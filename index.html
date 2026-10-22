@@ -4,23 +4,102 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mr. Anduv! Oyunları</title>
+<meta name="description" content="Mr. Anduv! mobil oyunları: Champion Battle Manager ve Malazgirt Akıncıları. App Store'da ücretsiz, reklamsız.">
+<meta property="og:title" content="Mr. Anduv! Oyunları">
+<meta property="og:description" content="Champion Battle Manager ve Malazgirt Akıncıları. App Store'da ücretsiz, reklamsız.">
+<meta property="og:image" content="https://emreanduv.github.io/img/cbm-kaptan-mecit.jpg">
 <style>
-:root{--bg:#f3e8cc;--fg:#2b1a0e;--acc:#7d1210;--line:#7d121033}
-@media (prefers-color-scheme:dark){:root{--bg:#1e140c;--fg:#f3e4c0;--acc:#e0b04a;--line:#e0b04a44}}
-body{font-family:Georgia,'Times New Roman',serif;max-width:720px;margin:32px auto;padding:0 16px;line-height:1.65;color:var(--fg);background:var(--bg)}
-h1{color:var(--acc);margin-bottom:4px}a{color:var(--acc)}li{margin:8px 0}.muted{opacity:.75;font-style:italic}
+:root{--bg:#f3e8cc;--card:#fbf4e2;--fg:#2b1a0e;--mute:#6b5640;--acc:#7d1210;--line:#7d121026}
+@media (prefers-color-scheme:dark){:root{--bg:#1e140c;--card:#2a1d12;--fg:#f3e4c0;--mute:#c4ad86;--acc:#e0b04a;--line:#e0b04a33}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Georgia,'Times New Roman',serif;line-height:1.6;color:var(--fg);background:var(--bg)}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px}
+header{padding:56px 0 24px}
+h1{font-size:44px;line-height:1.1;margin:0 0 8px;color:var(--acc)}
+.lead{font-size:20px;color:var(--mute);margin:0;max-width:640px}
+.en{display:block;font-size:15px;font-style:italic;opacity:.8;margin-top:4px}
+section.game{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;margin:28px 0}
+.head{display:flex;gap:18px;align-items:center;margin-bottom:12px}
+.head img{width:72px;height:72px;border-radius:16px;flex:none}
+h2{margin:0;font-size:28px;line-height:1.15}
+.tag{margin:2px 0 0;color:var(--mute)}
+p{margin:10px 0}
+.btn{display:inline-block;margin-top:10px;padding:12px 22px;border-radius:999px;background:var(--acc);color:var(--card);text-decoration:none;font-weight:bold;font-family:system-ui,-apple-system,sans-serif}
+.wide{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}
+.wide figure,.tall figure{margin:0}
+.wide img,.tall img{width:100%;display:block;border-radius:12px;border:1px solid var(--line)}
+.wide img{aspect-ratio:2.17;object-fit:cover}
+figcaption{font-size:14px;color:var(--mute);margin-top:4px}
+.tall{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+ul.feat{padding-left:20px;margin:10px 0}
+ul.feat li{margin:4px 0}
+.soon{color:var(--mute)}
+footer{padding:24px 0 48px;color:var(--mute);font-size:15px;border-top:1px solid var(--line);margin-top:40px}
+footer a{color:var(--acc)}
+@media (max-width:640px){h1{font-size:34px}.wide{grid-template-columns:1fr}.tall{grid-template-columns:repeat(2,1fr)}section.game{padding:20px}}
 </style>
 </head>
 <body>
-<h1>Mr. Anduv! Oyunları</h1>
-<p class="muted">Gizlilik politikaları · Privacy policies</p>
-<p>Oyunlarımızın hiçbiri kişisel veri toplamaz. Reklam, analiz aracı ya da hesap yoktur. / None of our games collect personal data.</p>
-<ul>
-  <li><a href="topcular/">Topçular</a></li>
-  <li><a href="hisar/">Hisar: Kara Gece</a></li>
-  <li><a href="malazgirt/">Malazgirt Akıncıları</a></li>
-  <li><a href="kirmizi-yali/">Kırmızı Yalı</a></li>
-</ul>
-<p>İletişim / Contact: emreanduvart@gmail.com</p>
+<div class="wrap">
+<header>
+  <h1>Mr. Anduv! Oyunları</h1>
+  <p class="lead">Akşamları ve hafta sonları geliştirilen, reklamsız ve kişisel veri toplamayan mobil oyunlar.
+    <span class="en">Mobile games made on evenings and weekends. No ads, no personal data.</span></p>
+</header>
+
+<section class="game">
+  <div class="head">
+    <img src="img/cbm-icon.jpg" alt="Champion Battle Manager simgesi">
+    <div><h2>Champion Battle Manager</h2><p class="tag">Ligi menajer gibi yönet, maçı sen oyna. <span class="en">Manage the league, play the match.</span></p></div>
+  </div>
+  <p>Eski menajerlik oyunlarının tadında bir lig kariyeri. Farkı şu: maç gününde sonucu simülasyon değil sen belirliyorsun, hem de beş farklı modda.</p>
+  <ul class="feat">
+    <li><b>Kaptan Mecit:</b> Maçı sahada, futbol olarak oyna. Beş kamera açısı.</li>
+    <li><b>Malazgirt:</b> Akıncılarını rakip kaleye sür, ordunu büyüt.</li>
+    <li><b>Hisar:</b> Hisarını savun, rakip kuleyi yık.</li>
+    <li><b>Topçular:</b> Açı, güç ve rüzgârla kaleyi kuşat.</li>
+    <li><b>Kafa Topu:</b> 60 saniyelik kafa topu maçları.</li>
+  </ul>
+  <p>6 lig, 120 kurmaca kulüp, fikstür, puan durumu ve gol krallığı. Reklam yok, üyelik yok, satın alma yok.</p>
+  <a class="btn" href="https://apps.apple.com/tr/app/champion-battle-manager/id6757344306">App Store'da ücretsiz</a>
+  <div class="wide">
+    <figure><img src="img/cbm-kaptan-mecit.jpg" alt="Kaptan Mecit modu, TV kamerası" loading="lazy"><figcaption>Kaptan Mecit modu</figcaption></figure>
+    <figure><img src="img/cbm-hisar.jpg" alt="Hisar modu" loading="lazy"><figcaption>Hisar modu</figcaption></figure>
+    <figure><img src="img/cbm-topcular.jpg" alt="Topçular modu" loading="lazy"><figcaption>Topçular modu</figcaption></figure>
+    <figure><img src="img/cbm-kafatopu.jpg" alt="Kafa Topu modu" loading="lazy"><figcaption>Kafa Topu modu</figcaption></figure>
+  </div>
+  <div class="tall">
+    <figure><img src="img/cbm-menajer.jpg" alt="Menajer merkezi" loading="lazy"><figcaption>Menajer merkezi</figcaption></figure>
+    <figure><img src="img/cbm-puan.jpg" alt="Puan durumu" loading="lazy"><figcaption>Puan durumu</figcaption></figure>
+  </div>
+</section>
+
+<section class="game">
+  <div class="head">
+    <img src="img/mlz-icon.jpg" alt="Malazgirt Akıncıları simgesi">
+    <div><h2>Malazgirt Akıncıları</h2><p class="tag">Doğru kapı, büyük ordu. <span class="en">Pick the right gate, grow your army.</span></p></div>
+  </div>
+  <p>Akıncılarını sefere çıkar. Artı ve çarpı kapılarından geçip ordunu büyüt, her seferin sonundaki kaleyi aş. Ahlat'tan Malazgirt'e uzanan sefer haritası, yeni seferler güncellemelerle geliyor.</p>
+  <a class="btn" href="https://apps.apple.com/tr/app/id6822718671">App Store'da ücretsiz</a>
+  <div class="tall">
+    <figure><img src="img/mlz-menu.jpg" alt="Malazgirt Akıncıları ana ekran" loading="lazy"></figure>
+    <figure><img src="img/mlz-sefer.jpg" alt="Sefer, ordu ve kale" loading="lazy"></figure>
+    <figure><img src="img/mlz-harita.jpg" alt="Sefer haritası" loading="lazy"></figure>
+  </div>
+</section>
+
+<p class="soon">Yakında: <b>Kurt Yolu</b> ve <b>Kırmızı Yalı</b>. <span class="en">Coming soon.</span></p>
+
+<footer>
+  <p>Bir Mr. Anduv! yapımıdır.</p>
+  <p>Gizlilik politikaları / Privacy policies:
+    <a href="malazgirt/">Malazgirt Akıncıları</a> ·
+    <a href="hisar/">Hisar: Kara Gece</a> ·
+    <a href="topcular/">Topçular</a> ·
+    <a href="kirmizi-yali/">Kırmızı Yalı</a></p>
+  <p>Oyunlarımızın hiçbiri kişisel veri toplamaz. Reklam, analiz aracı ya da hesap yoktur. / None of our games collect personal data.</p>
+  <p>İletişim / Contact: <a href="mailto:emreanduvart@gmail.com">emreanduvart@gmail.com</a></p>
+</footer>
+</div>
 </body>
 </html>

@@ -1,4 +1,6 @@
-# Mr. Anduv! — Gizlilik sayfaları
+# Mr. Anduv! — Oyun vitrini ve gizlilik sayfaları
+
+Ana sayfa (https://emreanduv.github.io/) oyunların tanıtım vitrinidir; görseller `img/` klasöründe.
 
 Mağaza (App Store / Google Play) formlarında kullanılan herkese açık gizlilik politikaları.
 
