@@ -13,6 +13,8 @@ import json, os, sys, time, math, urllib.request, urllib.parse, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from isim_turet import turet, sozcuk
+from fifa_kod import FIFA
+import re
 
 KOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "veri")
 GD = os.path.join(KOK, "gercek-dunya", "v1", "ligler.json")
@@ -74,8 +76,12 @@ def sparql(q):
 def kulup_bul(ad, ulke):
     if ad in ELLE:
         return ELLE[ad]
-    d = http("https://www.wikidata.org/w/api.php?" + urllib.parse.urlencode({"action": "wbsearchentities", "search": ad, "language": "en", "type": "item", "limit": 12, "format": "json"}))
-    ids = [x["id"] for x in (d or {}).get("search", [])]
+    ids = []
+    for arama in (ad, ad + " FK", ad + " S.K.", ad + " F.C.", ad + "spor"):
+        d = http("https://www.wikidata.org/w/api.php?" + urllib.parse.urlencode({"action": "wbsearchentities", "search": arama, "language": "en", "type": "item", "limit": 10, "format": "json"}))
+        ids += [x["id"] for x in (d or {}).get("search", []) if x["id"] not in ids]
+        if len(ids) >= 10:
+            break
     if not ids:
         return None
     vals = " ".join("wd:" + i for i in ids)
@@ -151,6 +157,102 @@ def kadro(qids):
     return oy
 
 
+def enwiki(qids):
+    vals = " ".join("wd:" + q for q in qids)
+    r = sparql(f"""SELECT ?c ?a WHERE {{ VALUES ?c {{ {vals} }} ?a schema:about ?c ; schema:isPartOf <https://en.wikipedia.org/> . }}""")
+    return {x["c"]["value"].rsplit("/", 1)[1]: urllib.parse.unquote(x["a"]["value"].rsplit("/wiki/", 1)[1]).replace("_", " ") for x in r}
+
+
+def sablonlar(metin, adlar):
+    """{{ad|...}} şablonlarını iç içe süslü parantezlere dikkat ederek bul."""
+    out, i, low = [], 0, metin.lower()
+    while True:
+        j = -1
+        for a in adlar:
+            k = low.find("{{" + a, i)
+            if k != -1 and (j == -1 or k < j):
+                j = k
+        if j == -1:
+            return out
+        d, k = 0, j
+        while k < len(metin) - 1:
+            if metin[k:k + 2] == "{{": d += 1; k += 2; continue
+            if metin[k:k + 2] == "}}":
+                d -= 1; k += 2
+                if d == 0: break
+                continue
+            k += 1
+        out.append((j, metin[j + 2:k - 2]))
+        i = k
+
+
+def parametreler(govde):
+    p, d, buf, parts = {}, 0, "", []
+    for ch in govde:
+        if ch in "{[": d += 1
+        if ch in "}]": d -= 1
+        if ch == "|" and d == 0: parts.append(buf); buf = ""; continue
+        buf += ch
+    parts.append(buf)
+    for x in parts[1:]:
+        if "=" in x:
+            k, v = x.split("=", 1); p[k.strip().lower()] = v.strip()
+    return p
+
+
+def wiki_kadro(baslik):
+    d = http("https://en.wikipedia.org/w/api.php?" + urllib.parse.urlencode({"action": "parse", "page": baslik, "prop": "wikitext", "format": "json", "redirects": 1}))
+    time.sleep(0.4)
+    metin = ((d or {}).get("parse", {}).get("wikitext", {}) or {}).get("*", "")
+    if not metin:
+        return []
+    low = metin.lower()
+    bas = low.find("{{fs start"); son = low.find("{{fs end", bas) if bas != -1 else -1
+    if bas == -1 or son == -1:
+        return []
+    blok = metin[bas:son]
+    oy = []
+    for _, g in sablonlar(blok, ["fs player", "football squad player"]):
+        p = parametreler(g)
+        ad = p.get("name", "")
+        m = re.search(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", ad)
+        baslik_o = m.group(1).strip() if m else re.sub(r"\{\{.*?\}\}|<.*?>", "", ad).strip()
+        gorunen = (m.group(2) or m.group(1)).strip() if m else baslik_o
+        gorunen = re.sub(r"\s*\(.*?\)", "", gorunen)
+        if not gorunen:
+            continue
+        oy.append({"baslik": baslik_o if m else None, "ad": gorunen, "no": p.get("no", "").strip(), "nat": p.get("nat", "").strip().upper(), "pos": p.get("pos", "").strip().upper()})
+    return oy
+
+
+def zenginlestir(basliklar):
+    """Wikipedia başlıklarından doğum, boy, mevki ve ünlülük (Wikidata)."""
+    out = {}
+    basliklar = [b for b in basliklar if b]
+    for i in range(0, len(basliklar), 40):
+        parca = basliklar[i:i + 40]
+        vals = " ".join("<https://en.wikipedia.org/wiki/" + urllib.parse.quote(b.replace(" ", "_"), safe="()_,'-.") + ">" for b in parca)
+        r = sparql(f"""SELECT ?a ?dob ?boy ?n ?posLabel WHERE {{ VALUES ?a {{ {vals} }} ?a schema:about ?p . ?p wikibase:sitelinks ?n .
+          OPTIONAL {{ ?p wdt:P569 ?dob }} OPTIONAL {{ ?p wdt:P2048 ?boy }} OPTIONAL {{ ?p wdt:P413 ?pos }}
+          SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }} }}""")
+        for x in r:
+            b = urllib.parse.unquote(x["a"]["value"].rsplit("/wiki/", 1)[1]).replace("_", " ")
+            o = out.setdefault(b, {"dob": None, "boy": None, "n": int(x["n"]["value"]), "pos": []})
+            if x.get("dob") and not o["dob"]:
+                o["dob"] = x["dob"]["value"][:10]
+            if x.get("boy") and not o["boy"]:
+                try:
+                    v = float(x["boy"]["value"]); o["boy"] = round(v * 100) if v < 3 else round(v)
+                except ValueError:
+                    pass
+            if x.get("posLabel") and x["posLabel"]["value"].lower() not in o["pos"]:
+                o["pos"].append(x["posLabel"]["value"].lower())
+    return out
+
+
+GENEL = {"GK": "KL", "DF": "D", "MF": "MOS", "FW": "SF"}
+
+
 def kisa_ad(ad, kullanilan):
     harf = [w[0] for w in ad.replace("-", " ").split() if w[:1].isalpha()]
     k = ("".join(harf) + "XXX")[:3].upper()
@@ -183,18 +285,30 @@ def main():
             if not q:
                 print(f"::warning::{kod}: {t} bulunamadı"); continue
             qmap[t] = q
-            print(f"ESLEME {kod} {t} -> {q}")
         bilgi = kulup_bilgi(list(qmap.values()))
-        oy = kadro(list(qmap.values()))
+        wk = enwiki(list(qmap.values()))
+        oy = None
         kul = []
         kisalar = set()
         for t in takimlar:
             if t not in qmap:
                 continue
             q = qmap[t]; b = bilgi.get(q, {})
-            oyuncular = [o for (c, _), o in oy.items() if c == q]
-            oyuncular.sort(key=lambda o: (o["start"], o["n"]), reverse=True)
-            oyuncular = oyuncular[:30]
+            wl = wiki_kadro(wk[q]) if q in wk else []
+            print(f"ESLEME {kod} {t} -> {q} · {wk.get(q)} · vikipedi {len(wl)}")
+            if len(wl) >= 15:
+                zen = zenginlestir([o["baslik"] for o in wl])
+                oyuncular = []
+                for o in wl:
+                    z = zen.get(o["baslik"] or "", {})
+                    oyuncular.append({"ad": o["ad"], "dob": z.get("dob"), "boy": z.get("boy"), "n": z.get("n", 3), "no": o["no"],
+                                      "pos": z.get("pos", []), "genel": GENEL.get(o["pos"]), "ev": None, "ulke": FIFA.get(o["nat"])})
+            else:
+                if oy is None:
+                    oy = kadro(list(qmap.values()))
+                oyuncular = [o for (c, _), o in oy.items() if c == q]
+                oyuncular.sort(key=lambda o: (o["start"], o["n"]), reverse=True)
+                oyuncular = oyuncular[:30]
             renkler = [RENK[r] for r in b.get("renk", []) if r in RENK]
             sehir = b.get("sehir") or t
             kulup = {"id": KM[kod].get(t) or ("y" + kisa_ad(sozcuk(t, t), set()).lower()), "km": t in KM[kod], "sira": sira[t],
@@ -203,9 +317,13 @@ def main():
             for o in oyuncular:
                 ad = turet(o["ad"])
                 parca = ad.split()
+                mev = mevki_coz(o["pos"])
+                if o.get("genel") and (not mev or (o["genel"] == "KL") != (mev == "KL")):
+                    mev = o["genel"]
+                no = o.get("no") or ""
                 kulup["oyuncular"].append({"ad": " ".join(parca[:-1]) if len(parca) > 1 else "", "soyad": parca[-1],
-                                           "dogum": o["dob"], "uyruk": o["ev"] or o["ulke"] or "", "mevki": mevki_coz(o["pos"]),
-                                           "boy": o["boy"], "un": o["n"]})
+                                           "dogum": o["dob"], "uyruk": o["ev"] or o["ulke"] or "", "mevki": mev,
+                                           "boy": o["boy"], "un": o["n"], "no": int(no) if no.isdigit() else None})
             kul.append(kulup)
             print(f"{kod} {t}: {len(kulup['oyuncular'])} oyuncu")
         cikti["ligler"][kod] = {"ad": ladi, "ulke": ulkeAd, "kulupler": kul}
