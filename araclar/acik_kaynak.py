@@ -294,8 +294,8 @@ def lig_maclari(kod, sezon):
         q = qid_baslik(adlar, "trwiki")
     else:
         q = {a: qid_ad(a, L["ulkeQ"], kod) for a in adlar}
-    # openfootball sonuçları gönüllülerce elle güncellenir; eksik skorları Vikipedi sonuç matrisinden tamamla
-    if L.get("fj"):
+    # openfootball ve trwiki şablonu gönüllülerce elle güncellenir, geride kalabilir; eksik skorları en.wiki sonuç matrisinden tamamla
+    if True:
         try:
             mat = wiki_matris(kod, sezon)
             if mat:
