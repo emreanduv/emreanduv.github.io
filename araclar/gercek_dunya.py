@@ -201,7 +201,7 @@ def main():
                 return datetime.strptime(m["zaman"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).timestamp() >= esik
             except Exception:
                 return False
-        gelecek = sorted((m for m in hepsi if not m["s"] and (m["durum"] == "canli" or (m["durum"] == "oynanacak" and ileride(m)))), key=lambda m: m["zaman"] or "9")
+        gelecek = sorted((m for m in hepsi if not m["s"] and m["durum"] in ("canli", "oynanacak") and ileride(m)), key=lambda m: m["zaman"] or "9")
         guncel_hafta = max((m["hafta"] or 0 for m in oynanan), default=0)
         sonuclar = sorted(oynanan, key=lambda m: m["zaman"] or "", reverse=True)[:20]
         ozet.append({
