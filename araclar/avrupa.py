@@ -54,7 +54,7 @@ def main():
         cikti["kupalar"][k["kod"]] = {"ad": k["ad"], "hafta": k["hafta"], "maclar": sorted(maclar.values(), key=lambda m: (m["r"], m["zaman"]))}
         print(f"::notice::{k['ad']}: {len(maclar)} maç, {len({m['ev'] for m in maclar.values()} | {m['dep'] for m in maclar.values()})} kulüp")
     for t, tid in takim_id.items():
-        if str(t) in kulupler or not tid or t in bizim:
+        if (str(t) in kulupler and kulupler[str(t)].get("sehir")) or not tid or t in bizim:
             continue
         if time.time() - bas > 15 * 60:
             print("::notice::süre doldu; kalan kulüp bilgileri sonraki çalışmada"); break
@@ -62,6 +62,8 @@ def main():
         x = (d.get("teams") or [{}])[0]
         sehir = (x.get("strLocation") or x.get("strStadiumLocation") or "").split(",")[0].strip()
         renk = [c.upper() for c in (x.get("strColour1"), x.get("strColour2")) if c and c.startswith("#") and len(c) == 7]
+        if not sehir and not x:
+            continue                                                # sorgu başarısız: sonraki çalışmada yeniden dene
         kulupler[str(t)] = {"sehir": sehir, "ulke": ULKE.get((x.get("strCountry") or "").strip(), ""), "renk": renk, "renkAd": [renk_adi(c) for c in renk]}
     eski_govde = {a: b for a, b in eski.items() if a != "guncel"}
     if eski_govde != cikti:
