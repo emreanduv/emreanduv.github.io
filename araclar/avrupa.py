@@ -5,7 +5,7 @@ TheSportsDB'den bu sezonun lig aşaması eşleşmelerini ve tarihlerini okur. Oy
 bu gerçek fikstürle başlar (sonuçlar oyunda serbest). Kulüpler yalnız TheSportsDB adının FNV özetiyle (tsdb) anılır;
 bizim 6 ligin dışındaki kulüpler için oyunda türetilmiş ad kurulsun diye şehir, renk ve ülke yazılır. Gerçek kulüp adı yazılmaz.
 Çıktı: veri/gercek-dunya/v1/avrupa.json · yalnız standart kitaplık."""
-import json, os, sys, datetime
+import json, os, sys, time, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gercek_dunya import getir, mac, sezon_adi, yaz, yukle, KOK
 from kadro_turet import fnv, renk_adi
@@ -34,6 +34,13 @@ def main():
     kulupler = eski.get("kulupler", {}) if eski.get("sezon") == sezon else {}
     cikti = {"surum": 1, "sezon": sezon, "not": "Kulüpler yalnız özetle (tsdb) anılır; gerçek ad yoktur.", "kupalar": {}, "kulupler": kulupler}
     takim_id = {}
+    bas = time.time()
+    bizim = set()                                                     # bizim 6 ligin kulüpleri: bilgileri oyunda var, sorgulanmaz
+    try:
+        dj = json.load(open(os.path.join(KOK, "..", "..", "cbm", "v1", "dunya.json"), encoding="utf-8"))
+        bizim = {c.get("tsdb") for l in dj["ligler"].values() for c in l["kulupler"]}
+    except Exception as e:
+        print(f"::warning::dunya.json okunamadı: {e}")
     for k in KUPALAR:
         maclar = {}
         for r in range(1, k["hafta"] + 1):
@@ -47,8 +54,10 @@ def main():
         cikti["kupalar"][k["kod"]] = {"ad": k["ad"], "hafta": k["hafta"], "maclar": sorted(maclar.values(), key=lambda m: (m["r"], m["zaman"]))}
         print(f"::notice::{k['ad']}: {len(maclar)} maç, {len({m['ev'] for m in maclar.values()} | {m['dep'] for m in maclar.values()})} kulüp")
     for t, tid in takim_id.items():
-        if str(t) in kulupler or not tid:
+        if str(t) in kulupler or not tid or t in bizim:
             continue
+        if time.time() - bas > 15 * 60:
+            print("::notice::süre doldu; kalan kulüp bilgileri sonraki çalışmada"); break
         d = getir(f"lookupteam.php?id={tid}") or {}
         x = (d.get("teams") or [{}])[0]
         sehir = (x.get("strLocation") or x.get("strStadiumLocation") or "").split(",")[0].strip()
