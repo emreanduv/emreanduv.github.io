@@ -6,7 +6,7 @@ def wt(host, baslik):
     d = json.loads(urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=40).read())
     return d.get("parse", {}).get("wikitext", {}).get("*", ""), d.get("error", {}).get("info")
 out = {}
-for host, b in [("tr.wikipedia.org", "2026-27 Süper Lig maçları"), ("en.wikipedia.org", "2026–27 Süper Lig"), ("tr.wikipedia.org", "2026-27 Süper Lig"), ("tr.wikipedia.org", "2026–27 Süper Lig"),
+for host, b in [("tr.wikipedia.org", "Şablon:2026-27 Süper Lig maçları"), ("tr.wikipedia.org", "Şablon:2026-27 Süper Lig puan durumu"), ("tr.wikipedia.org", "2026-27 Süper Lig maçları"), ("en.wikipedia.org", "2026–27 Süper Lig"), ("tr.wikipedia.org", "2026-27 Süper Lig"), ("tr.wikipedia.org", "2026–27 Süper Lig"),
                 ("en.wikipedia.org", "2026–27 UEFA Champions League league phase"), ("en.wikipedia.org", "2026–27 UEFA Europa League league phase"),
                 ("en.wikipedia.org", "2026–27 UEFA Conference League league phase"), ("en.wikipedia.org", "2026–27 Turkish Cup"), ("tr.wikipedia.org", "2026-27 Türkiye Kupası")]:
     try:
