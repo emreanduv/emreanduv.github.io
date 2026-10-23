@@ -163,17 +163,24 @@ def main():
             tam_lig = tam
         maclar = kayit["maclar"]
         if time.time() - BASLA > SURE:
-            print(f"::notice::{lig['ad']}: süre doldu, sonraki çalışmaya kaldı")
+            print(f"::notice::{lig['ad']}: süre doldu, sonraki çalışmaya kaldı (kayıtlı veri özete giriyor)")
+            if maclar:
+                ozet.append(lig_ozet(lig, list(maclar.values()), sezon, simdi))
             continue
         gecen = getir(f"eventspastleague.php?id={lig['id']}") or {}
         gelen = getir(f"eventsnextleague.php?id={lig['id']}") or {}
         hg = tamsayi(((gecen.get("events") or [{}])[0]).get("intRound")) or 1
         hs = tamsayi(((gelen.get("events") or [{}])[0]).get("intRound")) or hg + 1
         bilinen = max((m["hafta"] or 0 for m in maclar.values() if m["s"]), default=0)
+        dolu = {m["hafta"] for m in maclar.values() if m.get("hafta")}
+        eksik = [h for h in range(1, lig["hafta"] + 1) if h not in dolu]     # fikstürü hiç gelmemiş haftalar
+        an = simdi.strftime("%Y-%m-%dT%H:%M:%S")
+        gecikmis = sorted({m["hafta"] for m in maclar.values() if m.get("hafta") and not m["s"] and (m.get("zaman") or "9") < an})
+        yakin = {h for h in (hg - 1, hg, hs, hs + 1, bilinen - 1, bilinen, bilinen + 1, bilinen + 2) if 1 <= h <= lig["hafta"]}
         if tam_lig:
-            haftalar = list(range(1, lig["hafta"] + 1))  # bütün sezon (fikstür dahil)
+            haftalar = sorted(yakin | set(eksik) | set(gecikmis))        # eksikleri tamamla, oynanmamış görünenleri yenile
         else:
-            haftalar = sorted({h for h in (hg - 1, hg, hs, hs + 1, bilinen - 1, bilinen, bilinen + 1, bilinen + 2) if 1 <= h <= lig["hafta"]})
+            haftalar = sorted(yakin | set(eksik[:6]) | set(gecikmis[:4]))  # her çalışmada birkaç eksik hafta: fikstür kendiliğinden tamamlanır
         alinan, bos = 0, 0
         istenen = []
         for h in haftalar:
@@ -191,21 +198,7 @@ def main():
         if not hepsi:
             continue
         degisti |= yaz(yol, kayit)
-        oynanan = [m for m in hepsi if m["s"]]
-        esik = (simdi.timestamp() - 3 * 3600)
-        def ileride(m):
-            try:
-                return datetime.strptime(m["zaman"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).timestamp() >= esik
-            except Exception:
-                return False
-        gelecek = sorted((m for m in hepsi if not m["s"] and m["durum"] in ("canli", "oynanacak") and ileride(m)), key=lambda m: m["zaman"] or "9")
-        guncel_hafta = max((m["hafta"] or 0 for m in oynanan), default=0)
-        sonuclar = sorted(oynanan, key=lambda m: m["zaman"] or "", reverse=True)[:20]
-        ozet.append({
-            "kod": lig["kod"], "ad": lig["ad"], "ulke": lig["ulke"], "sezon": sezon.replace("-20", "-"),
-            "hafta": guncel_hafta, "toplamHafta": lig["hafta"],
-            "tablo": tablo(hepsi), "sonuclar": sonuclar, "fikstur": gelecek[:20],
-        })
+        ozet.append(lig_ozet(lig, hepsi, sezon, simdi))
     if not ozet:
         print("Hiç veri gelmedi; dosyalar değişmedi.")
         return
@@ -219,6 +212,25 @@ def main():
         yaz(cikti, veri)
         degisti = True
     print("Değişiklik var." if degisti else "Değişiklik yok.")
+
+
+def lig_ozet(lig, hepsi, sezon, simdi):
+    if True:
+        oynanan = [m for m in hepsi if m["s"]]
+        esik = (simdi.timestamp() - 3 * 3600)
+        def ileride(m):
+            try:
+                return datetime.strptime(m["zaman"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).timestamp() >= esik
+            except Exception:
+                return False
+        gelecek = sorted((m for m in hepsi if not m["s"] and m["durum"] in ("canli", "oynanacak") and ileride(m)), key=lambda m: m["zaman"] or "9")
+        guncel_hafta = max((m["hafta"] or 0 for m in oynanan), default=0)
+        sonuclar = sorted(oynanan, key=lambda m: m["zaman"] or "", reverse=True)[:20]
+        return {
+            "kod": lig["kod"], "ad": lig["ad"], "ulke": lig["ulke"], "sezon": sezon.replace("-20", "-"),
+            "hafta": guncel_hafta, "toplamHafta": lig["hafta"],
+            "tablo": tablo(hepsi), "sonuclar": sonuclar, "fikstur": gelecek[:20],
+        }
 
 
 if __name__ == "__main__":
