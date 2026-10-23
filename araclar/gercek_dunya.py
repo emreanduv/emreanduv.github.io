@@ -39,7 +39,7 @@ def sezon_adi(simdi):
 _son = [0.0]
 _istatistik = {"istek": 0, "429": 0, "hata": 0}
 BASLA = time.time()
-SURE = 18 * 60  # iş en fazla bu kadar sürsün; kalan ligler bir sonraki çalışmaya kalır
+SURE = 22 * 60  # iş en fazla bu kadar sürsün; kalan ligler bir sonraki çalışmaya kalır
 
 
 def getir(yol):
@@ -171,7 +171,7 @@ def main():
         hs = tamsayi(((gelen.get("events") or [{}])[0]).get("intRound")) or hg + 1
         bilinen = max((m["hafta"] or 0 for m in maclar.values() if m["s"]), default=0)
         if tam_lig:
-            haftalar = list(range(1, lig["hafta"] + 1))  # oynanmamış iki hafta üst üste gelince durur
+            haftalar = list(range(1, lig["hafta"] + 1))  # bütün sezon (fikstür dahil)
         else:
             haftalar = sorted({h for h in (hg - 1, hg, hs, hs + 1, bilinen - 1, bilinen, bilinen + 1, bilinen + 2) if 1 <= h <= lig["hafta"]})
         alinan, bos = 0, 0
@@ -184,10 +184,7 @@ def main():
             for m in liste:
                 maclar[m["id"]] = m
             alinan += len(liste)
-            if tam_lig and h > max(hs, hg):
-                bos = bos + 1 if not any(m["s"] for m in liste) else 0
-                if bos >= 2:
-                    break
+            # tam çalışmada bütün sezon çekilir: Challenge Modu gelecek haftaların fikstürünü de ister
         haftalar = istenen
         hepsi = list(maclar.values())
         print(f"::notice::{lig['ad']}: hafta {hg}/{hs}, {len(list(haftalar))} hafta istendi, {alinan} maç geldi, toplam {len(hepsi)} · istek {_istatistik['istek']}, 429 {_istatistik['429']}, hata {_istatistik['hata']}")
