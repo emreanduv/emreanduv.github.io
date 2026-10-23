@@ -23,4 +23,4 @@ jobs:
           git config user.name "Mr. Anduv! veri"
           git config user.email "emreanduvart@gmail.com"
           git commit -qm "Avrupa kupaları fikstürü güncellendi"
-          git pull -q --rebase origin "${GITHUB_REF_NAME}" && git push -q
+          for i in 1 2 3 4; do git pull -q --rebase -X theirs origin "${GITHUB_REF_NAME}" && git push -q && break; git rebase --abort 2>/dev/null; sleep 7; done
