@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 
 KOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "veri", "gercek-dunya", "v1")
 API = "https://www.thesportsdb.com/api/v1/json/123/"
-BEKLE = 2.2  # ücretsiz anahtar: dakikada 30 istek
+BEKLE = 3.2  # ücretsiz anahtar: pratikte dakikada ~20 istek
 
 LIGLER = [
     {"kod": "tr", "id": 4339, "ad": "Süper Lig", "ulke": "Türkiye", "hafta": 34},
@@ -169,26 +169,39 @@ def main():
         gelen = getir(f"eventsnextleague.php?id={lig['id']}") or {}
         hg = tamsayi(((gecen.get("events") or [{}])[0]).get("intRound")) or 1
         hs = tamsayi(((gelen.get("events") or [{}])[0]).get("intRound")) or hg + 1
+        bilinen = max((m["hafta"] or 0 for m in maclar.values() if m["s"]), default=0)
         if tam_lig:
-            eksik = [h for h in range(1, min(lig["hafta"], hs + 1) + 1)]
-            haftalar = eksik
+            haftalar = list(range(1, lig["hafta"] + 1))  # oynanmamış iki hafta üst üste gelince durur
         else:
-            haftalar = sorted({h for h in (hg - 1, hg, hs, hs + 1) if 1 <= h <= lig["hafta"]})
-        alinan = 0
+            haftalar = sorted({h for h in (hg - 1, hg, hs, hs + 1, bilinen - 1, bilinen, bilinen + 1, bilinen + 2) if 1 <= h <= lig["hafta"]})
+        alinan, bos = 0, 0
+        istenen = []
         for h in haftalar:
             liste = hafta_getir(lig, sezon, h)
+            istenen.append(h)
             if liste is None:
                 continue
             for m in liste:
                 maclar[m["id"]] = m
             alinan += len(liste)
+            if tam_lig and h > max(hs, hg):
+                bos = bos + 1 if not any(m["s"] for m in liste) else 0
+                if bos >= 2:
+                    break
+        haftalar = istenen
         hepsi = list(maclar.values())
         print(f"::notice::{lig['ad']}: hafta {hg}/{hs}, {len(list(haftalar))} hafta istendi, {alinan} maç geldi, toplam {len(hepsi)} · istek {_istatistik['istek']}, 429 {_istatistik['429']}, hata {_istatistik['hata']}")
         if not hepsi:
             continue
         degisti |= yaz(yol, kayit)
         oynanan = [m for m in hepsi if m["s"]]
-        gelecek = sorted((m for m in hepsi if not m["s"] and m["durum"] in ("oynanacak", "canli")), key=lambda m: m["zaman"] or "9")
+        esik = (simdi.timestamp() - 3 * 3600)
+        def ileride(m):
+            try:
+                return datetime.strptime(m["zaman"][:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).timestamp() >= esik
+            except Exception:
+                return False
+        gelecek = sorted((m for m in hepsi if not m["s"] and (m["durum"] == "canli" or (m["durum"] == "oynanacak" and ileride(m)))), key=lambda m: m["zaman"] or "9")
         guncel_hafta = max((m["hafta"] or 0 for m in oynanan), default=0)
         sonuclar = sorted(oynanan, key=lambda m: m["zaman"] or "", reverse=True)[:20]
         ozet.append({
