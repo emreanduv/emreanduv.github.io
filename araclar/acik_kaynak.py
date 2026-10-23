@@ -220,9 +220,12 @@ def qid_ad(ad, ulkeQ, dil="en"):
         r = sparql(f"""SELECT ?c ?n (GROUP_CONCAT(DISTINCT ?l; separator="|") AS ?ls) WHERE {{ VALUES ?c {{ {vals} }} ?c wdt:P31/wdt:P279* wd:Q476028 . ?c wikibase:sitelinks ?n .
                   OPTIONAL {{ ?c wdt:P17 ?u }} FILTER(!BOUND(?u) || ?u IN ({ulkeler.replace(' ', ', ')}))
                   OPTIONAL {{ ?c rdfs:label|skos:altLabel ?l . FILTER(LANG(?l) IN ("en", "{dil}")) }} }} GROUP BY ?c ?n ORDER BY DESC(?n)""")
-        sa = sade(ad)
-        tam = [x for x in r if sa in {sade(l) for l in (x.get("ls", {}).get("value") or "").split("|")}]
-        sec = (tam or r)
+        def ham(t):
+            return " ".join(re.sub(r"[^a-z0-9 ]", " ", (t or "").lower().replace(".", "")).split())
+        etik = lambda x: (x.get("ls", {}).get("value") or "").split("|")
+        birebir = [x for x in r if ham(ad) in {ham(l) for l in etik(x)}]
+        tam = [x for x in r if sade(ad) in {sade(l) for l in etik(x)}]
+        sec = (birebir or tam or r)
         q = sec[0]["c"]["value"].rsplit("/", 1)[1] if sec else None
     if q:
         o[k] = q
