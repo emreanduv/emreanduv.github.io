@@ -14,7 +14,7 @@ import json, os, sys, time, math, urllib.request, urllib.parse, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from isim_turet import turet, sozcuk
 from fifa_kod import FIFA
-from acik_kaynak import lig_maclari, anahtar as kulup_anahtari, onbellek, onbellek_yaz
+from acik_kaynak import lig_maclari, anahtar as kulup_anahtari, onbellek, onbellek_yaz, qid_baslik
 import re
 
 KOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "veri")
@@ -399,6 +399,26 @@ def main():
                         bc = bilgi.setdefault(c, {"sehir": None, "kap": 0, "renk": []})
                         for alan in ("sehir", "kap", "renk"):
                             if not bc.get(alan) and ub.get(alan): bc[alan] = ub[alan]
+        # hâlâ maddesi olmayanlar: kulübün adıyla İngilizce Vikipedi'de ara (Wikidata'da çift kayıt olabiliyor)
+        for ad, q in adq.items():
+            if not q or q in wk:
+                continue
+            yalin = re.sub(r"\s*\(.*?\)", "", ad).strip()
+            d = http("https://en.wikipedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "list": "search", "srsearch": f"{yalin} football club", "srlimit": 5, "format": "json"}))
+            for x in ((d or {}).get("query") or {}).get("search", []):
+                t = x.get("title", "")
+                if yalin.split()[0].lower() in t.lower() and "season" not in t.lower():
+                    wl_, _ = wiki_kadro(t)
+                    if len(wl_) >= 15:
+                        wk[q] = t
+                        qq = qid_baslik([t], "enwiki").get(t)
+                        if qq and not bilgi.get(q, {}).get("sehir"):
+                            ub = kulup_bilgi([qq]).get(qq, {})
+                            bc = bilgi.setdefault(q, {"sehir": None, "kap": 0, "renk": []})
+                            for alan in ("sehir", "kap", "renk"):
+                                if not bc.get(alan) and ub.get(alan): bc[alan] = ub[alan]
+                        print(f"::notice::{kod}: madde aramayla bulundu")
+                        break
         oy = None
         kul = []
         kisalar = set()
