@@ -519,17 +519,19 @@ def main():
                 ad = turet(o["ad"])
                 parca = ad.split()
                 mev = mevki_coz(o["pos"])
-                yan = []
+                yan, kesin = [], False
                 if o.get("bk") and (not o.get("genel") or (o["genel"] == "KL") == (o["bk"][0] == "KL")):
-                    mev, yan = o["bk"][0], [k for k in o["bk"][1:] if k != "KL"][:3]
+                    mev, yan, kesin = o["bk"][0], [k for k in o["bk"][1:] if k != "KL"][:3], True
                 if o.get("genel") and (not mev or (o["genel"] == "KL") != (mev == "KL")):
-                    mev, yan = o["genel"], []
+                    mev, yan, kesin = o["genel"], [], False
                 no = o.get("no") or ""
                 ty = {"ad": " ".join(parca[:-1]) if len(parca) > 1 else "", "soyad": parca[-1],
                       "dogum": (o["dob"] or "")[:4] or None, "uyruk": o["ev"] or o["ulke"] or "", "mevki": mev,
                       "boy": o["boy"], "un": o["n"], "no": int(no) if no.isdigit() else None}
                 if yan:
                     ty["yan"] = yan
+                if kesin:
+                    ty["kesin"] = 1
                 ty["k"] = anahtar(ty)
                 kulup["oyuncular"].append(ty)
             kul.append(kulup)
