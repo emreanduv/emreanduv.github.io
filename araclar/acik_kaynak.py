@@ -199,21 +199,31 @@ def sade(ad):
     return " ".join(re.sub(r"[^a-z0-9 ]", " ", a).split())
 
 
+ULKE_EK = {"Q142": ["Q235"]}   # Fransa ligi: Monaco kulübü de oynar
+
+
 def qid_ad(ad, ulkeQ, dil="en"):
-    """Kulüp adı (ör. 'Manchester City FC') → QID: Wikidata araması + futbol kulübü ve ülke süzgeci."""
+    """Kulüp adı (ör. 'Manchester City FC') → QID: Wikidata araması + futbol kulübü ve ülke süzgeci.
+    Etiketi adla birebir örtüşen aday önce gelir (Paris FC ≠ Paris Saint-Germain)."""
     o = onbellek(); k = f"ad:{ulkeQ}:{ad}"
     if k in o:
         return o[k]
     ids = []
-    for arama, lg in [(ad, "en"), (re.sub(r"\b(FC|CF|AFC|SC|AC|SS|SSC|US|1\. FC|FK|SK)\b\.?", "", ad).strip(), "en"), (ad, dil)]:
+    yalin = re.sub(r"\b(FC|CF|AFC|SC|AC|SS|SSC|US|1\. FC|FK|SK)\b\.?", "", ad).strip()
+    for arama, lg in [(ad, "en"), (yalin, "en"), (ad, dil), (re.sub(r"\s*\d+$", "", ad).strip(), "en")]:
         d = http("https://www.wikidata.org/w/api.php?" + urllib.parse.urlencode({"action": "wbsearchentities", "search": arama, "language": lg, "uselang": lg, "type": "item", "limit": 10, "format": "json"}))
         ids += [x["id"] for x in (d or {}).get("search", []) if x["id"] not in ids]
     q = None
     if ids:
         vals = " ".join("wd:" + i for i in ids)
-        r = sparql(f"""SELECT ?c ?n WHERE {{ VALUES ?c {{ {vals} }} ?c wdt:P31/wdt:P279* wd:Q476028 . ?c wikibase:sitelinks ?n .
-                  OPTIONAL {{ ?c wdt:P17 ?u }} FILTER(!BOUND(?u) || ?u = wd:{ulkeQ}) }} ORDER BY DESC(?n)""")
-        q = r[0]["c"]["value"].rsplit("/", 1)[1] if r else None
+        ulkeler = " ".join("wd:" + u for u in [ulkeQ] + ULKE_EK.get(ulkeQ, []))
+        r = sparql(f"""SELECT ?c ?n (GROUP_CONCAT(DISTINCT ?l; separator="|") AS ?ls) WHERE {{ VALUES ?c {{ {vals} }} ?c wdt:P31/wdt:P279* wd:Q476028 . ?c wikibase:sitelinks ?n .
+                  OPTIONAL {{ ?c wdt:P17 ?u }} FILTER(!BOUND(?u) || ?u IN ({ulkeler.replace(' ', ', ')}))
+                  OPTIONAL {{ ?c rdfs:label|skos:altLabel ?l . FILTER(LANG(?l) IN ("en", "{dil}")) }} }} GROUP BY ?c ?n ORDER BY DESC(?n)""")
+        sa = sade(ad)
+        tam = [x for x in r if sa in {sade(l) for l in (x.get("ls", {}).get("value") or "").split("|")}]
+        sec = (tam or r)
+        q = sec[0]["c"]["value"].rsplit("/", 1)[1] if sec else None
     if q:
         o[k] = q
     return q
@@ -305,6 +315,10 @@ def lig_maclari(kod, sezon):
         except Exception as e:
             print(f"::warning::{kod}: Vikipedi sonuç matrisi okunamadı: {e}")
     onbellek_yaz()
+    from collections import Counter
+    for qq, n in Counter(v for v in q.values() if v).items():
+        if n > 1:
+            print(f"::warning::{kod}: {n} kulüp aynı kimliğe eşlendi ({qq})")
     eksik = [a for a in adlar if not q.get(a)]
     if eksik:
         print(f"::warning::{kod}: kimliği bulunamayan {len(eksik)} kulüp")
