@@ -1,8 +1,14 @@
 name: wikidata deneme
 on: workflow_dispatch
+permissions:
+  contents: write
 jobs:
   d:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python3 araclar/wd_deneme.py
+      - run: python3 araclar/wd_deneme.py > /tmp/cikti.txt 2>&1 || true
+      - run: |
+          git config user.name "Mr. Anduv! veri"; git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan deneme-cikti; git rm -rfq .; cp /tmp/cikti.txt cikti.txt; git add cikti.txt
+          git commit -qm "deneme çıktısı"; git push -f origin deneme-cikti
