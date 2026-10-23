@@ -82,11 +82,12 @@ def main():
     bilgi = {}
     for i in range(0, len(qids), 60):
         vals = " ".join("wd:" + x for x in qids[i:i + 60])
-        for x in sparql(f"""SELECT ?c ?sehirLabel ?renkLabel WHERE {{ VALUES ?c {{ {vals} }} OPTIONAL {{ ?c wdt:P159 ?sehir }} OPTIONAL {{ ?c wdt:P6364 ?renk }}
+        for x in sparql(f"""SELECT ?c ?sehirLabel ?renkAdi WHERE {{ VALUES ?c {{ {vals} }} OPTIONAL {{ ?c wdt:P159 ?sehir }} OPTIONAL {{ ?c wdt:P6364 ?renk . ?renk rdfs:label ?renkAdi . FILTER(LANG(?renkAdi) = "en") }}
             SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }} }}"""):
             c = x["c"]["value"].rsplit("/", 1)[1]; o = bilgi.setdefault(c, {"sehir": "", "renk": []})
-            if x.get("sehirLabel") and not o["sehir"]: o["sehir"] = x["sehirLabel"]["value"]
-            r = (x.get("renkLabel") or {}).get("value", "").lower()
+            sl = (x.get("sehirLabel") or {}).get("value", "")
+            if sl and not re.fullmatch(r"Q\d+", sl) and not o["sehir"]: o["sehir"] = sl
+            r = (x.get("renkAdi") or {}).get("value", "").lower()
             if r in RENK and RENK[r] not in o["renk"]: o["renk"].append(RENK[r])
     for b in basliklar:
         if not q.get(b):
