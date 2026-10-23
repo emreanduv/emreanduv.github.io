@@ -277,7 +277,26 @@ def wiki_kadro(baslik):
     bas = low.find("{{fs start"); son = low.find("{{fs end", bas) if bas != -1 else -1
     if bas == -1 or son == -1:
         return [], renk
-    blok = metin[bas:son]
+    oy = oyuncu_blok(metin[bas:son])
+    # "Out on loan" bölümündeki Fs blokları: kiralık verilen oyuncular (kira=True)
+    i = son
+    while True:
+        b2 = low.find("{{fs start", i)
+        if b2 == -1:
+            break
+        s2 = low.find("{{fs end", b2)
+        if s2 == -1:
+            break
+        basliklar = re.findall(r"^=+\s*(.+?)\s*=+\s*$", metin[:b2], re.M)
+        h = (basliklar[-1] if basliklar else "").lower()
+        if "loan" in h and "out" in h:
+            for o in oyuncu_blok(metin[b2:s2]):
+                o["kira"] = True; oy.append(o)
+        i = s2 + 2
+    return oy, renk
+
+
+def oyuncu_blok(blok):
     oy = []
     for _, g in sablonlar(blok, ["fs player", "football squad player"]):
         p = parametreler(g)
@@ -289,7 +308,7 @@ def wiki_kadro(baslik):
         if not gorunen:
             continue
         oy.append({"baslik": baslik_o if m else None, "ad": gorunen, "no": p.get("no", "").strip(), "nat": p.get("nat", "").strip().upper(), "pos": p.get("pos", "").strip().upper()})
-    return oy, renk
+    return oy
 
 
 def renk_adi(hx):
@@ -349,7 +368,7 @@ def anahtar(o):
 def transfer_farki(eski, yeni):
     """İki haftalık türetilmiş kadro arasındaki gerçek transferler. Kadrosu çok değişen (ayrıştırma değişmiş) kulüpler atlanır."""
     def dizin(d):
-        k2c, kul = {}, {}
+        k2c, kul, kira = {}, {}, {}
         for l in d.get("ligler", {}).values():
             for c in l["kulupler"]:
                 ks = set()
@@ -357,23 +376,31 @@ def transfer_farki(eski, yeni):
                     k = anahtar(o)
                     k2c[k] = (c.get("tsdb"), o); ks.add(k)
                 kul[c.get("tsdb")] = ks
-        return k2c, kul
-    ek, ekul = dizin(eski)
-    yk, ykul = dizin(yeni)
+                for k in c.get("kira", []):
+                    kira[k] = c.get("tsdb")
+        return k2c, kul, kira
+    ek, ekul, ekira = dizin(eski)
+    yk, ykul, ykira = dizin(yeni)
     guvenli = {t for t in ykul if t in ekul and len(ykul[t]) >= 15 and len(ekul[t]) >= 15 and len(ykul[t] ^ ekul[t]) <= 14}
     bugun = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     olay = []
     alan = lambda o: {x: o.get(x) for x in ("ad", "soyad", "dogum", "uyruk", "mevki", "boy", "un")}
+    # tip: "kira" = kulübü oyuncuyu kiraladı (Vikipedi "Out on loan"), "donus" = kiralıktan döndü
     for k, (yt, o) in yk.items():
         if k in ek:
             et = ek[k][0]
             if et != yt and (et in guvenli or yt in guvenli):
-                olay.append({"t": bugun, "k": k, "e": et, "y": yt, "o": alan(o)})
+                x = {"t": bugun, "k": k, "e": et, "y": yt, "o": alan(o)}
+                if ykira.get(k) == et: x["tip"] = "kira"
+                elif ekira.get(k) == yt: x["tip"] = "donus"
+                olay.append(x)
         elif yt in guvenli and not ((o.get("un") or 0) < 0.25 and (o.get("dogum") or "0000") > str(int(bugun[:4]) - 21)):
             olay.append({"t": bugun, "k": k, "e": None, "y": yt, "o": alan(o)})       # bizim liglerin dışından geldi (altyapıdan çıkanlar hariç)
     for k, (et, o) in ek.items():
         if k not in yk and et in guvenli:
-            olay.append({"t": bugun, "k": k, "e": et, "y": None, "o": alan(o)})       # bizim liglerin dışına gitti
+            x = {"t": bugun, "k": k, "e": et, "y": None, "o": alan(o)}       # bizim liglerin dışına gitti
+            if ykira.get(k) == et: x["tip"] = "kira"                          # ... kiralık olarak
+            olay.append(x)
     return olay
 
 
@@ -461,7 +488,7 @@ def main():
                 t = x.get("title", "")
                 if yalin.split()[0].lower() in t.lower() and "season" not in t.lower():
                     wl_, _ = wiki_kadro(t)
-                    if len(wl_) >= 15:
+                    if len([o for o in wl_ if not o.get("kira")]) >= 15:
                         wk[q] = t
                         qq = qid_baslik([t], "enwiki").get(t)
                         if qq and not bilgi.get(q, {}).get("sehir"):
@@ -479,9 +506,14 @@ def main():
                 continue
             q = qmap[t]; b = bilgi.get(q, {})
             wl, wrenk = wiki_kadro(wk[q]) if q in wk else ([], [])
-            print(f"ESLEME {kod} {t} -> {q} · {wk.get(q)} · vikipedi {len(wl)}")
+            kl = [o for o in wl if o.get("kira")]; wl = [o for o in wl if not o.get("kira")]
+            print(f"ESLEME {kod} {t} -> {q} · {wk.get(q)} · vikipedi {len(wl)} · kiralıkta {len(kl)}")
+            kira = []
             if len(wl) >= 15:
-                zen = zenginlestir([o["baslik"] for o in wl])
+                zen = zenginlestir([o["baslik"] for o in wl + kl])
+                for o in kl:                                               # kiralıktakiler: yalnız türetilmiş anahtar (ad tutulmaz)
+                    parca = turet(o["ad"]).split(); dob = (zen.get(o["baslik"] or "", {}).get("dob") or "")[:4] or None
+                    kira.append(anahtar({"ad": " ".join(parca[:-1]) if len(parca) > 1 else "", "soyad": parca[-1], "dogum": dob}))
                 oyuncular = []
                 for o in wl:
                     z = zen.get(o["baslik"] or "", {})
@@ -514,7 +546,7 @@ def main():
             sehir = b.get("sehir") or "Şehir"
             kulup = {"id": KMQ.get((kod, q)) or f"y{len(kul) + 1:02d}", "km": (kod, q) in KMQ, "sira": sira[t], "tsdb": t,
                      "sehir": sehir, "kapasite": b.get("kap") or 0,
-                     "renk": [r[1] for r in renkler[:2]], "renkAd": [r[0] for r in renkler[:2]], "oyuncular": []}
+                     "renk": [r[1] for r in renkler[:2]], "renkAd": [r[0] for r in renkler[:2]], "oyuncular": [], **({"kira": kira} if kira else {})}
             for o in oyuncular:
                 ad = turet(o["ad"])
                 parca = ad.split()
