@@ -265,20 +265,26 @@ def trwiki_maclari(sezon):
 
 
 def wiki_matris(kod, sezon):
-    """en.wikipedia sezon maddesindeki sonuç matrisi (Module:Sports results): {(ev başlık, dep başlık): [a, b]}"""
+    """en.wikipedia sonuç matrisi: {(ev başlık, dep başlık): [a, b]}.
+    Matris ya sezon maddesinde (Module:Sports results) ya da "<sezon> <lig> table" şablonunda (Module:Sports table, match_ alanları) durur."""
     L = LIGLER[kod]
-    w = wikitext("en.wikipedia.org", f"{sezon[:4]}–{sezon[-2:]} {L['wiki']}")
-    out, ad = {}, {}
-    for _, govde in sablonlar(w, ["#invoke:sports results", "#invoke:Sports results"]):
-        a = sablon_alanlari(govde)
-        for k, v in a.items():
-            if k.startswith("name_"):
-                ad[k[5:].upper()] = link_hedef(v) or v
-        for k, v in a.items():
-            if k.startswith("match_"):
-                p = k[6:].upper().split("_")
-                if len(p) == 2 and p[0] in ad and p[1] in ad and skor(v):
-                    out[(ad[p[0]], ad[p[1]])] = skor(v)
+    kisa = f"{sezon[:4]}–{sezon[-2:]}"
+    out = {}
+    for baslik in [f"{kisa} {L['wiki']}", f"Template:{kisa} {L['wiki']} table"]:
+        w = wikitext("en.wikipedia.org", baslik)
+        if not w:
+            continue
+        for _, govde in sablonlar(w, ["#invoke:sports results", "#invoke:sports table"]):
+            a = sablon_alanlari(govde)
+            ad = {}
+            for k, v in a.items():
+                if k.startswith("name_"):
+                    ad[k[5:].upper()] = link_hedef(v) or v
+            for k, v in a.items():
+                if k.startswith("match_"):
+                    p = k[6:].upper().split("_")
+                    if len(p) == 2 and p[0] in ad and p[1] in ad and skor(v):
+                        out[(ad[p[0]], ad[p[1]])] = skor(v)
     return out
 
 
