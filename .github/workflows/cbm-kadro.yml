@@ -1,0 +1,27 @@
+name: CBM türetilmiş kadrolar
+# Champion Battle Manager için gerçek kadrolardan TÜRETİLMİŞ (Lukaku → Lakaka) dünya verisi.
+# Gerçek isimler depoya yazılmaz; yalnız veri/cbm/v1/dunya.json (türetilmiş) güncellenir.
+on:
+  schedule:
+    - cron: "41 4 * * 1"     # her pazartesi (transferler haftalık yansısın)
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: cbm-kadro
+  cancel-in-progress: false
+jobs:
+  kadro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Türet
+        run: python3 araclar/kadro_turet.py
+      - name: Değiştiyse kaydet
+        run: |
+          if [ -n "$(git status --porcelain veri/cbm)" ]; then
+            git config user.name "Mr. Anduv! veri"; git config user.email "actions@users.noreply.github.com"
+            git add veri/cbm && git commit -qm "CBM türetilmiş kadrolar güncellendi"
+            for i in 1 2 3; do git pull -q --rebase origin main && git push -q origin main && break; sleep 5; done
+          fi
