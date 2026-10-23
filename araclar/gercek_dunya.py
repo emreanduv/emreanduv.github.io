@@ -37,6 +37,9 @@ def sezon_adi(simdi):
 
 
 _son = [0.0]
+_istatistik = {"istek": 0, "429": 0, "hata": 0}
+BASLA = time.time()
+SURE = 18 * 60  # iş en fazla bu kadar sürsün; kalan ligler bir sonraki çalışmaya kalır
 
 
 def getir(yol):
@@ -45,6 +48,7 @@ def getir(yol):
         time.sleep(bekle)
     for deneme in range(4):
         _son[0] = time.time()
+        _istatistik["istek"] += 1
         try:
             req = urllib.request.Request(API + yol, headers={"User-Agent": "MrAnduv-ChampionBattleManager/1.0 (+https://emreanduv.github.io)"})
             with urllib.request.urlopen(req, timeout=30) as r:
@@ -52,11 +56,14 @@ def getir(yol):
             return json.loads(metin) if metin.strip() else {}
         except urllib.error.HTTPError as e:
             if e.code == 429:
-                time.sleep(65)
+                _istatistik["429"] += 1
+                time.sleep(30)
                 continue
-            print(f"  ! {yol}: HTTP {e.code}", file=sys.stderr)
+            _istatistik["hata"] += 1
+            print(f"::warning::{yol}: HTTP {e.code}")
         except Exception as e:  # ağ hatası
-            print(f"  ! {yol}: {e}", file=sys.stderr)
+            _istatistik["hata"] += 1
+            print(f"::warning::{yol}: {e}")
         time.sleep(5 * (deneme + 1))
     return None
 
@@ -155,13 +162,17 @@ def main():
         else:
             tam_lig = tam
         maclar = kayit["maclar"]
+        if time.time() - BASLA > SURE:
+            print(f"::notice::{lig['ad']}: süre doldu, sonraki çalışmaya kaldı")
+            continue
+        gecen = getir(f"eventspastleague.php?id={lig['id']}") or {}
+        gelen = getir(f"eventsnextleague.php?id={lig['id']}") or {}
+        hg = tamsayi(((gecen.get("events") or [{}])[0]).get("intRound")) or 1
+        hs = tamsayi(((gelen.get("events") or [{}])[0]).get("intRound")) or hg + 1
         if tam_lig:
-            haftalar = range(1, lig["hafta"] + 1)
+            eksik = [h for h in range(1, min(lig["hafta"], hs + 1) + 1)]
+            haftalar = eksik
         else:
-            gecen = getir(f"eventspastleague.php?id={lig['id']}") or {}
-            gelen = getir(f"eventsnextleague.php?id={lig['id']}") or {}
-            hg = tamsayi(((gecen.get("events") or [{}])[0]).get("intRound")) or 1
-            hs = tamsayi(((gelen.get("events") or [{}])[0]).get("intRound")) or hg + 1
             haftalar = sorted({h for h in (hg - 1, hg, hs, hs + 1) if 1 <= h <= lig["hafta"]})
         alinan = 0
         for h in haftalar:
@@ -172,7 +183,7 @@ def main():
                 maclar[m["id"]] = m
             alinan += len(liste)
         hepsi = list(maclar.values())
-        print(f"{lig['ad']}: {len(list(haftalar))} hafta istendi, {alinan} maç geldi, toplam {len(hepsi)}")
+        print(f"::notice::{lig['ad']}: hafta {hg}/{hs}, {len(list(haftalar))} hafta istendi, {alinan} maç geldi, toplam {len(hepsi)} · istek {_istatistik['istek']}, 429 {_istatistik['429']}, hata {_istatistik['hata']}")
         if not hepsi:
             continue
         degisti |= yaz(yol, kayit)
