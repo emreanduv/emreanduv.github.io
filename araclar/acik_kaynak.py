@@ -112,14 +112,15 @@ def sablon_alanlari(govde):
 
 
 def sablonlar(metin, adlar):
-    """metindeki {{ad ...}} şablonlarını (iç içe ayraçlara dikkat ederek) döndürür: (başlangıç, gövde)"""
-    low = metin.lower()
+    """metindeki {{ad ...}} şablonlarını (iç içe ayraçlara dikkat ederek) döndürür: (başlangıç, gövde).
+    Not: metin.lower() kullanılmaz; Türkçe 'İ'.lower() iki karakter olur ve konumları kaydırır."""
+    gor = set()
     for ad in adlar:
-        bas = 0
-        while True:
-            i = low.find("{{" + ad.lower(), bas)
-            if i < 0:
-                break
+        for mt in re.finditer(r"\{\{\s*" + re.escape(ad).replace("\\ ", r"[ _]"), metin, re.I):
+            i = mt.start()
+            if i in gor:
+                continue
+            gor.add(i)
             d, j = 0, i
             while j < len(metin):
                 if metin.startswith("{{", j):
@@ -131,7 +132,6 @@ def sablonlar(metin, adlar):
                     continue
                 j += 1
             yield i, metin[i + 2:j - 2]
-            bas = j
 
 
 def skor(s):
@@ -191,14 +191,22 @@ def qid_baslik(basliklar, site):
     return out
 
 
-def qid_ad(ad, ulkeQ):
+def sade(ad):
+    import unicodedata
+    a = unicodedata.normalize("NFKD", ad or "").encode("ascii", "ignore").decode().lower().replace(".", "")
+    a = re.sub(r"\(.*?\)", " ", a)
+    a = re.sub(r"\b(fc|cf|afc|sc|ac|as|ss|ssc|us|fk|sk|ogc|rc|stade|olympique|1\.|vfb|vfl|tsg|rcd|cd|ud|ca|sd|club|football|de|calcio|association|sportive)\b", " ", a)
+    return " ".join(re.sub(r"[^a-z0-9 ]", " ", a).split())
+
+
+def qid_ad(ad, ulkeQ, dil="en"):
     """Kulüp adı (ör. 'Manchester City FC') → QID: Wikidata araması + futbol kulübü ve ülke süzgeci."""
     o = onbellek(); k = f"ad:{ulkeQ}:{ad}"
     if k in o:
         return o[k]
     ids = []
-    for arama in [ad, re.sub(r"\b(FC|CF|AFC|SC|AC|SS|SSC|US|1\. FC|FK|SK)\b\.?", "", ad).strip()]:
-        d = http("https://www.wikidata.org/w/api.php?" + urllib.parse.urlencode({"action": "wbsearchentities", "search": arama, "language": "en", "type": "item", "limit": 10, "format": "json"}))
+    for arama, lg in [(ad, "en"), (re.sub(r"\b(FC|CF|AFC|SC|AC|SS|SSC|US|1\. FC|FK|SK)\b\.?", "", ad).strip(), "en"), (ad, dil)]:
+        d = http("https://www.wikidata.org/w/api.php?" + urllib.parse.urlencode({"action": "wbsearchentities", "search": arama, "language": lg, "uselang": lg, "type": "item", "limit": 10, "format": "json"}))
         ids += [x["id"] for x in (d or {}).get("search", []) if x["id"] not in ids]
     q = None
     if ids:
@@ -272,13 +280,23 @@ def lig_maclari(kod, sezon):
     if L.get("kaynak") == "trwiki":
         q = qid_baslik(adlar, "trwiki")
     else:
-        q = {a: qid_ad(a, L["ulkeQ"]) for a in adlar}
+        q = {a: qid_ad(a, L["ulkeQ"], kod) for a in adlar}
     # openfootball sonuçları gönüllülerce elle güncellenir; eksik skorları Vikipedi sonuç matrisinden tamamla
     if L.get("fj"):
         try:
             mat = wiki_matris(kod, sezon)
             if mat:
                 mq = qid_baslik(sorted({x for k in mat for x in k}), "enwiki")
+                # adı Wikidata aramasında bulunamayan kulüpleri, sonuç matrisindeki madde başlıklarıyla eşle
+                hedef = {sade(t): qq for t, qq in mq.items() if qq}
+                bilinen = {v for v in q.values() if v}
+                for a in adlar:
+                    if q.get(a) and q[a] in set(mq.values()):
+                        continue
+                    sa = sade(a)
+                    aday = [qq for t, qq in hedef.items() if qq not in bilinen and t and sa and (t == sa or t in sa or sa in t)]
+                    if len(set(aday)) == 1:
+                        q[a] = aday[0]; bilinen.add(aday[0]); onbellek()[f"ad:{L['ulkeQ']}:{a}"] = aday[0]
                 skor_q = {(mq.get(a), mq.get(b)): s for (a, b), s in mat.items() if mq.get(a) and mq.get(b)}
                 for m in ham:
                     x = skor_q.get((q.get(m["ev"]), q.get(m["dep"])))
