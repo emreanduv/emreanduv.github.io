@@ -46,6 +46,9 @@ KM = {
            "Lorient": "lts", "Paris FC": "pgm"},
 }
 ELLE = {}  # gerekirse: "TheSportsDB adı": "Wikidata Q kimliği"
+ARAMA = {"Amed": "Amed Sportif Faaliyetler", "Çorum": "Çorum FK", "Göztepe": "Göztepe S.K.", "Valencia": "Valencia CF", "Roma": "AS Roma",
+         "Stuttgart": "VfB Stuttgart", "Köln": "1. FC Köln", "Lorient": "FC Lorient", "Brest": "Stade Brestois 29", "Nice": "OGC Nice",
+         "Freiburg": "SC Freiburg", "Torino": "Torino FC", "Lens": "RC Lens"}
 RENK = {"red": ("Kırmızı", "#C8102E"), "white": ("Beyaz", "#F2F2F2"), "blue": ("Mavi", "#1F5FB4"), "black": ("Siyah", "#141414"),
         "yellow": ("Sarı", "#F5C400"), "green": ("Yeşil", "#0B7A3B"), "navy blue": ("Lacivert", "#0B2A6B"), "dark blue": ("Lacivert", "#0B2A6B"),
         "sky blue": ("Gök Mavi", "#6CADDF"), "light blue": ("Gök Mavi", "#6CADDF"), "claret": ("Bordo", "#7A1F3D"), "maroon": ("Bordo", "#7A1F3D"),
@@ -77,7 +80,7 @@ def kulup_bul(ad, ulke):
     if ad in ELLE:
         return ELLE[ad]
     ids = []
-    for arama in (ad, ad + " FK", ad + " S.K.", ad + " F.C.", ad + "spor"):
+    for arama in ([ARAMA[ad]] if ad in ARAMA else []) + [ad, ad + " FK", ad + " S.K.", ad + " F.C.", ad + "spor"]:
         d = http("https://www.wikidata.org/w/api.php?" + urllib.parse.urlencode({"action": "wbsearchentities", "search": arama, "language": "en", "type": "item", "limit": 10, "format": "json"}))
         ids += [x["id"] for x in (d or {}).get("search", []) if x["id"] not in ids]
         if len(ids) >= 10:
@@ -205,11 +208,16 @@ def wiki_kadro(baslik):
     time.sleep(0.4)
     metin = ((d or {}).get("parse", {}).get("wikitext", {}) or {}).get("*", "")
     if not metin:
-        return []
+        return [], []
+    renk = []
+    for k in ("body1", "shorts1", "socks1"):
+        m = re.search(r"\|\s*" + k + r"\s*=\s*#?([0-9A-Fa-f]{6})", metin)
+        if m:
+            renk.append("#" + m.group(1).upper())
     low = metin.lower()
     bas = low.find("{{fs start"); son = low.find("{{fs end", bas) if bas != -1 else -1
     if bas == -1 or son == -1:
-        return []
+        return [], renk
     blok = metin[bas:son]
     oy = []
     for _, g in sablonlar(blok, ["fs player", "football squad player"]):
@@ -222,7 +230,18 @@ def wiki_kadro(baslik):
         if not gorunen:
             continue
         oy.append({"baslik": baslik_o if m else None, "ad": gorunen, "no": p.get("no", "").strip(), "nat": p.get("nat", "").strip().upper(), "pos": p.get("pos", "").strip().upper()})
-    return oy
+    return oy, renk
+
+
+def renk_adi(hx):
+    r, g, b = int(hx[1:3], 16), int(hx[3:5], 16), int(hx[5:7], 16)
+    en, ed = None, 1e9
+    for ad, h in {"Kırmızı": "#C8102E", "Beyaz": "#F2F2F2", "Mavi": "#1F5FB4", "Siyah": "#141414", "Sarı": "#F5C400", "Yeşil": "#0B7A3B", "Lacivert": "#0B2A6B",
+                  "Gök Mavi": "#6CADDF", "Bordo": "#7A1F3D", "Turuncu": "#E35205", "Mor": "#5B2A86", "Gri": "#8A8D91"}.items():
+        d = (r - int(h[1:3], 16)) ** 2 + (g - int(h[3:5], 16)) ** 2 + (b - int(h[5:7], 16)) ** 2
+        if d < ed:
+            ed, en = d, ad
+    return en
 
 
 def zenginlestir(basliklar):
@@ -294,7 +313,7 @@ def main():
             if t not in qmap:
                 continue
             q = qmap[t]; b = bilgi.get(q, {})
-            wl = wiki_kadro(wk[q]) if q in wk else []
+            wl, wrenk = wiki_kadro(wk[q]) if q in wk else ([], [])
             print(f"ESLEME {kod} {t} -> {q} · {wk.get(q)} · vikipedi {len(wl)}")
             if len(wl) >= 15:
                 zen = zenginlestir([o["baslik"] for o in wl])
@@ -310,8 +329,14 @@ def main():
                 oyuncular.sort(key=lambda o: (o["start"], o["n"]), reverse=True)
                 oyuncular = oyuncular[:30]
             renkler = [RENK[r] for r in b.get("renk", []) if r in RENK]
+            if len(renkler) < 2 and wrenk:
+                renkler = []
+                for h in wrenk:
+                    a = renk_adi(h)
+                    if a not in [x[0] for x in renkler]:
+                        renkler.append((a, h))
             sehir = b.get("sehir") or t
-            kulup = {"id": KM[kod].get(t) or ("y" + kisa_ad(sozcuk(t, t), set()).lower()), "km": t in KM[kod], "sira": sira[t],
+            kulup = {"id": KM[kod].get(t) or f"y{len(kul) + 1:02d}", "km": t in KM[kod], "sira": sira[t],
                      "sehir": sehir, "kapasite": b.get("kap") or 0,
                      "renk": [r[1] for r in renkler[:2]], "renkAd": [r[0] for r in renkler[:2]], "oyuncular": []}
             for o in oyuncular:
