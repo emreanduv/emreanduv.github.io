@@ -272,6 +272,16 @@ def zenginlestir(basliklar):
 GENEL = {"GK": "KL", "DF": "D", "MF": "MOS", "FW": "SF"}
 
 
+def fnv(s):
+    """Oyundaki rng.js hash() ile aynı (FNV-1a, UTF-16): gerçek dünya maçlarını kulübe bağlamak için; ad saklanmaz."""
+    h = 2166136261
+    b = s.encode("utf-16-le")
+    for i in range(0, len(b), 2):
+        h ^= b[i] | (b[i + 1] << 8)
+        h = (h * 16777619) & 0xFFFFFFFF
+    return h
+
+
 def kisa_ad(ad, kullanilan):
     harf = [w[0] for w in ad.replace("-", " ").split() if w[:1].isalpha()]
     k = ("".join(harf) + "XXX")[:3].upper()
@@ -336,7 +346,7 @@ def main():
                     if a not in [x[0] for x in renkler]:
                         renkler.append((a, h))
             sehir = b.get("sehir") or t
-            kulup = {"id": KM[kod].get(t) or f"y{len(kul) + 1:02d}", "km": t in KM[kod], "sira": sira[t],
+            kulup = {"id": KM[kod].get(t) or f"y{len(kul) + 1:02d}", "km": t in KM[kod], "sira": sira[t], "tsdb": fnv(t),
                      "sehir": sehir, "kapasite": b.get("kap") or 0,
                      "renk": [r[1] for r in renkler[:2]], "renkAd": [r[0] for r in renkler[:2]], "oyuncular": []}
             for o in oyuncular:
