@@ -385,6 +385,20 @@ def main():
         sira = {t: i + 1 for i, t in enumerate(takimlar)}
         bilgi = kulup_bilgi(list(qmap.values()))
         wk = enwiki(list(qmap.values()))
+        # futbol şubesinin kendi İngilizce maddesi yoksa (ör. madde çatı kulübün kaydında) çatı kulübe bak
+        eksik = [q for q in qmap.values() if q not in wk]
+        if eksik:
+            vals = " ".join("wd:" + q for q in eksik)
+            for x in sparql(f"""SELECT ?c ?u ?a WHERE {{ VALUES ?c {{ {vals} }} ?c (wdt:P361|^wdt:P527|wdt:P749|wdt:P127) ?u .
+                               ?a schema:about ?u ; schema:isPartOf <https://en.wikipedia.org/> . }}"""):
+                c = x["c"]["value"].rsplit("/", 1)[1]; u = x["u"]["value"].rsplit("/", 1)[1]
+                if c not in wk:
+                    wk[c] = urllib.parse.unquote(x["a"]["value"].rsplit("/wiki/", 1)[1]).replace("_", " ")
+                    if not bilgi.get(c, {}).get("sehir"):
+                        ub = kulup_bilgi([u]).get(u, {})
+                        bc = bilgi.setdefault(c, {"sehir": None, "kap": 0, "renk": []})
+                        for alan in ("sehir", "kap", "renk"):
+                            if not bc.get(alan) and ub.get(alan): bc[alan] = ub[alan]
         oy = None
         kul = []
         kisalar = set()
