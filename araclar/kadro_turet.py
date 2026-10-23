@@ -118,11 +118,63 @@ def kulup_bilgi(qids):
     return out
 
 
-MEVKI = [("goalkeeper", "KL"), ("left-back", "SLB"), ("left back", "SLB"), ("right-back", "SĞB"), ("right back", "SĞB"), ("wing-back", "B"), ("full-back", "B"),
+MEVKI = [("goalkeeper", "KL"), ("left wing-back", "SLB"), ("right wing-back", "SĞB"), ("left wing back", "SLB"), ("right wing back", "SĞB"), ("central defender", "STP"), ("left wing", "SLK"), ("right wing", "SĞK"), ("left-back", "SLB"), ("left back", "SLB"), ("right-back", "SĞB"), ("right back", "SĞB"), ("wing-back", "B"), ("full-back", "B"),
          ("full back", "B"), ("centre-back", "STP"), ("center back", "STP"), ("sweeper", "STP"), ("defender", "D"), ("defensive midfielder", "DOS"),
          ("attacking midfielder", "OOS"), ("left midfielder", "SLO"), ("right midfielder", "SĞO"), ("central midfielder", "MOS"), ("midfielder", "MOS"),
          ("wing half", "MOS"), ("left winger", "SLK"), ("right winger", "SĞK"), ("winger", "K"), ("second striker", "SF"), ("centre-forward", "SF"),
          ("striker", "SF"), ("forward", "SF")]
+
+
+def mevkiler_coz(deger):
+    """Vikipedi bilgi kutusundaki 'position' değerinden sıralı mevki kodları (ilk: asıl mevki, kalanlar: yan mevkiler)."""
+    v = re.sub(r"<!--.*?-->", "", deger, flags=re.S)
+    v = re.sub(r"<ref[^>]*/>|<ref[^>]*>.*?</ref>", "", v, flags=re.S)
+    v = re.sub(r"\{\{\s*(efn|refn|sfn|citation needed|cn)[^{}]*\}\}", "", v, flags=re.I)
+    v = re.sub(r"\[\[(?:[^\]|]*\|)?([^\]]*)\]\]", r"\1", v)                     # [[hedef|görünen]] → görünen
+    v = re.sub(r"(?i)\b(hlist|flatlist|plainlist|unbulleted list|ubl|nowrap|small)\b", "", v)
+    v = re.sub(r"<br\s*/?>|[{}|;*/\n]|\band\b|\bor\b", ",", v, flags=re.I)
+    kodlar = []
+    for parca in v.split(","):
+        e = parca.strip().lower().replace("center", "centre")
+        if not e:
+            continue
+        k = mevki_coz([e])
+        if k and k not in kodlar:
+            kodlar.append(k)
+    return kodlar
+
+
+def bilgi_kutusu_mevki(basliklar):
+    """İngilizce Vikipedi oyuncu maddelerinin bilgi kutusundan mevkiler (yalnız olgu: hangi mevkilerde oynadığı)."""
+    out = {}
+    basliklar = sorted({b for b in basliklar if b})
+    for i in range(0, len(basliklar), 20):
+        parca = basliklar[i:i + 20]
+        d = http("https://en.wikipedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "prop": "revisions", "rvprop": "content", "rvslots": "main",
+                 "titles": "|".join(parca), "redirects": 1, "format": "json", "formatversion": 2}))
+        time.sleep(0.3)
+        q = (d or {}).get("query") or {}
+        geri = {}
+        for x in (q.get("normalized") or []) + (q.get("redirects") or []):
+            geri.setdefault(x["to"], []).append(x["from"])
+        for sayfa in q.get("pages") or []:
+            try:
+                metin = sayfa["revisions"][0]["slots"]["main"]["content"]
+            except (KeyError, IndexError, TypeError):
+                continue
+            m = re.search(r"\|\s*position\s*=\s*([^\n]*(?:\n(?!\s*\|)[^\n]*)*)", metin)
+            if not m:
+                continue
+            kodlar = mevkiler_coz(m.group(1))
+            if not kodlar:
+                continue
+            t = sayfa["title"]
+            adlar = [t] + geri.get(t, [])
+            for g in list(adlar):
+                adlar += geri.get(g, [])
+            for a in adlar:
+                out[a] = kodlar
+    return out
 
 
 def mevki_coz(etiketler):
@@ -145,7 +197,7 @@ def kadro(qids):
     for x in r:
         c = x["c"]["value"].rsplit("/", 1)[1]
         pid = x["p"]["value"].rsplit("/", 1)[1]
-        o = oy.setdefault((c, pid), {"ad": x["pLabel"]["value"], "start": x["start"]["value"][:10], "dob": x["dob"]["value"][:10], "n": int(x["n"]["value"]),
+        o = oy.setdefault((c, pid), {"qid": pid, "ad": x["pLabel"]["value"], "start": x["start"]["value"][:10], "dob": x["dob"]["value"][:10], "n": int(x["n"]["value"]),
                                     "boy": None, "pos": [], "ulke": None, "ev": None})
         if x.get("boy"):
             try:
@@ -433,7 +485,7 @@ def main():
                 oyuncular = []
                 for o in wl:
                     z = zen.get(o["baslik"] or "", {})
-                    oyuncular.append({"ad": o["ad"], "dob": z.get("dob"), "boy": z.get("boy"), "n": z.get("n", 3), "no": o["no"],
+                    oyuncular.append({"baslik": o["baslik"], "ad": o["ad"], "dob": z.get("dob"), "boy": z.get("boy"), "n": z.get("n", 3), "no": o["no"],
                                       "pos": z.get("pos", []), "genel": GENEL.get(o["pos"]), "ev": None, "ulke": FIFA.get(o["nat"])})
             else:
                 if oy is None:
@@ -441,6 +493,17 @@ def main():
                 oyuncular = [o for (c, _), o in oy.items() if c == q]
                 oyuncular.sort(key=lambda o: (o["start"], o["n"]), reverse=True)
                 oyuncular = oyuncular[:30]
+            # mevki: Vikipedi bilgi kutusu (özel mevki + yan mevkiler) > Wikidata (çoğu zaman yalnız "defans/orta saha/forvet")
+            eksik_b = [o["qid"] for o in oyuncular if o.get("qid") and not o.get("baslik")]
+            if eksik_b:
+                tb = enwiki(eksik_b)
+                for o in oyuncular:
+                    if o.get("qid") in tb:
+                        o["baslik"] = tb[o["qid"]]
+            bk = bilgi_kutusu_mevki([o.get("baslik") for o in oyuncular])
+            for o in oyuncular:
+                o["bk"] = bk.get(o.get("baslik") or "", [])
+            print(f"MEVKI {kod} {t}: bilgi kutusu {sum(1 for o in oyuncular if o['bk'])}/{len(oyuncular)}")
             renkler = [RENK[r] for r in b.get("renk", []) if r in RENK]
             if len(renkler) < 2 and wrenk:
                 renkler = []
@@ -456,12 +519,17 @@ def main():
                 ad = turet(o["ad"])
                 parca = ad.split()
                 mev = mevki_coz(o["pos"])
+                yan = []
+                if o.get("bk") and (not o.get("genel") or (o["genel"] == "KL") == (o["bk"][0] == "KL")):
+                    mev, yan = o["bk"][0], [k for k in o["bk"][1:] if k != "KL"][:3]
                 if o.get("genel") and (not mev or (o["genel"] == "KL") != (mev == "KL")):
-                    mev = o["genel"]
+                    mev, yan = o["genel"], []
                 no = o.get("no") or ""
                 ty = {"ad": " ".join(parca[:-1]) if len(parca) > 1 else "", "soyad": parca[-1],
                       "dogum": (o["dob"] or "")[:4] or None, "uyruk": o["ev"] or o["ulke"] or "", "mevki": mev,
                       "boy": o["boy"], "un": o["n"], "no": int(no) if no.isdigit() else None}
+                if yan:
+                    ty["yan"] = yan
                 ty["k"] = anahtar(ty)
                 kulup["oyuncular"].append(ty)
             kul.append(kulup)
