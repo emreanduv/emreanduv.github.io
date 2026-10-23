@@ -168,9 +168,14 @@ def enwiki(qids):
     return {x["c"]["value"].rsplit("/", 1)[1]: urllib.parse.unquote(x["a"]["value"].rsplit("/wiki/", 1)[1]).replace("_", " ") for x in r}
 
 
+def kucuk(metin):
+    """Uzunluğu koruyan küçük harf: Türkçe 'İ'.lower() iki karakter olur, konumları kaydırmasın."""
+    return "".join(c.lower() if len(c.lower()) == 1 else c for c in metin)
+
+
 def sablonlar(metin, adlar):
     """{{ad|...}} şablonlarını iç içe süslü parantezlere dikkat ederek bul."""
-    out, i, low = [], 0, metin.lower()
+    out, i, low = [], 0, kucuk(metin)
     while True:
         j = -1
         for a in adlar:
@@ -216,7 +221,7 @@ def wiki_kadro(baslik):
         m = re.search(r"\|\s*" + k + r"\s*=\s*#?([0-9A-Fa-f]{6})", metin)
         if m:
             renk.append("#" + m.group(1).upper())
-    low = metin.lower()
+    low = kucuk(metin)
     bas = low.find("{{fs start"); son = low.find("{{fs end", bas) if bas != -1 else -1
     if bas == -1 or son == -1:
         return [], renk
