@@ -19,6 +19,7 @@ import re
 KOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "veri")
 GD = os.path.join(KOK, "gercek-dunya", "v1", "ligler.json")
 CIKTI = os.path.join(KOK, "cbm", "v1", "dunya.json")
+TRANSFER = os.path.join(KOK, "cbm", "v1", "transferler.json")
 UA = {"User-Agent": "MrAnduv-ChampionBattleManager/1.0 (+https://emreanduv.github.io)"}
 
 LIG = {  # kod: (oyundaki ad, ülke, wikidata ülke)
@@ -282,6 +283,42 @@ def fnv(s):
     return h
 
 
+def anahtar(o):
+    """Oyuncuyu haftalar boyunca izlemek için kararlı kimlik: yalnız zaten yayımlanan türetilmiş ad + doğum tarihinden."""
+    return fnv(f"{o.get('ad', '')} {o.get('soyad', '')}|{o.get('dogum') or ''}")
+
+
+def transfer_farki(eski, yeni):
+    """İki haftalık türetilmiş kadro arasındaki gerçek transferler. Kadrosu çok değişen (ayrıştırma değişmiş) kulüpler atlanır."""
+    def dizin(d):
+        k2c, kul = {}, {}
+        for l in d.get("ligler", {}).values():
+            for c in l["kulupler"]:
+                ks = set()
+                for o in c["oyuncular"]:
+                    k = o.get("k") or anahtar(o)
+                    k2c[k] = (c.get("tsdb"), o); ks.add(k)
+                kul[c.get("tsdb")] = ks
+        return k2c, kul
+    ek, ekul = dizin(eski)
+    yk, ykul = dizin(yeni)
+    guvenli = {t for t in ykul if t in ekul and len(ykul[t]) >= 15 and len(ekul[t]) >= 15 and len(ykul[t] ^ ekul[t]) <= 14}
+    bugun = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+    olay = []
+    alan = lambda o: {x: o.get(x) for x in ("ad", "soyad", "dogum", "uyruk", "mevki", "boy", "un")}
+    for k, (yt, o) in yk.items():
+        if k in ek:
+            et = ek[k][0]
+            if et != yt and (et in guvenli or yt in guvenli):
+                olay.append({"t": bugun, "k": k, "e": et, "y": yt, "o": alan(o)})
+        elif yt in guvenli and not ((o.get("un") or 0) < 0.25 and (o.get("dogum") or "0000") > str(int(bugun[:4]) - 21)):
+            olay.append({"t": bugun, "k": k, "e": None, "y": yt, "o": alan(o)})       # bizim liglerin dışından geldi (altyapıdan çıkanlar hariç)
+    for k, (et, o) in ek.items():
+        if k not in yk and et in guvenli:
+            olay.append({"t": bugun, "k": k, "e": et, "y": None, "o": alan(o)})       # bizim liglerin dışına gitti
+    return olay
+
+
 def kisa_ad(ad, kullanilan):
     harf = [w[0] for w in ad.replace("-", " ").split() if w[:1].isalpha()]
     k = ("".join(harf) + "XXX")[:3].upper()
@@ -356,9 +393,11 @@ def main():
                 if o.get("genel") and (not mev or (o["genel"] == "KL") != (mev == "KL")):
                     mev = o["genel"]
                 no = o.get("no") or ""
-                kulup["oyuncular"].append({"ad": " ".join(parca[:-1]) if len(parca) > 1 else "", "soyad": parca[-1],
-                                           "dogum": o["dob"], "uyruk": o["ev"] or o["ulke"] or "", "mevki": mev,
-                                           "boy": o["boy"], "un": o["n"], "no": int(no) if no.isdigit() else None})
+                ty = {"ad": " ".join(parca[:-1]) if len(parca) > 1 else "", "soyad": parca[-1],
+                      "dogum": o["dob"], "uyruk": o["ev"] or o["ulke"] or "", "mevki": mev,
+                      "boy": o["boy"], "un": o["n"], "no": int(no) if no.isdigit() else None}
+                ty["k"] = anahtar(ty)
+                kulup["oyuncular"].append(ty)
             kul.append(kulup)
             print(f"{kod} {t}: {len(kulup['oyuncular'])} oyuncu")
         cikti["ligler"][kod] = {"ad": ladi, "ulke": ulkeAd, "kulupler": kul}
@@ -372,6 +411,23 @@ def main():
     toplam = sum(len(k["oyuncular"]) for l in cikti["ligler"].values() for k in l["kulupler"])
     if toplam < 1500:
         print(f"::error::Yalnız {toplam} oyuncu geldi; eski veri korunuyor."); sys.exit(1)
+    if eski.get("ligler"):
+        try:
+            olay = transfer_farki(eski, cikti)
+        except Exception as e:
+            print(f"::warning::transfer farkı hesaplanamadı: {e}"); olay = []
+        try:
+            tv = json.load(open(TRANSFER, encoding="utf-8"))
+        except Exception:
+            tv = {"surum": 1, "not": "Türetilmiş transfer kaydı: gerçek isim yoktur.", "olaylar": []}
+        sinir = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=420)).strftime("%Y-%m-%d")
+        tv["olaylar"] = [x for x in tv["olaylar"] if x["t"] >= sinir] + olay
+        tv["olaylar"] = tv["olaylar"][-5000:]
+        if olay or not os.path.exists(TRANSFER):
+            tv["guncel"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            os.makedirs(os.path.dirname(TRANSFER), exist_ok=True)
+            json.dump(tv, open(TRANSFER, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+        print(f"::notice::Transfer olayı: {len(olay)}")
     eski_govde = {k: v for k, v in eski.items() if k != "guncel"}
     if eski_govde != cikti:
         cikti["guncel"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
