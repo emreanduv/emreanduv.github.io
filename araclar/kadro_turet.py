@@ -6,7 +6,7 @@ açık kaynaktan (Wikidata, CC0) okur; Winning Eleven usulü TÜRETİLMİŞ bir 
   - oyuncu adları çağrıştıran ama farklı (Lukaku → Lakaka), kulüp adları şehir + renk (Londra Kırmızı-Beyaz)
   - yaş, uyruk, mevki, boy ve "ünlülük" (Wikipedia dil sayısı) gibi olgular; yetenek puanlarını oyun kendisi hesaplar
 Gerçek isimler depoya YAZILMAZ; çıktıda yalnız türetilmiş isimler bulunur.
-Kulüp listesi: veri/gercek-dunya/v1/ligler.json (bu sezonun takımları).
+Kulüp listesi: açık kaynak fikstürden (acik_kaynak.py: openfootball kamu malı, Vikipedi), kulüp kimliği Wikidata.
 Çıktı: veri/cbm/v1/dunya.json
 Yalnız Python standart kitaplığı."""
 import json, os, sys, time, math, urllib.request, urllib.parse, datetime
@@ -14,6 +14,7 @@ import json, os, sys, time, math, urllib.request, urllib.parse, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from isim_turet import turet, sozcuk
 from fifa_kod import FIFA
+from acik_kaynak import lig_maclari, anahtar as kulup_anahtari, onbellek, onbellek_yaz
 import re
 
 KOK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "veri")
@@ -26,7 +27,7 @@ LIG = {  # kod: (oyundaki ad, ülke, wikidata ülke)
     "tr": ("Anadolu Ligi", "Türkiye", "Q43"), "en": ("Ada Ligi", "İngiltere", "Q145"), "es": ("İber Ligi", "İspanya", "Q29"),
     "it": ("Çizme Ligi", "İtalya", "Q38"), "de": ("Ren Ligi", "Almanya", "Q183"), "fr": ("Galya Ligi", "Fransa", "Q142"),
 }
-# Kaptan Mecit'ten bilinen kulüpler (aynı kod, aynı ad ve renk korunur). Anahtar: TheSportsDB takım adı.
+# Kaptan Mecit'ten bilinen kulüpler (aynı kod, aynı ad ve renk korunur). Anahtar: eski kulüp listesindeki ad; Wikidata kimliğine çevrilip önbelleğe alınır.
 KM = {
     "tr": {"Galatasaray": "gs", "Fenerbahçe": "fb", "Beşiktaş": "bjk", "Trabzonspor": "ts", "İstanbul Başakşehir": "ibfk", "Konyaspor": "kon",
            "Alanyaspor": "aly", "Kasımpaşa": "ksp", "Gaziantep": "gfk", "Samsunspor": "sam", "Rizespor": "riz", "Göztepe": "goz", "Eyüpspor": "eyp"},
@@ -46,7 +47,7 @@ KM = {
            "Rennes": "rks", "Strasbourg": "smb", "Brest": "bkb", "Toulouse": "tmr", "Auxerre": "abm", "Angers": "asb", "Le Havre": "hgl",
            "Lorient": "lts", "Paris FC": "pgm"},
 }
-ELLE = {}  # gerekirse: "TheSportsDB adı": "Wikidata Q kimliği"
+ELLE = {}  # gerekirse: "kulüp adı": "Wikidata Q kimliği"
 ARAMA = {"Amed": "Amed Sportif Faaliyetler", "Çorum": "Çorum FK", "Göztepe": "Göztepe S.K.", "Valencia": "Valencia CF", "Roma": "AS Roma",
          "Stuttgart": "VfB Stuttgart", "Köln": "1. FC Köln", "Lorient": "FC Lorient", "Brest": "Stade Brestois 29", "Nice": "OGC Nice",
          "Freiburg": "SC Freiburg", "Torino": "Torino FC", "Lens": "RC Lens"}
@@ -285,7 +286,7 @@ def fnv(s):
 
 def anahtar(o):
     """Oyuncuyu haftalar boyunca izlemek için kararlı kimlik: yalnız zaten yayımlanan türetilmiş ad + doğum tarihinden."""
-    return fnv(f"{o.get('ad', '')} {o.get('soyad', '')}|{o.get('dogum') or ''}")
+    return fnv(f"{o.get('ad', '')} {o.get('soyad', '')}|{(o.get('dogum') or '')[:4]}")
 
 
 def transfer_farki(eski, yeni):
@@ -296,7 +297,7 @@ def transfer_farki(eski, yeni):
             for c in l["kulupler"]:
                 ks = set()
                 for o in c["oyuncular"]:
-                    k = o.get("k") or anahtar(o)
+                    k = anahtar(o)
                     k2c[k] = (c.get("tsdb"), o); ks.add(k)
                 kul[c.get("tsdb")] = ks
         return k2c, kul
@@ -329,28 +330,54 @@ def kisa_ad(ad, kullanilan):
     return k
 
 
+def km_qid():
+    """Kaptan Mecit kulüplerinin Wikidata kimlikleri (önbellekli): QID → KM kodu"""
+    o, out = onbellek(), {}
+    for kod, (ladi, ulkeAd, ulkeQ) in LIG.items():
+        for ad, km in KM[kod].items():
+            k = f"km:{kod}:{ad}"
+            if k not in o:
+                q = kulup_bul(ad, ulkeQ)
+                if q: o[k] = q
+            if o.get(k): out[(kod, o[k])] = km
+    onbellek_yaz()
+    return out
+
+
+def tablo_sira(maclar):
+    P = {}
+    for m in maclar:
+        for k in (m["evk"], m["depk"]): P.setdefault(k, [0, 0, 0])
+        if m["s"]:
+            a, b = m["s"]
+            P[m["evk"]][1] += a - b; P[m["depk"]][1] += b - a; P[m["evk"]][2] += a; P[m["depk"]][2] += b
+            if a > b: P[m["evk"]][0] += 3
+            elif b > a: P[m["depk"]][0] += 3
+            else: P[m["evk"]][0] += 1; P[m["depk"]][0] += 1
+    return [k for k, _ in sorted(P.items(), key=lambda x: (-x[1][0], -x[1][1], -x[1][2], x[0]))]
+
+
 def main():
-    gd = json.load(open(GD, encoding="utf-8"))
     eski = {}
     try:
         eski = json.load(open(CIKTI, encoding="utf-8"))
     except Exception:
         pass
-    sezon = gd["ligler"][0]["sezon"]
-    cikti = {"surum": 1, "sezon": sezon, "kaynak": "Türetilmiş veri · olgular: Wikidata (CC0) · kulüp listesi: TheSportsDB",
+    from acik_kaynak import sezon_adi
+    sezon = sezon_adi().replace("-20", "-")
+    KMQ = km_qid()
+    cikti = {"surum": 2, "sezon": sezon, "kaynak": "Türetilmiş veri · olgular: Wikidata (CC0), Vikipedi (CC BY-SA) · fikstür: openfootball (kamu malı)",
              "not": "Oyuncu ve kulüp adları kurmacadır; gerçek kişi ve kulüplerle bağlantısı yoktur.", "ligler": {}}
     for kod, (ladi, ulkeAd, ulkeQ) in LIG.items():
-        L = next((l for l in gd["ligler"] if l["kod"] == kod), None)
-        if not L:
-            print(f"::warning::{kod}: takım listesi yok"); continue
-        takimlar = [r["takim"] for r in L["tablo"]]
+        maclar, adq = lig_maclari(kod, sezon_adi())
+        if not maclar:
+            print(f"::warning::{kod}: fikstür okunamadı"); continue
+        sira_k = tablo_sira(maclar)
+        qmap = {}                                                          # anahtar → QID (gerçek ad tutulmaz)
+        for ad, q in adq.items():
+            if q: qmap[kulup_anahtari(q)] = q
+        takimlar = [k for k in sira_k if k in qmap]
         sira = {t: i + 1 for i, t in enumerate(takimlar)}
-        qmap = {}
-        for t in takimlar:
-            q = kulup_bul(t, ulkeQ)
-            if not q:
-                print(f"::warning::{kod}: {t} bulunamadı"); continue
-            qmap[t] = q
         bilgi = kulup_bilgi(list(qmap.values()))
         wk = enwiki(list(qmap.values()))
         oy = None
@@ -382,8 +409,8 @@ def main():
                     a = renk_adi(h)
                     if a not in [x[0] for x in renkler]:
                         renkler.append((a, h))
-            sehir = b.get("sehir") or t
-            kulup = {"id": KM[kod].get(t) or f"y{len(kul) + 1:02d}", "km": t in KM[kod], "sira": sira[t], "tsdb": fnv(t),
+            sehir = b.get("sehir") or "Şehir"
+            kulup = {"id": KMQ.get((kod, q)) or f"y{len(kul) + 1:02d}", "km": (kod, q) in KMQ, "sira": sira[t], "tsdb": t,
                      "sehir": sehir, "kapasite": b.get("kap") or 0,
                      "renk": [r[1] for r in renkler[:2]], "renkAd": [r[0] for r in renkler[:2]], "oyuncular": []}
             for o in oyuncular:
@@ -394,7 +421,7 @@ def main():
                     mev = o["genel"]
                 no = o.get("no") or ""
                 ty = {"ad": " ".join(parca[:-1]) if len(parca) > 1 else "", "soyad": parca[-1],
-                      "dogum": o["dob"], "uyruk": o["ev"] or o["ulke"] or "", "mevki": mev,
+                      "dogum": (o["dob"] or "")[:4] or None, "uyruk": o["ev"] or o["ulke"] or "", "mevki": mev,
                       "boy": o["boy"], "un": o["n"], "no": int(no) if no.isdigit() else None}
                 ty["k"] = anahtar(ty)
                 kulup["oyuncular"].append(ty)
@@ -411,7 +438,7 @@ def main():
     toplam = sum(len(k["oyuncular"]) for l in cikti["ligler"].values() for k in l["kulupler"])
     if toplam < 1500:
         print(f"::error::Yalnız {toplam} oyuncu geldi; eski veri korunuyor."); sys.exit(1)
-    if eski.get("ligler"):
+    if eski.get("ligler") and eski.get("surum") == cikti["surum"]:      # kaynak değişiminde (kulüp anahtarları yenilendi) fark alınmaz
         try:
             olay = transfer_farki(eski, cikti)
         except Exception as e:

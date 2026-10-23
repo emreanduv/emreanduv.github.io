@@ -1,7 +1,7 @@
 name: Avrupa kupaları (lig aşaması fikstürü)
 on:
   schedule:
-    - cron: "17 5 * * 2"     # her salı
+    - cron: "17 5 * * *"     # her gün
   workflow_dispatch:
 permissions:
   contents: write
@@ -18,7 +18,7 @@ jobs:
         run: python3 araclar/avrupa.py
       - name: Değiştiyse gönder
         run: |
-          git add veri/gercek-dunya
+          git add veri/gercek-dunya araclar/onbellek_kulup.json
           if git diff --cached --quiet; then echo "Değişiklik yok"; exit 0; fi
           git config user.name "Mr. Anduv! veri"
           git config user.email "emreanduvart@gmail.com"
