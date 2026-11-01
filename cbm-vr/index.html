@@ -25,7 +25,7 @@
 <div id="ust"><b>Champion <em>Battle</em> VR · maket saha</b><span class="mod"><button data-mod="oyna">🎮 Maçı oyna</button><button data-mod="izle">👁 Maçı izle</button><button id="hiz" title="İzleme hızı">⏩ Hız</button></span><span class="imza">Bir Mr. Anduv! yapımıdır.</span></div>
 <div id="bilgi"><b>Maket saha</b> — saha masanın üstünde, sen ayaktasın. Gözlükte <b>VR'a gir</b>'e bas.<br>
   <b>🎮 Maçı oyna</b> (Kaptan Mecit): sol çubuk koş (baktığın yöne göre) · sağ tetik ya da A <b>pas / oyuncu seç</b> · B ya da sağ kavrama <b>şut / kayarak müdahale</b>.<br>
-  <b>👁 Maçı izle</b> (Champion maç motoru, altı ligden kulüpler ve dizilişleri): sağ tetik ya da A <b>hız ×1 / ×2 / ×4</b>.<br>
+  <b>👁 Maçı izle</b> (Champion maç motoru, altı ligden kulüpler ve dizilişleri): ev sahibi takım senin — masanın kenarındaki <b>teknik alan</b> panosundan zihniyet, diziliş ve değişiklik; kumanda ışınını panoya tut, tetiğe bas · A <b>hız ×1 / ×2 / ×4</b>.<br>
   <b>Her iki modda:</b> sol X <b>mod değiştir</b> · Y <b>yeni maç</b> · sol kavrama sahayı kendine çevir.<br>
   <b>Bilgisayarda:</b> <kbd>↑↓←→</kbd>/<kbd>WASD</kbd> koş · <kbd>X</kbd> pas · <kbd>Z</kbd> şut · <kbd>M</kbd> mod · <kbd>H</kbd> hız · <kbd>N</kbd> yeni maç · fareyle sürükle: masanın etrafında dön.</div>
 <iframe id="km" title="Kaptan Mecit motoru" src="kaptanmecit.html?vr=1"></iframe>
@@ -151,7 +151,7 @@ const topGolge = new THREE.Mesh(new THREE.CircleGeometry(0.008, 16), new THREE.M
 topGolge.rotation.x = -Math.PI / 2; saha.add(topGolge);
 
 /* ---------- Kaptan Mecit motoru (gizli çerçeve): adımı biz atarız, girişi biz veririz ---------- */
-let MOD = /[?&]izle/.test(location.search) ? 'izle' : 'oyna', IZ = null, izAcc = 0, HIZ = 1, sonOlay = '', sonOlayT = 0, izBitisT = 0, izleYukle = null;
+let MOD = /[?&]izle/.test(location.search) ? 'izle' : 'oyna', IZM = null, IZ = null, izAcc = 0, HIZ = 1, sonOlay = '', sonOlayT = 0, izBitisT = 0, izleYukle = null;
 const fr = document.getElementById('km');
 let W = null, RL = null, hazir = false, golYazi = 0, sonSkor = '0-0';
 const giris = { x: 0, y: 0, pas: false, sut: false };
@@ -193,7 +193,7 @@ function girisOku(dt) {
     const ax = gp.axes.length >= 4 ? [gp.axes[2], gp.axes[3]] : [gp.axes[0] || 0, gp.axes[1] || 0];
     if (src.handedness === 'left') { if (Math.hypot(ax[0], ax[1]) > 0.15) { sx = ax[0]; sy = -ax[1]; } if (kenar('lg', gp.buttons[1]?.pressed)) masa.rotation.y += Math.PI; if (kenar('ly', gp.buttons[5]?.pressed)) yeniMac(); if (kenar('lx', gp.buttons[4]?.pressed)) modDegis(MOD === 'oyna' ? 'izle' : 'oyna'); }
     if (src.handedness === 'right') {
-      if (MOD === 'izle') { if (kenar('rt', gp.buttons[0]?.pressed) || kenar('ra', gp.buttons[4]?.pressed)) hizDegis(); continue; }
+      if (MOD === 'izle') { if (kenar('ra', gp.buttons[4]?.pressed)) hizDegis(); continue; }
       if (kenar('rt', gp.buttons[0]?.pressed) || kenar('ra', gp.buttons[4]?.pressed)) giris.pas = true;
       if (kenar('rb', gp.buttons[5]?.pressed) || kenar('rg', gp.buttons[1]?.pressed)) giris.sut = true;
     }
@@ -216,20 +216,80 @@ async function izleYeniMac() {
   izleYukle ||= import('./izle.js');
   const { izleMac } = await izleYukle;
   figurTemizle();
-  IZ = izleMac((metin, tur) => { if (tur === 'gol' || /GOL|⚽|kart|penalt|VAR|🟥|🟨/i.test(metin)) { sonOlay = metin; sonOlayT = 4; } });
-  izAcc = 0; izBitisT = 0;
+  const mod = await izleYukle; IZM = mod;
+  IZ = izleMac((metin, tur) => { if (tur === 'gol' || tur === 'degisiklik' || tur === 'taktik' || /GOL|⚽|kart|penalt|VAR|🟥|🟨/i.test(metin)) { sonOlay = metin; sonOlayT = 4; } panelCiz(); });
+  mod.yonetici(IZ.M); izAcc = 0; izBitisT = 0; panelCiz();
 }
 function yeniMac() { if (MOD === 'izle') izleYeniMac(); else if (hazir) { figurTemizle(); kmYeniMac(); } }
 function modDegis(m) {
-  if (m === MOD) return; MOD = m; figurTemizle();
+  if (m === MOD) return; MOD = m; figurTemizle(); panelCiz();
   document.querySelectorAll('[data-mod]').forEach(b => b.classList.toggle('on', b.dataset.mod === MOD));
   if (MOD === 'izle') izleYeniMac(); else if (hazir) kmYeniMac();
 }
-function hizDegis() { HIZ = HIZ === 1 ? 2 : HIZ === 2 ? 4 : 1; tabelaSon = ''; }
+function hizDegis() { HIZ = HIZ === 1 ? 2 : HIZ === 2 ? 4 : 1; tabelaSon = ''; panelCiz(); }
 document.querySelectorAll('[data-mod]').forEach(b => { b.classList.toggle('on', b.dataset.mod === MOD); b.onclick = () => modDegis(b.dataset.mod); });
 document.getElementById('hiz').onclick = () => hizDegis();
 addEventListener('keydown', e => { if (e.code === 'KeyH' && MOD === 'izle') hizDegis(); if (e.code === 'KeyN') yeniMac(); if (e.code === 'KeyM') modDegis(MOD === 'oyna' ? 'izle' : 'oyna'); });
 if (MOD === 'izle') izleYeniMac();
+
+/* ---------- 🧑‍💼 teknik alan panosu (izle modu): masanın sana bakan kenarında; kumanda ışınıyla ya da fareyle tıklanır ---------- */
+const panelC = document.createElement('canvas'); panelC.width = 1024; panelC.height = 560; const panelT = new THREE.CanvasTexture(panelC); panelT.colorSpace = THREE.SRGBColorSpace;
+const panel = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.34), new THREE.MeshBasicMaterial({ map: panelT, transparent: true }));
+panel.position.set(0.62, MASA_Y + 0.2, 0.86); panel.rotation.x = -0.55; panel.rotation.y = -0.25; masa.add(panel);
+let BTN = [];
+function panelCiz() {
+  panel.visible = MOD === 'izle' && !!IZ;
+  if (!panel.visible) return;
+  const g = panelC.getContext('2d'), M = IZ.M, T = M.T[0]; BTN = [];
+  g.clearRect(0, 0, 1024, 560); g.fillStyle = '#f6efdfee'; g.beginPath(); g.roundRect(6, 6, 1012, 548, 26); g.fill();
+  g.fillStyle = '#1f3b3c'; g.beginPath(); g.roundRect(6, 6, 1012, 74, [26, 26, 0, 0]); g.fill();
+  g.fillStyle = '#f4efe2'; g.font = 'bold 38px system-ui, sans-serif'; g.textBaseline = 'middle'; g.textAlign = 'left';
+  g.fillText(`🧑‍💼 Teknik alan · ${IZ.ev.kisa}`, 30, 44); g.textAlign = 'right'; g.font = 'bold 28px system-ui, sans-serif'; g.fillText(`${M.saatYazi()}  ${M.skor[0]}-${M.skor[1]}`, 990, 44);
+  const dug = (x, y, w, h, yazi, on, act, v) => { g.fillStyle = on ? '#3e9a4c' : '#e9dcc0'; g.beginPath(); g.roundRect(x, y, w, h, 14); g.fill(); g.strokeStyle = on ? '#2d7a39' : '#c9b48a'; g.lineWidth = 3; g.stroke();
+    g.fillStyle = on ? '#fff' : '#1d2526'; g.font = 'bold 30px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(yazi, x + w / 2, y + h / 2 + 1); BTN.push({ x, y, w, h, act, v }); };
+  const et = (y, t) => { g.fillStyle = '#5b6466'; g.font = 'bold 26px system-ui, sans-serif'; g.textAlign = 'left'; g.fillText(t, 30, y); };
+  et(118, 'Zihniyet');
+  [['savunma', '🛡 Savunma'], ['dengeli', '⚖ Dengeli'], ['hucum', '⚔ Hücum']].forEach(([v, y], i) => dug(30 + i * 322, 140, 306, 72, y, T.zihniyet === v, 'zihniyet', v));
+  et(248, `Diziliş · şu an ${M.dz[0]}`);
+  const L = IZM.VR_DIZILIS, i = Math.max(0, L.indexOf(M.dz[0]));
+  dug(30, 270, 120, 72, '◀', false, 'dz', L[(i - 1 + L.length) % L.length]); dug(160, 270, 704, 72, `${L[(i + 1) % L.length]}'e geç`, false, 'dz', L[(i + 1) % L.length]); dug(874, 270, 120, 72, '▶', false, 'dz', L[(i + 2) % L.length]);
+  et(378, `Değişiklik · kalan ${M.kalanHak(0)} hak, ${M.kalanAra(0)} ara`);
+  dug(30, 400, 470, 72, '🔁 En yorgunu çıkar', false, 'deg');
+  dug(512, 400, 482, 72, `🤖 Asistan: ${M.asistan[0] ? 'açık' : 'kapalı'}`, M.asistan[0], 'asistan');
+  dug(30, 484, 964, 56, `⏩ Hız ×${HIZ}  ·  ${IZ.ev.kisa} senin takımın, ${IZ.dep.kisa} rakip`, false, 'hiz');
+  panelT.needsUpdate = true;
+}
+function panelBas(uv) {
+  if (!IZ || !uv) return;
+  const x = uv.x * 1024, y = (1 - uv.y) * 560, b = BTN.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h); if (!b) return;
+  const M = IZ.M;
+  if (b.act === 'zihniyet') IZM.zihniyetYap(M, b.v);
+  else if (b.act === 'dz') IZM.dizilisYap(M, b.v);
+  else if (b.act === 'deg') { const r = IZM.degisiklikYap(M); if (!r) { sonOlay = 'Değişiklik yapılamıyor (hak, ara ya da yedek kalmadı)'; sonOlayT = 3; } }
+  else if (b.act === 'asistan') M.asistan[0] = !M.asistan[0];
+  else if (b.act === 'hiz') hizDegis();
+  panelCiz();
+}
+/* tıklama: fare (bilgisayar) ve kumanda ışını (VR) */
+const isin = new THREE.Raycaster(), fareV = new THREE.Vector2();
+renderer.domElement.addEventListener('click', e => {
+  if (MOD !== 'izle' || !panel.visible) return;
+  fareV.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); isin.setFromCamera(fareV, kamera);
+  const h = isin.intersectObject(panel)[0]; if (h) panelBas(h.uv);
+});
+const isinCizgi = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]);
+const tmpM = new THREE.Matrix4();
+for (let i = 0; i < 2; i++) {
+  const k = renderer.xr.getController(i);
+  const cizgi = new THREE.Line(isinCizgi, new THREE.LineBasicMaterial({ color: '#ffe14a' })); cizgi.scale.z = 1.5; cizgi.visible = false; k.add(cizgi); k.userData.cizgi = cizgi;
+  k.addEventListener('selectstart', () => {
+    if (MOD !== 'izle' || !panel.visible) return;
+    tmpM.identity().extractRotation(k.matrixWorld); isin.ray.origin.setFromMatrixPosition(k.matrixWorld); isin.ray.direction.set(0, 0, -1).applyMatrix4(tmpM);
+    const h = isin.intersectObject(panel)[0]; if (h) panelBas(h.uv);
+  });
+  sahne.add(k);
+}
+setInterval(() => { if (MOD === 'izle') panelCiz(); }, 1000);
 
 /* ---------- kare döngüsü ---------- */
 const saat = new THREE.Clock();
@@ -237,6 +297,7 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(0.05, saat.getDelta());
   orbit.update();
   girisOku(dt);
+  for (let i = 0; i < 2; i++) { const k = renderer.xr.getController(i); if (k.userData.cizgi) k.userData.cizgi.visible = MOD === 'izle'; }
   if (MOD === 'oyna' && hazir) {
     if (!RL.M || RL.M.state === 'over') { bitisT ||= performance.now(); if (performance.now() - bitisT > 9000) kmYeniMac(); }   // maç bitti: birkaç saniye sonra yeni maç
     if (RL.M) {
@@ -290,7 +351,7 @@ function ciz(G, dt) {
   const vurgu = golYazi > 0 ? 'GOOOL!' : G.durum || (G.anahtar === 'iz' && sonOlayT > 0 ? sonOlay : '');
   tabelaCiz({ kit: G.kit, ad: G.ad, skor: G.skor, alt: vurgu || G.dk, vurgu: !!vurgu });
 }
-window.__VR = { get M() { return RL && RL.M; }, get IZ() { return IZ; }, get MOD() { return MOD; }, modDegis, giris, sahne, masa };
+window.__VR = { get M() { return RL && RL.M; }, get IZ() { return IZ; }, get MOD() { return MOD; }, modDegis, giris, sahne, masa, panel, kamera, BTN: () => BTN };
 </script>
 </body>
 </html>
