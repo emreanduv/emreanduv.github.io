@@ -7,6 +7,7 @@
 window.VR_KUR = function (O) {
   'use strict';
   const xr = navigator.xr;
+  const M = window.MANTIK;
   const { scene, renderer, camera, $, t, fmt, D, SFX, NL, canPlay, startGame, previewLevel, show, unlockAudio, nextLevel, resize, frame } = O;
   // ölçek (1 oyun birimi = 1,8 cm), masa genişliği / derinliği, gözden uzaklığı ve göz hizasının altında kalışı, eğimi; ordunun masadaki yeri
   const TABLE = { s: 0.018, w: 1.15, d: 1.3, ahead: 0.8, below: 0.22, tilt: 18 * Math.PI / 180, army: 0.22 };
@@ -285,13 +286,17 @@ window.VR_KUR = function (O) {
     }
     if ((clipT -= dt) <= 0) { clipT = 0.5; clipAll(); }
     paint(); animateRoom(dt);
-    if (!VR.test) readInput(dt);
+    if (!VR.test) { readInput(dt); swing(dt); }
+    const pv = updatePanel(dt);
+    for (const sw of swords) sw.visible = !!VR.ride && O.mode() === 'play' && !pv;
+    for (const c of [VR.ctrl0, VR.ctrl1]) { const lb = c && c.userData.lab && c.userData.lab(); if (lb) lb.visible = !VR.ride || pv; }
+    board.visible = board.visible && !pv;
     // tabela
     const lv = t('Bölüm {n}', { n: g.i + 1 });
     if (msgT > 0) { msgT -= dt; drawBoard(lv, msg); }
     else if (O.mode() === 'play') drawBoard(lv + ' · ' + fmt(g.count) + (g.heroes ? ' +' + g.heroes : ''), g.L.ad);
     else if (O.mode() === 'over') drawBoard(O.lastRes() && O.lastRes().win ? t('ZAFER!') + ' ' + '★'.repeat(O.lastRes().stars) : t('GERİ ÇEKİL!'), O.lastRes() && O.lastRes().win ? t('Tetiğe bas: devam') : t('Tetiğe bas: yeniden dene'));
-    else drawBoard(lv, t('Tetiğe bas: sefere çık'));
+    else drawBoard(lv, t('Menüden seç'));
   }
   function say(m, sec) { msg = m; msgT = sec || 2.5; }
 
@@ -315,6 +320,10 @@ window.VR_KUR = function (O) {
       if (ax4 && !btnPrev[k4]) toggleRide();
       btnPrev[k4] = ax4;
       if (!VR.ride && src.handedness === 'left' && Math.abs(ay) > 0.5) rig.hAdj = Math.max(-0.5, Math.min(0.4, rig.hAdj - ay * 0.35 * dt));
+      // yan tuş (tutamak): duraklat ⇄ devam
+      const gr = gp.buttons[1] && gp.buttons[1].pressed, k1 = src.handedness + '1';
+      if (gr && !btnPrev[k1] && O.mode() === 'play') { const pz = O.paused && O.paused(); if (pz) O.pause(false); else O.pause(true); }
+      btnPrev[k1] = gr;
       // B / Y: masayı bakılan yöne ve göz hizasına göre yeniden yerleştir
       const by = gp.buttons[5] && gp.buttons[5].pressed, key = src.handedness + '5';
       if (by && !btnPrev[key]) { calibrate(); say(t('Masa önüne alındı'), 1.5); }
@@ -338,10 +347,12 @@ window.VR_KUR = function (O) {
   }
 
   /* ---------- kumandalar ve eller ---------- */
+  const swords = [], prevP = [new V3(), new V3()], hasPrev = [false, false];
   for (let k = 0; k < 2; k++) {
     const c = renderer.xr.getController(k);
     c.addEventListener('selectstart', () => {
       unlockAudio();
+      if (panelClick(c)) return;
       if (O.mode() === 'play') { grab = { ctrl: c, p: c.position.clone() }; return; }
       act();
     });
@@ -349,11 +360,12 @@ window.VR_KUR = function (O) {
     // kumanda ucunda küçük altın ok
     const tip = new THREE.Mesh(new THREE.ConeGeometry(0.008, 0.05, 8), brass); tip.rotation.x = -Math.PI / 2; tip.position.z = -0.03; c.add(tip);
     // kumandanın üstünde ne işe yaradığını yazan küçük etiket (hangi elde olduğu bilinince)
-    let lab = null;
+    let lab = null; const sw = makeSword(); c.add(sw); swords.push(sw); c.userData.lab = () => lab;
     c.addEventListener('connected', e => {
+      c.userData.src = e.data;
       if (lab) c.remove(lab);
       const left = e.data && e.data.handedness === 'left';
-      lab = labelPlane(left ? [t('Tetik: başla / sürükle'), t('Çubuk ↕: masa yüksekliği'), t('X: at sırtı ⇄ masa'), t('Y: masayı önüne al')] : [t('Tetik: başla / sürükle'), t('Çubuk: yönlendir'), t('A: at sırtı ⇄ masa'), t('B: masayı önüne al')]);
+      lab = labelPlane(left ? [t('Tetik: seç / sürükle'), t('Çubuk ↕: masa yüksekliği'), t('X: at sırtı ⇄ masa'), t('Y: masayı önüne al'), t('Yan tuş: duraklat')] : [t('Tetik: seç / sürükle'), t('Çubuk: yönlendir'), t('A: at sırtı ⇄ masa'), t('B: masayı önüne al'), t('At sırtında: savur, vur!')]);
       lab.position.set(0, 0.07, -0.02); lab.rotation.x = -0.7; c.add(lab);
     });
     VR['ctrl' + k] = c;
@@ -373,6 +385,168 @@ window.VR_KUR = function (O) {
     }
     if (O.mode() === 'menu' || O.mode() === 'over') { const i = nextLevel(); if (!canPlay(i)) { locked(i); return; } startGame(i); }
   }
+  /* ================= VR menüsü: havada duran pano (ana menü, bölümler, ordugâh, ayarlar, duraklat, sonuç) =================
+     Kumandadan çıkan ışınla seçilir, tetikle tıklanır. Oyun sırasında gizlidir; yan tuş (tutamak) oyunu duraklatıp panoyu açar. */
+  const PW = 1024, PH = 768, pcv = document.createElement('canvas'); pcv.width = PW; pcv.height = PH; const px = pcv.getContext('2d');
+  const ptex = new THREE.CanvasTexture(pcv);
+  const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.9), basic(0xffffff, { map: ptex, transparent: true, depthTest: false }));   // masanın ve atın önünde kalsın
+  const panelG = new THREE.Group(); panelG.matrixAutoUpdate = false; panelG.add(panel); W.add(panelG); panel.renderOrder = 30;
+  let pScr = 'ana', pDirty = true, pHover = -1, pBtns = [], lvSef = -1, lvPage = 0, pRedrawT = 0;
+  const S_ = () => O.S();
+  function rr(x, y, w, h, r) { px.beginPath(); px.moveTo(x + r, y); px.arcTo(x + w, y, x + w, y + h, r); px.arcTo(x + w, y + h, x, y + h, r); px.arcTo(x, y + h, x, y, r); px.arcTo(x, y, x + w, y, r); px.closePath(); }
+  function btn(x, y, w, h, l1, l2, cb, o) {
+    o = o || {}; const i = pBtns.length; pBtns.push({ x, y, w, h, cb: o.dis ? null : cb });
+    const hov = i === pHover && !o.dis;
+    px.fillStyle = o.dis ? 'rgba(80,90,105,.55)' : o.gold ? (hov ? '#ffd86a' : '#f0b232') : o.sel ? '#2bb9be' : hov ? '#2a5a92' : 'rgba(29,63,110,.95)';
+    rr(x, y, w, h, 18); px.fill(); px.lineWidth = hov ? 6 : 3; px.strokeStyle = hov ? '#fff2b0' : 'rgba(240,178,50,.8)'; rr(x, y, w, h, 18); px.stroke();
+    px.textAlign = 'center'; px.fillStyle = o.gold ? '#3a2200' : o.dis ? '#c8ced6' : '#fff';
+    px.font = '800 ' + (o.fs || 40) + 'px "Baloo 2", sans-serif'; px.fillText(l1, x + w / 2, y + (l2 ? h / 2 + 2 : h / 2 + (o.fs || 40) * 0.36));
+    if (l2) { px.font = '700 ' + (o.fs2 || 26) + 'px "Baloo 2", sans-serif'; px.fillStyle = o.gold ? '#5a3a00' : '#ffe9a8'; px.fillText(l2, x + w / 2, y + h / 2 + 34); }
+  }
+  function head(title, back) {
+    px.textAlign = 'center'; px.fillStyle = '#fff'; px.font = '800 50px "Baloo 2", sans-serif'; px.fillText(title, PW / 2, 78);
+    if (back) btn(26, 26, 110, 70, '‹', '', () => go(back), { fs: 56 });
+    const s = S_(); px.textAlign = 'right'; px.font = '700 30px "Baloo 2", sans-serif'; px.fillStyle = '#ffe9a8'; px.fillText(fmt(s.coins) + ' ' + t('akçe'), PW - 34, 72);
+  }
+  function go(s) { pScr = s; pDirty = true; SFX.click(); }
+  function play(i) { if (!canPlay(i)) { locked(i); return; } SFX.click(); startGame(i); }
+  function drawPanel() {
+    pBtns = []; px.clearRect(0, 0, PW, PH);
+    px.fillStyle = 'rgba(10,24,46,.93)'; rr(6, 6, PW - 12, PH - 12, 40); px.fill(); px.strokeStyle = '#f0b232'; px.lineWidth = 8; rr(6, 6, PW - 12, PH - 12, 40); px.stroke();
+    const s = S_(), g = O.G(), m = O.mode(), r = O.lastRes();
+    if (pScr === 'ana') {
+      px.textAlign = 'center'; px.fillStyle = '#f0b232'; px.font = '800 30px "Baloo 2", sans-serif'; px.fillText('☾ 1071 · 1453 ✸', PW / 2, 70);
+      px.fillStyle = '#fff'; px.font = '800 92px "Baloo 2", sans-serif'; px.fillText('MALAZGİRT', PW / 2, 160);
+      px.fillStyle = '#2bb9be'; rr(PW / 2 - 190, 178, 380, 62, 14); px.fill(); px.fillStyle = '#fff'; px.font = '800 40px "Baloo 2", sans-serif'; px.fillText('AKINCILARI', PW / 2, 224);
+      px.fillStyle = '#ffe9a8'; px.font = '700 30px "Baloo 2", sans-serif'; px.fillText(fmt(s.coins) + ' ' + t('akçe') + '   ·   ' + t('{a} / {b} yıldız', { a: O.totalStars(), b: NL * 3 }), PW / 2, 290);
+      const i = nextLevel(); btn(162, 316, 700, 120, t('SEFERE ÇIK'), t('Bölüm {n}', { n: i + 1 }) + ' · ' + M.LEVELS[i].ad, () => play(i), { gold: 1, fs: 52, fs2: 28 });
+      btn(162, 456, 340, 92, t('Bölümler'), '', () => { lvSef = M.seferOf(nextLevel()); lvPage = -1; go('bolum'); });
+      btn(522, 456, 340, 92, t('Ordugâh'), '', () => go('ordu'));
+      const paid = O.buyFull && !s.full;
+      btn(162, 566, paid ? 340 : 700, 82, t('Ayarlar'), '', () => go('ayar'));
+      if (paid) btn(522, 566, 340, 82, '★ ' + t('Tam Sürüm'), '', () => locked(nextLevel()), { gold: 1 });
+      px.fillStyle = 'rgba(255,255,255,.6)'; px.font = '600 24px "Baloo 2", sans-serif'; px.fillText(t('A / X: at sırtı ⇄ harp masası') + '   ·   ' + t('Yan tuş: duraklat'), PW / 2, 696);
+      px.fillText('Bir Mr. Anduv! yapımıdır.', PW / 2, 734);
+    } else if (pScr === 'bolum') {
+      const SF = M.SEFERLER[lvSef], a0 = M.SEF0[lvSef], n = SF.n, per = 40, pages = Math.ceil(n / per);
+      if (lvPage < 0) lvPage = Math.max(0, Math.min(pages - 1, Math.floor((nextLevel() - a0) / per)));
+      head('', 'ana');
+      btn(150, 30, 80, 70, '◀', '', () => { lvSef--; lvPage = 0; pDirty = true; SFX.click(); }, { dis: lvSef <= 0, fs: 40 });
+      btn(PW - 330, 30, 80, 70, '▶', '', () => { lvSef++; lvPage = 0; pDirty = true; SFX.click(); }, { dis: lvSef >= M.SEFERLER.length - 1 || M.SEF0[lvSef + 1] + 1 > s.unlocked, fs: 40 });
+      px.textAlign = 'center'; px.fillStyle = '#fff'; px.font = '800 36px "Baloo 2", sans-serif'; px.fillText(t('{n}. Sefer: {a}', { n: lvSef + 1, a: SF.ad }), PW / 2 - 70, 64);
+      px.fillStyle = '#ffe9a8'; px.font = '600 24px "Baloo 2", sans-serif'; px.fillText(SF.yil + ' · ' + SF.alt, PW / 2 - 70, 96);
+      const k0 = lvPage * per;
+      for (let k = k0; k < Math.min(n, k0 + per); k++) {
+        const i = a0 + k, j = k - k0, cx2 = 40 + (j % 8) * 118, cy2 = 124 + Math.floor(j / 8) * 112, lock = i + 1 > s.unlocked, st = s.stars[i] || 0;
+        btn(cx2, cy2, 104, 98, lock ? '🔒' : String(i + 1), lock ? '' : '★'.repeat(st) + '☆'.repeat(3 - st), () => play(i), { dis: lock, sel: i === nextLevel(), fs: 34, fs2: 22 });
+      }
+      if (pages > 1) {
+        btn(300, 690, 140, 60, '◀', '', () => { lvPage--; pDirty = true; SFX.click(); }, { dis: lvPage <= 0, fs: 34 });
+        px.fillStyle = '#fff'; px.font = '700 28px "Baloo 2", sans-serif'; px.textAlign = 'center'; px.fillText((lvPage + 1) + ' / ' + pages, PW / 2, 730);
+        btn(PW - 440, 690, 140, 60, '▶', '', () => { lvPage++; pDirty = true; SFX.click(); }, { dis: lvPage >= pages - 1, fs: 34 });
+      }
+    } else if (pScr === 'ordu') {
+      head(t('Ordugâh'), 'ana'); const cap = O.upCapNow();
+      M.UPG.forEach((u, k) => {
+        const l = s.up[u.k], max = l >= cap, cost = max ? 0 : M.upCost(u, l), y = 128 + k * 150;
+        px.fillStyle = 'rgba(29,63,110,.6)'; rr(40, y, PW - 80, 136, 20); px.fill();
+        px.textAlign = 'left'; px.fillStyle = '#fff'; px.font = '800 36px "Baloo 2", sans-serif'; px.fillText(u.ad, 68, y + 48);
+        px.fillStyle = '#ffe9a8'; px.font = '700 24px "Baloo 2", sans-serif'; px.fillText(t('SEVİYE {a} / {b}', { a: l, b: cap }), 68, y + 84);
+        px.fillStyle = 'rgba(255,255,255,.75)'; px.font = '600 22px "Baloo 2", sans-serif'; px.fillText(String(u.desc(l)).slice(0, 52), 68, y + 116);
+        btn(PW - 330, y + 28, 270, 82, max ? t(cap < M.UPMAX ? 'YENİ SEFERDE' : 'EN ÜST') : fmt(cost) + ' ' + t('akçe'), '', () => {
+          const s2 = S_(); if (s2.coins < cost) return; s2.coins -= cost; s2.up[u.k]++; if (s2.up[u.k] >= M.UPMAX) O.achieve('ORDUGAH'); O.persist(); SFX.buy(); pDirty = true;
+          if (O.mode() === 'menu') previewLevel(nextLevel());
+        }, { dis: max || s.coins < cost, gold: !max && s.coins >= cost, fs: 32 });
+      });
+    } else if (pScr === 'ayar') {
+      head(t('Ayarlar'), 'ana');
+      const row = (y, label) => { px.textAlign = 'left'; px.fillStyle = '#fff'; px.font = '700 34px "Baloo 2", sans-serif'; px.fillText(label, 70, y + 52); };
+      const click = sel => () => { const el = document.querySelector(sel); if (el) el.click(); pDirty = true; };
+      row(130, t('Dil')); btn(440, 130, 240, 80, 'Türkçe', '', click('#setLang [data-v="tr"]'), { sel: D.lang === 'tr' }); btn(700, 130, 240, 80, 'English', '', click('#setLang [data-v="en"]'), { sel: D.lang === 'en' });
+      row(240, t('Ses')); btn(440, 240, 240, 80, t('Açık'), '', () => { if (!S_().sound) click('#sndBtn')(); }, { sel: s.sound }); btn(700, 240, 240, 80, t('Kapalı'), '', () => { if (S_().sound) click('#sndBtn')(); }, { sel: !s.sound });
+      row(350, t('Mehter (müzik)') + '  ' + s.vol.mus);
+      const vol = d => () => { const el = document.getElementById('setMus'); el.value = Math.max(0, Math.min(100, S_().vol.mus + d)); el.dispatchEvent(new Event('input')); O.persist(); pDirty = true; SFX.click(); };
+      btn(440, 350, 240, 80, '−', '', vol(-20), { fs: 50 }); btn(700, 350, 240, 80, '+', '', vol(20), { fs: 50 });
+      row(460, t('Görüş')); btn(440, 460, 240, 80, t('Harp masası'), '', () => { if (VR.ride) toggleRide(); pDirty = true; }, { sel: !VR.ride, fs: 32 }); btn(700, 460, 240, 80, t('At sırtı'), '', () => { if (!VR.ride) toggleRide(); pDirty = true; }, { sel: !!VR.ride, fs: 32 });
+      if (O.buyFull && !s.full) { row(570, t('Tam Sürüm')); btn(440, 570, 500, 80, '★ ' + t('Satın al'), '', () => locked(nextLevel()), { gold: 1 }); }
+    } else if (pScr === 'durak') {
+      head(t('Duraklatıldı'));
+      btn(212, 170, 600, 120, t('DEVAM'), g ? t('Bölüm {n}', { n: g.i + 1 }) + ' · ' + g.L.ad : '', () => { SFX.click(); O.pause(false); }, { gold: 1, fs: 52 });
+      btn(212, 320, 600, 96, t('Bölümü yeniden başlat'), '', () => { SFX.click(); startGame(g.i); });
+      btn(212, 436, 290, 96, t('Ordugâh'), '', () => go('ordu'));
+      btn(522, 436, 290, 96, t('Ayarlar'), '', () => go('ayar'));
+      btn(212, 552, 600, 96, t('Ana menü'), '', () => { SFX.click(); O.setPaused(false); previewLevel(nextLevel()); O.setMode('menu'); show(null); pScr = 'ana'; pDirty = true; });
+    } else if (pScr === 'sonuc' && r) {
+      const win = r.win; px.textAlign = 'center'; px.fillStyle = win ? '#f0b232' : '#ff8a8f'; px.font = '800 86px "Baloo 2", sans-serif'; px.fillText(win ? t('ZAFER!') : t('GERİ ÇEKİL!'), PW / 2, 130);
+      if (win) { px.font = '800 70px "Baloo 2", sans-serif'; px.fillStyle = '#ffd86a'; px.fillText('★'.repeat(r.stars) + '☆'.repeat(3 - r.stars), PW / 2, 220); }
+      px.fillStyle = '#fff'; px.font = '700 34px "Baloo 2", sans-serif'; px.fillText('+' + fmt(r.gain || 0) + ' ' + t('akçe') + '  ·  ' + t('Bölüm {n}', { n: r.i + 1 }), PW / 2, win ? 284 : 220);
+      const nx = win ? Math.min(NL - 1, r.i + 1) : r.i;
+      btn(212, 320, 600, 120, win ? t('DEVAM') : t('YENİDEN DENE'), t('Bölüm {n}', { n: nx + 1 }) + ' · ' + M.LEVELS[nx].ad, () => play(nx), { gold: 1, fs: 52 });
+      if (win) btn(212, 456, 600, 90, t('Yeniden oyna'), '', () => play(r.i));
+      btn(212, win ? 562 : 456, 290, 90, t('Ordugâh'), '', () => go('ordu'));
+      btn(522, win ? 562 : 456, 290, 90, t('Ana menü'), '', () => go('ana'));
+    }
+    ptex.needsUpdate = true; pDirty = false;
+  }
+  // hangi pano görünsün
+  let lastMode = '';
+  function panelState() {
+    const m = O.mode(), paused = O.paused && O.paused();
+    if (m !== lastMode) { if (m === 'over') pScr = 'sonuc'; else if (m === 'menu' && (pScr === 'sonuc' || pScr === 'durak')) pScr = 'ana'; lastMode = m; pDirty = true; }
+    if (m === 'play' && paused && pScr !== 'durak' && pScr !== 'ordu' && pScr !== 'ayar') { pScr = 'durak'; pDirty = true; }
+    if (m === 'play' && !paused && pScr === 'durak') pScr = 'ana';
+    return m === 'menu' || m === 'over' || (m === 'play' && paused);
+  }
+  const ray = new THREE.Raycaster(), _o = new V3(), _d = new V3(), _mq = new THREE.Quaternion();
+  function rayHit(c) {
+    c.updateMatrixWorld(); _o.setFromMatrixPosition(c.matrixWorld); c.matrixWorld.decompose(_d, _mq, new V3()); _d.set(0, 0, -1).applyQuaternion(_mq);
+    ray.set(_o, _d); const h = ray.intersectObject(panel, false)[0]; return h || null;
+  }
+  function btnAt(uv) { const x = uv.x * PW, y = (1 - uv.y) * PH; for (let i = 0; i < pBtns.length; i++) { const b = pBtns[i]; if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return i; } return -1; }
+  const lasers = [0, 1].map(() => { const g = new THREE.BufferGeometry().setFromPoints([new V3(0, 0, 0), new V3(0, 0, -1)]); const l = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xffd86a, fog: false, depthTest: false })); l.renderOrder = 31; l.visible = false; return l; });
+  const dots = [0, 1].map(() => { const d = glow(0xfff2b0, 0.04); d.visible = false; W.add(d); return d; });
+  function updatePanel(dt) {
+    const vis = panelState(); panel.visible = vis;
+    const h = rig.head || new V3(0, 1.2, 0), fx = -Math.sin(rig.yaw), fz = -Math.cos(rig.yaw);
+    panelG.matrix.makeRotationY(rig.yaw).multiply(_m.makeRotationX(-0.08)).setPosition(h.x + fx * 1.35, h.y - 0.05, h.z + fz * 1.35); panelG.matrixWorldNeedsUpdate = true;
+    let hov = -1;
+    [VR.ctrl0, VR.ctrl1].forEach((c, k) => {
+      const L = lasers[k]; if (!c) return; if (L.parent !== c) c.add(L);
+      L.visible = vis; dots[k].visible = false; if (!vis) return;
+      const hh = rayHit(c); L.scale.z = hh ? hh.distance : 1.2;
+      if (hh) { dots[k].position.copy(hh.point); dots[k].visible = true; const b = btnAt(hh.uv); if (b >= 0 && pBtns[b].cb) hov = b; }
+    });
+    if (hov !== pHover) { pHover = hov; pDirty = true; }
+    if ((pRedrawT -= dt) <= 0) { pRedrawT = 1; if (vis) pDirty = true; }
+    if (vis && pDirty) drawPanel();
+    return vis;
+  }
+  function panelClick(c) {
+    if (!panel.visible) return false;
+    const hh = rayHit(c); if (!hh) return true;
+    const b = btnAt(hh.uv); if (b >= 0 && pBtns[b].cb) { const cb = pBtns[b].cb; cb(); pDirty = true; }
+    return true;
+  }
+
+  /* ---------- sipahi kılıcı: at sırtında kumandayı savurunca önündeki düşmana darbe ---------- */
+  function makeSword() {
+    const g = new THREE.Group(), steel = new THREE.MeshPhongMaterial({ color: 0xdfe6ee, shininess: 90, specular: 0xffffff });
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.016, 0.12, 8), lam(0x3a2416)); grip.rotation.x = Math.PI / 2; grip.position.z = 0.02; g.add(grip);
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.018, 0.02), brass); guard.position.z = -0.045; g.add(guard);
+    const pom = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), brass); pom.position.z = 0.085; g.add(pom);
+    for (let i = 0; i < 6; i++) { const seg = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.034 - i * 0.003, 0.13), steel); const a = i * 0.07; seg.position.set(0, i * i * 0.0045, -0.11 - i * 0.125); seg.rotation.x = a; g.add(seg); }
+    g.rotation.x = -0.35; g.visible = false; return g;
+  }
+  function swing(dt) {
+    [VR.ctrl0, VR.ctrl1].forEach((c, k) => {
+      if (!c) return; const p = c.position, sp = hasPrev[k] ? p.distanceTo(prevP[k]) / Math.max(dt, 1e-3) : 0; prevP[k].copy(p); hasPrev[k] = true;
+      if (!VR.ride || O.mode() !== 'play' || sp < 1.9 || !O.darbe) return;
+      const r = O.darbe(Math.min(1.6, sp / 2.4)); if (r === null) return;
+      const src = c.userData.src, ha = src && src.gamepad && src.gamepad.hapticActuators && src.gamepad.hapticActuators[0];
+      if (ha && ha.pulse) try { ha.pulse(r ? 0.9 : 0.25, r ? 80 : 25); } catch (e) {}
+    });
+  }
+
 
   /* ---------- oturum ---------- */
   let fogNear = 70, fogFar = 200, camNear = 0.1;
@@ -401,7 +575,7 @@ window.VR_KUR = function (O) {
     requestAnimationFrame(ts => { O.setLast(ts); frame(ts); });
   }
   VR.state = () => ({ mode: O.mode(), lvl: O.G() && O.G().i, count: O.G() && O.G().count, x: O.G() && O.G().x, mood: O.mood && O.mood(), yaw: +rig.yaw.toFixed(2), head: rig.head && rig.head.toArray().map(v => +v.toFixed(2)) });
-  VR.toggleRide = toggleRide;
+  VR.toggleRide = toggleRide; VR.darbe = O.darbe; VR.G = O.G; VR.pClick = (x, y) => { drawPanel(); for (const b of pBtns) if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h && b.cb) { b.cb(); pDirty = true; return true; } return false; }; VR.pScr = () => pScr;
   VR.dbg = () => ({ ride: !!VR.ride, table: new V3().setFromMatrixPosition(mTable).toArray(), cam: camera.position.toArray(), clip: clip.map(p => [p.normal.toArray(), p.constant]), nClipped: clipped.size, pres: renderer.xr.isPresenting, lce: renderer.localClippingEnabled });
   VR.start = async function () {
     try {

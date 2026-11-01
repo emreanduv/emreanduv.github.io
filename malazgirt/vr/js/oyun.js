@@ -563,6 +563,25 @@ const snowPts = new THREE.Points(precipGeo, new THREE.PointsMaterial({ color: 0x
 [rainLines, snowPts].forEach(o => { o.frustumCulled = false; o.visible = false; scene.add(o); });
 let curMood = 'ogle';
 // görüş: 'kus' (kuşbakışı) ya da 'sipahi' (Sipahi Gözü); yalnız bölüm oynanırken at sırtına geçilir
+// Sipahi darbesi: at sırtındayken önündeki düşmana kılıç / mızrak vurur (VR'da kumandayı savurarak, ekranda Boşluk / A tuşu / dokunarak).
+// Okların yanında ek hasar: bir darbe aşağı yukarı beş ok yaylımı kadardır. Hedef: ordunun önünde, menzildeki en yakın düşman ya da engel.
+let darbeT = 0, darbeK = 0;
+function darbe(guc) {
+  if (!G || mode !== 'play' || paused || darbeT > 0) return null;
+  const front = G.z - G.Rz; let best = null, bd = 1e9;
+  for (const o of G.objs) {
+    if (!o.alive || o.t === 'gecit' || o.t === 'gulle' || o.t === 'tas' || o.t === 'pedestal') continue;
+    const dz = front - (o.z + (o.d || 1) / 2), dx = Math.abs(o.x - G.x) - (o.w || 1) / 2;
+    if (dz < -1.5 || dz > 9 || dx > 3.5) continue;
+    if (dz < bd) { bd = dz; best = o; }
+  }
+  darbeT = 0.3; darbeK = 1;
+  if (!best) { noise(0.06, 0.05, 1400); return false; }
+  M.hitObj(G, best, M.totalPow(G) * 0.5 * (guc || 1));
+  const hx = best.t === 'squad' ? best.x : G.x, hz = Math.min(front - 1, best.z + (best.d || 1) / 2);
+  puff(hx, 1.2, hz, 1.6); SFX.tick(); noise(0.09, 0.09, 420);
+  return true;
+}
 const sipahiGozu = () => window.VR && VR.on ? !!VR.ride : S.view === 'sipahi' && (mode === 'play' || mode === 'dying');
 function updatePrecip(dt, cx, cz) {
   const rain = rainLines.visible, snow = snowPts.visible; if (!rain && !snow) return;
@@ -823,7 +842,10 @@ function updateWeapon() { const w = M.WEAPONS[G.wTier]; $('weapon').innerHTML = 
 
 /* girdi: parmağını kaydır */
 let drag = false, lx = 0, keyDir = 0;
-window.addEventListener('pointerdown', e => { unlockAudio(); if (mode !== 'play' || paused) return; drag = true; lx = e.clientX; });
+let tapT = 0, tapX = 0;
+window.addEventListener('pointerdown', e => { unlockAudio(); if (mode !== 'play' || paused) return; drag = true; lx = e.clientX; tapT = performance.now(); tapX = e.clientX; });
+// Sipahi Gözü'nde kısa dokunuş (kaydırmadan) = darbe
+window.addEventListener('pointerup', e => { if (sipahiGozu() && performance.now() - tapT < 220 && Math.abs(e.clientX - tapX) < 10 && e.target.tagName !== 'BUTTON') darbe(); });
 window.addEventListener('pointermove', e => { if (!drag || !G) return; const dx = e.clientX - lx; lx = e.clientX; G.tx += dx / Math.min(window.innerWidth, 520) * 13; });
 ['pointerup', 'pointercancel'].forEach(t => window.addEventListener(t, () => drag = false));
 window.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'a') keyDir = -1; if (e.key === 'ArrowRight' || e.key === 'd') keyDir = 1; if (e.key === 'Escape') { if (mode === 'play' && !paused) pause(true); else if (curScr && curScr !== 'menu') padBack(); } if (e.key === 'F11' && HOST) { e.preventDefault(); S.fs = S.fs ? 0 : 1; persist(); applyFullscreen(); } });
@@ -1005,7 +1027,7 @@ function drawViewBtn() { const fp = S.view === 'sipahi'; $('viewBtn').textConten
 $('viewBtn').addEventListener('click', e => { e.stopPropagation(); SFX.click(); setView(S.view === 'sipahi' ? 'kus' : 'sipahi'); });
 $('viewBtn').addEventListener('pointerdown', e => e.stopPropagation());
 $('setView').addEventListener('click', e => { const v = e.target.dataset && e.target.dataset.v; if (!v) return; SFX.click(); setView(v); });
-window.addEventListener('keydown', e => { if ((e.key === 'v' || e.key === 'V') && mode === 'play') setView(S.view === 'sipahi' ? 'kus' : 'sipahi'); });
+window.addEventListener('keydown', e => { if ((e.key === 'v' || e.key === 'V') && mode === 'play') setView(S.view === 'sipahi' ? 'kus' : 'sipahi'); if (e.key === ' ' && sipahiGozu()) { e.preventDefault(); darbe(); } });
 drawViewBtn();
 $('pResume').addEventListener('click', () => { SFX.click(); pause(false); });
 $('pRestart').addEventListener('click', () => { SFX.click(); startGame(G.i); });
@@ -1151,6 +1173,7 @@ function pollPad(dt) {
     const v = Math.abs(ax) > 0.15 ? ax : b(14) ? -1 : b(15) ? 1 : 0; G.tx += v * 14 * dt;
     if (edge(9) || edge(1)) pause(true);
     if (edge(3)) setView(S.view === 'sipahi' ? 'kus' : 'sipahi');   // Y / △: görüş
+    if (edge(0) && sipahiGozu()) darbe();   // A / ✕: sipahi darbesi
     return;
   }
   for (const k of ['l', 'r', 'u', 'd']) { const v = stick[k], was = padPrev['s' + k]; padPrev['s' + k] = v; if (v && !was) {
@@ -1251,6 +1274,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
   pollPad(dt);
   if (G) {
+    if (darbeT > 0) darbeT -= dt; darbeK = Math.max(0, darbeK - dt * 5);
     if (mode === 'play' && !paused) {
       G.tx += keyDir * 12 * dt;
       M.step(G, dt); handleEvents(); drumLoop(dt);
@@ -1263,9 +1287,9 @@ function frame(now) {
     camX += (tx - camX) * Math.min(1, dt * 5); camZ += (tz - camZ) * Math.min(1, dt * 8);
     if (window.VR && VR.on) { VR.update(dt); if (VR.test) VR.testCam(); }   // VR: savaş alanı harp masasının üstünde (js/vr.js)
     else if (sipahiGozu()) {   // Sipahi Gözü: ordunun önündeki atın sırtından
-      const b = binek.position, sw = (G.tx - G.x) * 0.012;
+      const b = binek.position, sw = (G.tx - G.x) * 0.012 + darbeK * 0.05;
       camera.fov = window.innerWidth / window.innerHeight < 0.8 ? 84 : 70; camera.updateProjectionMatrix();
-      camera.position.set(b.x, 2.2 + b.y * 0.8, b.z + 0.3); camera.up.set(Math.sin(sw), 1, 0); camera.lookAt(b.x + sw * 6, 0.7, b.z - 14);
+      camera.position.set(b.x, 2.2 + b.y * 0.8 - darbeK * 0.12, b.z + 0.3 - darbeK * 0.6);   // darbede öne atılış camera.up.set(Math.sin(sw), 1, 0); camera.lookAt(b.x + sw * 6, 0.7, b.z - 14);
     }
     else {
       if (camera.fov > 60 && window.innerWidth / window.innerHeight >= 0.8 || camera.fov > 80) { camera.up.set(0, 1, 0); resize(); }
@@ -1284,7 +1308,7 @@ function frame(now) {
 }
 // VR (Harp Masası) modülüne oyunun sahnesini ve durumunu ver
 if (window.VR_KUR) window.VR_KUR({ scene, renderer, camera, $, t, fmt, D, SFX, NL, canPlay, startGame, previewLevel, show, unlockAudio, nextLevel, resize, frame,
-  binek: () => binek, buyFull: PAID ? () => buyFull().then(ok => { if (ok) { S.full = true; persist(); drawFullChip(); } return ok; }) : null, G: () => G, mode: () => mode, mood: () => curMood, MOODS, precip: [rainLines, snowPts], lastRes: () => lastRes, setMode: v => { mode = v; }, setPaused: v => { paused = v; }, setLast: v => { last = v; } });
+  binek: () => binek, paused: () => paused, darbe, S: () => S, persist, upCapNow, totalStars: () => totalStars(), setView, achieve: id => achieve(id), pause, fmtN: fmt, buyFull: PAID ? () => buyFull().then(ok => { if (ok) { S.full = true; persist(); drawFullChip(); } return ok; }) : null, G: () => G, mode: () => mode, mood: () => curMood, MOODS, precip: [rainLines, snowPts], lastRes: () => lastRes, setMode: v => { mode = v; }, setPaused: v => { paused = v; }, setLast: v => { last = v; } });
 
 // Mağaza görselleri için sahne modu: ?kare=BÖLÜM&hiz=2 (araclar/magaza-gorselleri.js kullanır)
 const Q = new URLSearchParams(location.search);

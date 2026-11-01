@@ -1755,6 +1755,6 @@ function rewardOf(G, win, firstClear) {
   return Math.min(Math.round(L.reward * 0.3), 4 + Math.floor(G.kills / 6)) + loot;
 }
 
-const API = { buildLevel, CAL, ROAD, levelPos, regionOf, regLen, SEF0, SEFR0, REG0, lanesOf, roadOf, speedOf, laneAt, laneX, WEAPONS, FOES, UPG, UPMAX, upCap, upCost, stats, REGIONS, SEFERLER, SOON, NL, seferOf, BOSSES, LEVELS, newGame, step, progress, starsOf, rewardOf, applyOp, crowdR, gecitCap, HERO_POW, MAX_HERO };
+const API = { hitObj, totalPow, buildLevel, CAL, ROAD, levelPos, regionOf, regLen, SEF0, SEFR0, REG0, lanesOf, roadOf, speedOf, laneAt, laneX, WEAPONS, FOES, UPG, UPMAX, upCap, upCost, stats, REGIONS, SEFERLER, SOON, NL, seferOf, BOSSES, LEVELS, newGame, step, progress, starsOf, rewardOf, applyOp, crowdR, gecitCap, HERO_POW, MAX_HERO };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.MANTIK = API;
 })(typeof window !== 'undefined' ? window : globalThis);
