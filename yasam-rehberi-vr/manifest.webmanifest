@@ -1,0 +1,18 @@
+{
+  "name": "Yaşam Rehberi VR · Ayasofya",
+  "short_name": "Yaşam Rehberi VR",
+  "description": "Ayasofya'nın kubbesi altında dur: hat levhaları, mihrap, minber ve 1500 yıllık hikâye. Sıradaki vakit ve elinde tesbih. Bir Mr. Anduv! yapımıdır.",
+  "lang": "tr",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#14171a",
+  "theme_color": "#1d4d36",
+  "orientation": "landscape",
+  "icons": [
+    { "src": "simge-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "simge-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "simge-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["lifestyle", "education", "travel"]
+}

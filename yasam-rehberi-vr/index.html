@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1d4d36">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="simge-192.png">
+<link rel="apple-touch-icon" href="simge-192.png">
+<title>Yaşam Rehberi VR · Ayasofya</title>
+<meta name="description" content="Ayasofya'nın kubbesi altında dur: hat levhaları, mihrap, minber ve 1500 yıllık hikâye. Sıradaki vakit, tesbih ve sükûnet. VR gözlükte, bilgisayarda ve telefonda çalışır.">
+<style>
+  @font-face{font-family:'DM Sans';font-weight:500;src:url(fonts/dm-sans-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'DM Sans';font-weight:500;src:url(fonts/dm-sans-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'DM Sans';font-weight:700;src:url(fonts/dm-sans-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'DM Sans';font-weight:700;src:url(fonts/dm-sans-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'DM Sans';font-weight:800;src:url(fonts/dm-sans-latin-ext-800-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'DM Sans';font-weight:800;src:url(fonts/dm-sans-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'DM Sans';font-weight:900;src:url(fonts/dm-sans-latin-ext-900-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'DM Sans';font-weight:900;src:url(fonts/dm-sans-latin-900-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'Barlow Condensed';font-weight:800;src:url(fonts/barlow-condensed-latin-ext-800-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'Barlow Condensed';font-weight:800;src:url(fonts/barlow-condensed-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'Amiri';font-weight:700;src:url(fonts/amiri-arabic-700-normal.woff2) format('woff2')}
+  :root{--ink:#1f2328;--band:#1d4d36;--gold:#c9a227;--panel:#efe8d4;--head:#2f3e4c;--go:#2e7d46}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:#14171a;color:#fff;font:500 15px/1.4 'DM Sans',system-ui,sans-serif}
+  canvas{display:block;touch-action:none}
+  .band{position:fixed;left:0;right:0;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;
+    background:var(--band);border-bottom:3px solid var(--gold)}
+  .band h1{margin:0;font:900 19px/1 'DM Sans',sans-serif;letter-spacing:.3px}.band h1 em{font-style:normal;color:#e9c766}
+  .band small{display:block;color:#cfe6d9;font-size:12px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .band .t{min-width:0;flex:1}
+  .vr{flex:none;border:1px solid #1f5a31;border-radius:4px;padding:9px 14px;font:900 14px 'DM Sans',sans-serif;color:#fff;background:var(--go);cursor:pointer}
+  .vr[disabled]{background:#3c4852;border-color:#2a3640;cursor:default;opacity:.85}
+  .alt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;display:flex;gap:8px;align-items:center;
+    padding:8px;border-radius:6px;background:#14171ae6;border:1px solid #3c4852;max-width:calc(100% - 24px)}
+  .alt button{border:1px solid #c8bc9a;border-radius:4px;padding:10px 13px;font:800 15px 'DM Sans',sans-serif;background:var(--panel);color:var(--ink);cursor:pointer;white-space:nowrap}
+  .alt .say{background:var(--go);border-color:#1f5a31;color:#fff;min-width:110px}
+  .ipucu{position:fixed;left:12px;top:calc(62px + env(safe-area-inset-top,0px));z-index:4;font-size:12.5px;color:#cfe6d9;background:#14171ab3;padding:6px 10px;border-radius:4px;max-width:calc(100% - 24px)}
+  .giris{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at 50% 25%,#2a6247,#14171a 72%)}
+  .kart{max-width:540px;width:100%;border-radius:4px;overflow:hidden;color:var(--ink);background:var(--panel);border:1px solid #c8bc9a;box-shadow:0 20px 50px #000a}
+  .kart .h{background:var(--head);color:#fff;font:800 12px 'DM Sans';letter-spacing:1.4px;padding:9px 16px;text-transform:uppercase}
+  .kart .b{padding:16px 18px 18px}
+  .kart h2{margin:0 0 8px;font:900 30px/1.05 'DM Sans',sans-serif;color:#1d4d36}
+  .kart p{margin:0 0 10px;font-size:15.5px}
+  .kart ul{margin:0 0 14px;padding-left:18px;font-size:14px;color:#5e5645}
+  .kart button{width:100%;border:1px solid #1f5a31;border-radius:4px;padding:14px;font:900 18px 'DM Sans',sans-serif;color:#fff;background:var(--go);cursor:pointer}
+  .kart .made{margin:12px 0 0;text-align:center;font-weight:800;font-style:italic;color:#9a7a14;font-size:13px}
+  .kart .not{font-size:12px;color:#7d7461;margin:8px 0 0}
+  .hata{color:#ffd0c4}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body>
+<header class="band">
+  <div class="t"><h1>YAŞAM REHBERİ <em>VR</em></h1><small id="alt">Ayasofya · İstanbul</small></div>
+  <button class="vr" id="vr" disabled>VR</button>
+</header>
+<div class="ipucu" id="ipucu">Sürükle: etrafına bak · Zemine çift tıkla: oraya yürü · Altın noktalar: Ayasofya'nın hikâyesi</div>
+<div class="alt">
+  <button class="say" id="say" aria-label="Tesbih say">📿 0/33</button>
+  <button id="zikir" aria-label="Zikri değiştir">Sübhânallah</button>
+  <button id="kubbe" aria-label="Kubbeye bak">Kubbe</button>
+</div>
+<div class="giris" id="giris">
+  <div class="kart">
+    <div class="h">Yaşam Rehberi · VR</div>
+    <div class="b">
+      <h2>Ayasofya</h2>
+      <p>Kubbenin altında dur. Hat levhalarına, mihraba ve minbere yaklaş; altın noktalara dokunup 1500 yıllık hikâyeyi dinle. Sıradaki vakit hep yanında, tesbihin elinde.</p>
+      <ul>
+        <li><b>VR gözlükte:</b> sağ el ışınla göster, tetikle yürü ya da seç · sol el tetik: tesbih, kavrama: zikri değiştir · çubukla dön</li>
+        <li><b>Bilgisayar ve telefonda:</b> sürükleyerek bak, zemine çift dokunup yürü · altta tesbih</li>
+      </ul>
+      <button id="basla"><span id="yuk">Hazırlanıyor…</span></button>
+      <p class="not">Model temsilîdir; ölçüler yaklaşıktır. İnternet gerekmez, hiçbir veri toplanmaz.</p>
+      <p class="made">Bir Mr. Anduv! yapımıdır.</p>
+    </div>
+  </div>
+</div>
+<script type="module" src="cami.js"></script>
+</body>
+</html>
