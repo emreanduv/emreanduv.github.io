@@ -46,5 +46,17 @@
     "41:4E:8F:FB:51:4C:11:C7:51:1D:7D:DA:07:79:42:48:B8:F2:B0:D3:22:6D:41:F3:D1:34:48:8C:B8:36:8F:FC"
    ]
   }
+ },
+ {
+  "relation": [
+   "delegate_permission/common.handle_all_urls"
+  ],
+  "target": {
+   "namespace": "android_app",
+   "package_name": "com.anduv.kaptanmecit.vr",
+   "sha256_cert_fingerprints": [
+    "98:7A:83:62:25:AD:16:14:3F:45:79:B0:09:84:1F:E1:7F:39:E2:39:0A:AD:E8:EE:E9:57:BF:2D:B7:0D:31:B1"
+   ]
+  }
  }
 ]
