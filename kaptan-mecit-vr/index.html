@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f3b3c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="ikon-192.png">
+<title>Kaptan Mecit VR</title>
+<style>
+  :root{--ink:#f4efe2;--bg:#0d1318;--green:#3e9a4c;--orange:#e2702a}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+  canvas{display:block}
+  #ust{position:fixed;left:0;right:0;top:0;padding:12px 16px;display:flex;gap:12px;align-items:center;z-index:5;background:linear-gradient(#0d1318ee,#0d131800);pointer-events:none}
+  #ust b{font-size:18px} #ust b em{color:var(--orange);font-style:normal}
+  #ust .imza{margin-left:auto;font-size:13px;opacity:.85}
+  #gir{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);display:flex;gap:10px;z-index:6}
+  #gir button{font:700 16px system-ui,sans-serif;padding:13px 22px;border-radius:12px;border:0;cursor:pointer;background:var(--orange);color:#fff;box-shadow:0 4px 16px #0006}
+  #gir button.ikinci{background:#1f3b3c;color:var(--ink);border:1px solid #3c5a5c}
+  #gir button[hidden]{display:none}
+  #bilgi{position:fixed;left:16px;bottom:84px;max-width:520px;font-size:13px;line-height:1.5;background:#0d1318cc;border:1px solid #2b3a3c;border-radius:10px;padding:10px 14px;z-index:5}
+  #bilgi kbd{background:#2b3a3c;border-radius:4px;padding:1px 6px;font-family:inherit}
+  #km{position:fixed;width:2px;height:2px;left:-10px;top:-10px;border:0;opacity:0;pointer-events:none}
+  @media (max-width:640px){#bilgi{display:none}}
+</style>
+<script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
+</head>
+<body>
+<div id="ust"><b>Kaptan <em>Mecit</em> VR</b><span class="imza">Bir Mr. Anduv! yapımıdır.</span></div>
+<div id="bilgi"><b>Gözlükte:</b> <b>VR'a gir</b>'e bas. Sol çubuk koş (baktığın yöne göre) · sağ tetik / A <b>pas · oyuncu seç</b> · B / sağ kavrama <b>şut · kay</b> · sağ çubuk sola/sağa: <b>yer değiştir</b> · sol Y: <b>menü</b>.<br>
+  <b>Bilgisayarda:</b> <kbd>WASD</kbd>/<kbd>↑↓←→</kbd> koş · <kbd>X</kbd> pas · <kbd>Z</kbd> şut · <kbd>Q</kbd>/<kbd>E</kbd> yer değiştir · <kbd>M</kbd> menü · fareyle sürükle: etrafına bak.</div>
+<div id="gir"><button id="vrB" hidden>🥽 VR'a gir</button><button id="arB" class="ikinci" hidden>🏠 Odamda oyna (karma gerçeklik)</button></div>
+<iframe id="km" title="Kaptan Mecit motoru" src="kaptanmecit.html?vr=1"></iframe>
+<script type="module">
+import * as THREE from 'three';
+import { Ses } from './ses.js';
+
+/* =====================================================================================
+   KAPTAN MECİT VR
+   Oyun motoru: Kaptan Mecit'in kendisi (gizli çerçevede; adımı ve girişi buradan veririz).
+   Mide bulandırmama ilkesi: kamera ASLA kendiliğinden hareket etmez ya da dönmez. Sen tribündeki
+   koltuğunda oturursun, maçı kafanı çevirerek izlersin. Yer değiştirme yalnız sen isteyince olur ve
+   kayarak değil, kısa bir kararma ile olur. Ufuk sabit. Maket masada dünya tamamen sabittir.
+   Koordinat: KM (x en 0–68, y boy 0–105, z yükseklik) → sahne (x−34, z, y−52.5). 1 KM metresi = 1 m.
+   ===================================================================================== */
+const PW = 68, PL = 105, GW = 7.32, GH = 2.44, GX0 = PW / 2 - GW / 2, GX1 = PW / 2 + GW / 2;
+const V3 = (x, y, z = 0) => new THREE.Vector3(x - PW / 2, z, y - PL / 2);
+const MAKET_OLCEK = 1 / 70, MAKET_OYUNCU = 2.4;
+
+/* ---------- çizici ---------- */
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.setSize(innerWidth, innerHeight);
+renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor');
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+const sahne = new THREE.Scene();
+const kamera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 900);
+const arac = new THREE.Group(); arac.add(kamera); sahne.add(arac);               // "araç": oturduğun koltuk; kamera yalnız sen kafanı çevirince döner
+kamera.position.set(0, 1.25, 0);
+addEventListener('resize', () => { kamera.aspect = innerWidth / innerHeight; kamera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+sahne.add(new THREE.HemisphereLight('#e8eeff', '#2a3528', 1.05));
+const projektor = new THREE.DirectionalLight('#fffaf0', 1.15); projektor.position.set(-30, 80, 20); sahne.add(projektor);
+const ters = new THREE.DirectionalLight('#dfe8ff', 0.45); ters.position.set(40, 60, -30); sahne.add(ters);
+
+/* gökyüzü: gece; ufukta şehir ışığı */
+const gok = (() => {
+  const g = new THREE.SphereGeometry(700, 32, 16), c = [], p = g.attributes.position, C = new THREE.Color();
+  for (let i = 0; i < p.count; i++) { const y = p.getY(i) / 700; C.set(y < 0.02 ? '#1c2228' : y < 0.12 ? '#2a2f3a' : y < 0.35 ? '#141a24' : '#070a10'); c.push(C.r, C.g, C.b); }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(c, 3));
+  return new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, depthWrite: false }));
+})();
+sahne.add(gok);
+const zemin = new THREE.Mesh(new THREE.CircleGeometry(600, 48), new THREE.MeshLambertMaterial({ color: '#1e2328' }));
+zemin.rotation.x = -Math.PI / 2; zemin.position.y = -0.05; sahne.add(zemin);
+
+/* dünya: stadyumun tamamı (gerçek boyda ölçek 1; makette küçülür) */
+const dunya = new THREE.Group(); sahne.add(dunya);
+
+/* maket odası (yalnız maket VR'da görünür): koyu ahşap kaide + zemin + duvar ışığı */
+const oda = new THREE.Group(); sahne.add(oda);
+{
+  const ahsap = new THREE.MeshLambertMaterial({ color: '#4a3020' });
+  const spot = new THREE.PointLight('#fff4dd', 2.2, 7, 1.2); spot.position.set(0.4, 2.6, 0.3); oda.add(spot);
+  const kaide = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.74, 2.9), ahsap); kaide.position.set(0, 0.37, 0); oda.add(kaide);
+  const ust = new THREE.Mesh(new THREE.BoxGeometry(2.36, 0.04, 2.96), new THREE.MeshLambertMaterial({ color: '#2a1c12' })); ust.position.set(0, 0.76, 0); oda.add(ust);
+  const taban = new THREE.Mesh(new THREE.CircleGeometry(9, 40), new THREE.MeshLambertMaterial({ color: '#20282a' })); taban.rotation.x = -Math.PI / 2; taban.position.y = 0.001; oda.add(taban);
+  const duvar = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 5, 40, 1, true), new THREE.MeshLambertMaterial({ color: '#172025', side: THREE.BackSide })); duvar.position.y = 2.5; oda.add(duvar);
+  const imza = yaziPlak('Bir Mr. Anduv! yapımıdır.', 1024, 96, 52, '#f4efe2', '#00000000'); imza.scale.set(1.6, 0.15, 1); imza.position.set(0, 0.4, 1.47); oda.add(imza);
+}
+function yaziPlak(t, w, h, f, renk, zemin) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
+  g.fillStyle = zemin; g.fillRect(0, 0, w, h); g.fillStyle = renk; g.font = `700 ${f}px system-ui,sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, w / 2, h / 2);
+  const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tx, transparent: true }));
+}
+
+/* ---------- Kaptan Mecit motoru (gizli çerçeve) ---------- */
+const fr = document.getElementById('km');
+let W = null, RL = null, LEDo = null, hazir = false;
+const giris = { x: 0, y: 0, pas: false, sut: false };
+let mesaj = '', mesajT = 0, sonM = null, sonSonuc = null;
+let baslatildi = false;
+const cerceveHazir = () => {
+  if (baslatildi || !fr.contentWindow || !fr.contentWindow.__RL) return; baslatildi = true;
+  W = fr.contentWindow; RL = W.__RL; LEDo = W.eval('LED');
+  W.draw = () => {}; W.loop = () => {};                           // kendi döngüsü ve 2B çizimi gereksiz: adımı biz atarız                                             // kendi 2B çizimi gereksiz (LED'leri biz döndürürüz)
+  /* sesler: motorun sesleri 3B sese yönlendirilir (top nerede ise ses oradan) */
+  const topKonum = () => { const M = RL.M; if (!M) return [0, 1, 0]; const v = V3(M.ball.x, M.ball.y, M.ball.z || 0); dunya.localToWorld(v); return [v.x, v.y, v.z]; };
+  const S = W.SND; if (S) {
+    S.init = () => {}; S.ambStart = () => {}; S.ambStop = () => {}; S.jingle = () => {}; S.sad = () => {}; S.click = () => Ses.tik(); S.tone = () => {}; S.noise = () => {};
+    S.kick = (g) => Ses.vurus(...topKonum(), g ?? 1); S.bounce = () => Ses.vurus(...topKonum(), 0.35); S.net = () => Ses.vurus(...topKonum(), 0.6);
+    S.whistle = (n) => { const v = V3(PW / 2, PL / 2, 2); dunya.localToWorld(v); Ses.duduk(n >= 3, v.x, v.y, v.z, Math.min(2, n || 1)); };
+    S.roar = () => Ses.gol(); S.ooh = () => Ses.ooo();
+  }
+  /* motorun ekran yazıları (GOOOL, DEVRE ARASI, KART...) dev ekranlara gelir */
+  W.banner = (t, s) => { mesaj = (String(t || '') + (s ? ' · ' + String(s) : '')).replace(/<[^>]*>/g, '').replace(/&amp;/g, '&'); mesajT = 2.6; };
+  W.hideBanner = () => {};
+  const SS = RL.S(); SS.set.cam = 0;                               // motor çerçevesinde en hafif kamera
+  demoBaslat(); hazir = true; menuCiz();
+};
+fr.addEventListener('load', cerceveHazir);
+const LG = () => W.eval('LG_ORDER'), LGS = () => W.eval('LEAGUES');
+function rastgeleTakim(lg) { const t = LGS()[lg].t; return RL.team(lg, t[Math.floor(Math.random() * t.length)][0]); }
+function demoBaslat() {
+  const lg = LG()[Math.floor(Math.random() * 6)]; let a = rastgeleTakim(lg), b = rastgeleTakim(lg); if (a.id === b.id) b = rastgeleTakim(lg);
+  RL.startMatch(a, b, null, true); macHazirla(true);
+}
+function macHazirla(demo) {
+  const M = RL.M; M.paused = true; M.lastT = performance.now();
+  W.document.querySelectorAll('#pmenu,#banner').forEach(x => x.hidden = true);
+  W.__bot = demo ? null : M2 => { M2.input.x = giris.x; M2.input.y = giris.y; if (giris.pas) { M2.input.pasE = true; giris.pas = false; } if (giris.sut) { M2.input.sutE = true; giris.sut = false; } };
+  stadyumKur(M); seyirciRenk(M); oyunculariKur(M); tabelaSon = ''; if (!demo) { sonM = M; sonSonuc = null; mesajT = 0; }
+}
+function macBaslat() {
+  const SS = RL.S(); SS.set.diff = SEC.zor; SS.set.dur = SEC.sure;
+  const lg = LG()[SEC.lig], T = LGS()[lg].t, a = RL.team(lg, T[SEC.ev % T.length][0]), b = RL.team(lg, T[SEC.dep % T.length][0]);
+  RL.startMatch(a, b, null, false, {}); macHazirla(false); DEMO = false;
+  W.__RL.M && (W.__RL.M.paused = true);
+  const M = RL.M; M.state = 'pre'; M.stateT = 1.5;
+  try { localStorage.setItem('kmvr.sec', JSON.stringify(SEC)); } catch { /* */ }
+}
+let DEMO = true;
+
+/* ---------- stadyum: Kaptan Mecit'in stadyum mimarisinden (aynı tribünler, loca kuşağı, çatı, projektörler) ---------- */
+let STAD = null, KOLTUK_ENGEL = [];
+function stadyumKur(M) {
+  if (STAD) return;
+  const ST = W.buildStadium({ W: 1, N: 1, E: 1, S: 1 }, 1, false, false), L = ST.L;
+  STAD = { L, fans: [] };
+  /* tüm dörtgenler tek ağ, köşe renkleriyle */
+  const pos = [], col = [], C = new THREE.Color();
+  const dort = (q, c) => { C.set(c); const v = q.map(p => V3(p[0], p[1], p[2])); for (const i of [0, 1, 2, 0, 2, 3]) { pos.push(v[i].x, v[i].y, v[i].z); col.push(C.r, C.g, C.b); } };
+  for (const k of ['roof', 'upper', 'vip', 'lower', 'fasc']) for (const o of L[k]) dort(o.q, o.c);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.computeVertexNormals();
+  dunya.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })));
+  /* çatı makasları */
+  const tp = []; for (const [A, B] of L.truss) tp.push(V3(...A), V3(...B));
+  dunya.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(tp), new THREE.LineBasicMaterial({ color: '#8a929b' })));
+  /* saçak projektörleri (parlak) ve loca camları (sarı ışık) */
+  const kutu = (liste, geo, renk) => { const m = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ color: renk }), liste.length), o = new THREE.Object3D();
+    liste.forEach((p, i) => { o.position.copy(V3(p[0], p[1], p[2])); o.lookAt(V3(PW / 2, PL / 2, 0)); o.updateMatrix(); m.setMatrixAt(i, o.matrix); }); dunya.add(m); };
+  kutu(L.lights, new THREE.BoxGeometry(1.4, 0.7, 0.3), '#fffbe6');
+  const pen = []; for (const v of L.vip) if (v.win) pen.push(...v.win); kutu(pen, new THREE.PlaneGeometry(1.4, 1.1), '#ffd98a');
+  /* seyirci noktaları */
+  for (const k of ['upper', 'lower']) for (const o of L[k]) if (o.fans) for (const d of o.fans) STAD.fans.push(d);
+  seyirciKur(); pankartlar(); ekranlar(); sahaKur(); koltukZeminleri();
+}
+
+/* çim: Kaptan Mecit'in şeritleri ve çizgileri, kenar bölgesiyle */
+function sahaKur() {
+  const xs = -8, ys = -9, w = PW + 16, h = PL + 18, S = 16, c = document.createElement('canvas'); c.width = w * S; c.height = h * S; const g = c.getContext('2d');
+  const X = x => (x - xs) * S, Y = y => (y - ys) * S;
+  g.fillStyle = '#2b6328'; g.fillRect(0, 0, c.width, c.height);
+  const SW = PL / 18; for (let i = -1; i < 19; i++) { g.fillStyle = (i + 60) % 2 ? '#3e8d38' : '#4a9b41'; g.fillRect(X(-3), Y(i * SW), (PW + 6) * S, SW * S + 1); }
+  g.strokeStyle = '#f2f2ea'; g.lineWidth = 0.13 * S; g.fillStyle = '#f2f2ea';
+  g.strokeRect(X(0), Y(0), PW * S, PL * S); g.beginPath(); g.moveTo(X(0), Y(PL / 2)); g.lineTo(X(PW), Y(PL / 2)); g.stroke();
+  g.beginPath(); g.arc(X(PW / 2), Y(PL / 2), 9.15 * S, 0, 7); g.stroke();
+  for (const [ge, s] of [[0, 1], [PL, -1]]) {
+    const b0 = (PW - 40.32) / 2; g.strokeRect(X(b0), Math.min(Y(ge), Y(ge + s * 16.5)), 40.32 * S, 16.5 * S);
+    g.strokeRect(X(PW / 2 - 9.16), Math.min(Y(ge), Y(ge + s * 5.5)), 18.32 * S, 5.5 * S);
+    g.beginPath(); g.arc(X(PW / 2), Y(ge + s * 11), 0.22 * S, 0, 7); g.fill();
+    g.beginPath(); const a0 = Math.acos(5.5 / 9.15); if (s > 0) g.arc(X(PW / 2), Y(ge + 11), 9.15 * S, Math.PI / 2 - a0, Math.PI / 2 + a0); else g.arc(X(PW / 2), Y(ge - 11), 9.15 * S, -Math.PI / 2 - a0, -Math.PI / 2 + a0); g.stroke();
+  }
+  g.beginPath(); g.arc(X(PW / 2), Y(PL / 2), 0.22 * S, 0, 7); g.fill();
+  for (const [x, y, a] of [[0, 0, 0], [PW, 0, Math.PI / 2], [PW, PL, Math.PI], [0, PL, -Math.PI / 2]]) { g.beginPath(); g.arc(X(x), Y(y), 1 * S, a, a + Math.PI / 2); g.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: t }));
+  m.rotation.x = -Math.PI / 2; m.position.copy(V3(xs + w / 2, ys + h / 2, 0.01)); dunya.add(m);
+  /* kaleler: direkler + ağ */
+  const beyaz = new THREE.MeshLambertMaterial({ color: '#ffffff' }), agM = new THREE.LineBasicMaterial({ color: '#e6ece6', transparent: true, opacity: 0.6 });
+  for (const gy of [0, PL]) {
+    const back = gy === 0 ? -2.2 : PL + 2.2, cyl = l => new THREE.CylinderGeometry(0.07, 0.07, l, 10);
+    for (const x of [GX0, GX1]) { const m2 = new THREE.Mesh(cyl(GH), beyaz); m2.position.copy(V3(x, gy, GH / 2)); dunya.add(m2); }
+    const bar = new THREE.Mesh(cyl(GW + 0.14), beyaz); bar.rotation.z = Math.PI / 2; bar.position.copy(V3(PW / 2, gy, GH)); dunya.add(bar);
+    const pts = [], L = (a, b) => pts.push(V3(...a), V3(...b));
+    for (let x = GX0; x <= GX1 + 0.01; x += 0.4) { L([x, back, 0], [x, back, GH * 0.85]); L([x, gy, GH], [x, back, GH * 0.85]); }
+    for (let z = 0; z <= GH * 0.85; z += 0.35) L([GX0, back, z], [GX1, back, z]);
+    for (let q = 0; q <= 5; q++) { const y = gy + (back - gy) * q / 5, zt = GH - GH * 0.15 * q / 5; L([GX0, y, 0], [GX0, y, zt]); L([GX1, y, 0], [GX1, y, zt]); }
+    for (let z = 0; z <= GH; z += 0.35) { L([GX0, gy, z], [GX0, back, Math.min(z, GH * 0.85)]); L([GX1, gy, z], [GX1, back, Math.min(z, GH * 0.85)]); }
+    dunya.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), agM));
+  }
+  /* köşe bayrakları */
+  const sopa = new THREE.MeshLambertMaterial({ color: '#f2f2f2' }), bayrak = new THREE.MeshLambertMaterial({ color: '#f7d21e', side: THREE.DoubleSide });
+  const bg = new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.Float32BufferAttribute([0, 1.5, 0, 0, 1.15, 0, 0.45, 1.32, 0], 3)); bg.computeVertexNormals();
+  for (const [x, y] of [[0, 0], [PW, 0], [0, PL], [PW, PL]]) { const s = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.5, 6), sopa); s.position.copy(V3(x, y, 0.75)); dunya.add(s);
+    const f = new THREE.Mesh(bg, bayrak); f.position.copy(V3(x, y, 0)); f.rotation.y = x < PW / 2 ? 0 : Math.PI; dunya.add(f); }
+  /* yedek kulübeleri (saha kenarı koltuğunun iki yanında) */
+  const kulube = new THREE.MeshLambertMaterial({ color: '#33424c', side: THREE.DoubleSide }), koltuk = new THREE.MeshLambertMaterial({ color: '#283238' });
+  for (const yc of [PL / 2 - 14, PL / 2 + 14]) {
+    const k = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 8, 16, 1, true, 0, Math.PI), kulube); k.rotation.z = Math.PI / 2; k.rotation.y = Math.PI / 2; k.position.copy(V3(PW + 5.2, yc, 0.9)); k.scale.set(1, 1, 1); dunya.add(k);
+    const o = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 8.6), koltuk); o.position.copy(V3(PW + 5.6, yc, 0.25)); dunya.add(o);
+  }
+}
+
+/* ---------- seyirci: tek çizimde binlerce kişi; gol olunca hepsi ayağa kalkıp zıplar ---------- */
+let seyirci = null;
+const insanDokusu = (() => {
+  const c = document.createElement('canvas'); c.width = 32; c.height = 64; const g = c.getContext('2d');
+  g.fillStyle = 'rgb(255,0,0)'; g.beginPath(); g.roundRect(5, 24, 22, 40, 6); g.fill();                  // forma (R kanalı = renk)
+  g.fillStyle = 'rgb(0,255,0)'; g.beginPath(); g.arc(16, 15, 9, 0, 7); g.fill();                         // yüz (G kanalı = ten)
+  g.fillStyle = 'rgb(0,0,255)'; g.beginPath(); g.arc(16, 12, 9.4, Math.PI * 1.05, Math.PI * 1.95); g.fill(); // saç (B kanalı)
+  const t = new THREE.CanvasTexture(c); t.magFilter = THREE.LinearFilter; return t;
+})();
+function seyirciKur() {
+  const yer = KOLTUKLAR.filter(k => k.dunyada).flatMap(k => [k.km, k.km2].filter(Boolean));
+  const F = STAD.fans.filter(d => !yer.some(km => Math.hypot(d[0] - km[0], d[1] - km[1]) < (d[2] < km[2] - 0.5 ? 6.5 : 3) && d[2] < km[2] + 1.5));
+  const n = F.length, ofs = new Float32Array(n * 3), nrm = new Float32Array(n * 2), ph = new Float32Array(n), ci = new Float32Array(n), ten = new Float32Array(n * 3), sac = new Float32Array(n * 3);
+  const TEN = ['#f1c9a5', '#e0ac7e', '#c68a5a', '#8d5a3b'].map(c => new THREE.Color(c)), SAC = ['#1d1612', '#3a2617', '#6b4a2a', '#c9a35b', '#2a2a2a'].map(c => new THREE.Color(c));
+  F.forEach((d, i) => {
+    const v = V3(d[0], d[1], d[2] + 0.02); ofs.set([v.x, v.y, v.z], i * 3);
+    const cx = Math.max(0, Math.min(PW, d[0])), cy = Math.max(0, Math.min(PL, d[1])); let nx = cx - d[0], ny = cy - d[1]; const l = Math.hypot(nx, ny) || 1; nrm.set([nx / l, ny / l], i * 2);
+    ph[i] = d[4]; ci[i] = d[3]; const t = TEN[Math.floor(Math.random() * 4)], s = SAC[Math.floor(Math.random() * 5)]; ten.set([t.r, t.g, t.b], i * 3); sac.set([s.r, s.g, s.b], i * 3);
+  });
+  const geo = new THREE.InstancedBufferGeometry(); const q = new THREE.PlaneGeometry(0.62, 1.05); q.translate(0, 0.525, 0);
+  geo.index = q.index; geo.setAttribute('position', q.attributes.position); geo.setAttribute('uv', q.attributes.uv);
+  geo.setAttribute('ofs', new THREE.InstancedBufferAttribute(ofs, 3)); geo.setAttribute('nrm', new THREE.InstancedBufferAttribute(nrm, 2));
+  geo.setAttribute('ph', new THREE.InstancedBufferAttribute(ph, 1)); geo.setAttribute('ci', new THREE.InstancedBufferAttribute(ci, 1));
+  geo.setAttribute('ten', new THREE.InstancedBufferAttribute(ten, 3)); geo.setAttribute('sac', new THREE.InstancedBufferAttribute(sac, 3));
+  geo.setAttribute('renk', new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3)); geo.instanceCount = n;
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { harita: { value: insanDokusu }, t: { value: 0 }, cosku: { value: 0 } },
+    vertexShader: `attribute vec3 ofs; attribute vec2 nrm; attribute float ph; attribute vec3 renk; attribute vec3 ten; attribute vec3 sac;
+      uniform float t; uniform float cosku; varying vec2 vUv; varying vec3 vR; varying vec3 vT; varying vec3 vS; varying float vIs;
+      void main(){ vUv=uv; vR=renk; vT=ten; vS=sac;
+        vec3 sag=vec3(-nrm.y,0.0,nrm.x); float zip = ph<4.2 ? cosku*max(0.0,sin(t*(6.0+ph)+ph*7.0))*0.45 : cosku*0.12;
+        vec3 p = ofs + sag*position.x + vec3(0.0, position.y*(1.0+0.35*cosku) + zip, 0.0);
+        vIs = 0.78 + 0.22*fract(ph*13.7);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p,1.0); }`,
+    fragmentShader: `uniform sampler2D harita; varying vec2 vUv; varying vec3 vR; varying vec3 vT; varying vec3 vS; varying float vIs;
+      void main(){ vec4 m=texture2D(harita,vUv); float a=max(m.r,max(m.g,m.b)); if(a<0.35) discard;
+        vec3 yuz = gl_FrontFacing ? vT : vS; vec3 c=(vR*m.r+yuz*m.g+vS*m.b)/a; gl_FragColor=vec4(c*vIs,1.0);
+        #include <colorspace_fragment>
+      }`,
+    side: THREE.DoubleSide,
+  });
+  if (seyirci) dunya.remove(seyirci);
+  seyirci = new THREE.Mesh(geo, mat); seyirci.frustumCulled = false; dunya.add(seyirci);
+}
+function seyirciRenk(M) {
+  if (!seyirci) return;
+  const cols = [M.T[0].kit.c1, M.T[0].kit.c2, M.T[1].kit.c1, M.T[1].kit.c2, '#f1c9a5', '#c68a5a', '#e8e8e8', '#2a2a2a', '#d33a2e', '#3b5b8c', '#c9a227'].map(c => new THREE.Color(c));
+  const a = seyirci.geometry.attributes.ci.array, r = seyirci.geometry.attributes.renk;
+  for (let i = 0; i < a.length; i++) { const c = cols[a[i]] || cols[6]; r.array[i * 3] = c.r; r.array[i * 3 + 1] = c.g; r.array[i * 3 + 2] = c.b; }
+  r.needsUpdate = true;
+}
+
+/* ---------- LED panolar: Kaptan Mecit'in dönen LED panoları (Mr. Anduv! markası, canlı skor, golde GOOOL) ---------- */
+const PANOLAR = [];
+function pankartlar() {
+  const E = 8 - 1.5, S = 7 - 1.5; let i = 0;
+  const kenar = (ax, ay, bx, by, nx, ny) => { const len = Math.hypot(bx - ax, by - ay), k = Math.max(1, Math.round(len / 13));
+    for (let j = 0; j < k; j++) { const t0 = j / k, t1 = (j + 1) / k, x0 = ax + (bx - ax) * t0, y0 = ay + (by - ay) * t0, x1 = ax + (bx - ax) * t1, y1 = ay + (by - ay) * t1;
+      const cv = W.ledCanvas(i), tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(Math.hypot(x1 - x0, y1 - y0) - 0.15, 0.95), new THREE.MeshBasicMaterial({ map: tx }));
+      m.position.copy(V3((x0 + x1) / 2, (y0 + y1) / 2, 0.5)); m.rotation.y = Math.atan2(nx, ny); dunya.add(m);
+      const arka = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(x1 - x0, y1 - y0) - 0.1, 1.0, 0.3), new THREE.MeshLambertMaterial({ color: '#15191d' }));
+      arka.position.copy(V3((x0 + x1) / 2 - nx * 0.17, (y0 + y1) / 2 - ny * 0.17, 0.5)); arka.rotation.y = m.rotation.y; dunya.add(arka);
+      PANOLAR.push({ tx, i: i++ }); } };
+  kenar(-3, PL + E, -3, -E, 1, 0); kenar(-S, -5, PW + S, -5, 0, 1); kenar(PW + 3, -E, PW + 3, PL + E, -1, 0); kenar(PW + S, PL + 5, -S, PL + 5, 0, -1);
+}
+
+/* ---------- dev ekranlar (iki kale arkasında, çatının altında) + maket tabelası ---------- */
+const tabelaC = document.createElement('canvas'); tabelaC.width = 1024; tabelaC.height = 448;
+const tabelaT = new THREE.CanvasTexture(tabelaC); tabelaT.colorSpace = THREE.SRGBColorSpace;
+const tabelaM = new THREE.MeshBasicMaterial({ map: tabelaT });
+let tabelaSon = '';
+function ekranlar() {
+  const ek = (x, y, z, w, ry) => { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 448 / 1024), tabelaM);
+    const kasa = new THREE.Mesh(new THREE.BoxGeometry(w + 0.6, w * 448 / 1024 + 0.6, 0.6), new THREE.MeshLambertMaterial({ color: '#1a1e22' })); kasa.position.z = -0.32;
+    g.add(kasa, m); g.position.copy(V3(x, y, z)); g.rotation.y = ry; dunya.add(g); };
+  ek(PW / 2, -8 - 4.4, 27, 17, 0); ek(PW / 2, PL + 8 + 2.6, 24.5, 15, Math.PI);
+}
+const maketTabela = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1 * 448 / 1024), tabelaM);
+maketTabela.position.set(-1.2, 1.55, 0); maketTabela.rotation.y = Math.PI / 2; oda.add(maketTabela);
+function tabelaCiz(M) {
+  const ust = mesajT > 0 ? mesaj : M.state === 'tekrar' ? 'TEKRAR' : M.state === 'half' ? 'DEVRE ARASI' : '';
+  const ad = M.ctrl && !M.demo ? `${M.ctrl.n} ${M.ctrl.no}` : '';
+  const dk = W.minTxt ? W.minTxt() : '', k = `${M.T[0].score}-${M.T[1].score}|${dk}|${ust}|${ad}|${M.demo}`;
+  if (k === tabelaSon) return; tabelaSon = k;
+  const g = tabelaC.getContext('2d'), w = 1024, h = 448, F = 'system-ui,-apple-system,Segoe UI,Arial,sans-serif';
+  g.fillStyle = '#05100e'; g.fillRect(0, 0, w, h);
+  const kit = (T, x) => { g.fillStyle = T.kit.c1; g.fillRect(x, 70, 150, 110); g.fillStyle = T.kit.c2; g.fillRect(x + 118, 70, 32, 110);
+    g.fillStyle = '#f4efe2'; g.font = `900 60px ${F}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(T.t.short, x + 75, 228, 190); };
+  kit(M.T[0], 70); kit(M.T[1], w - 220);
+  g.fillStyle = '#ffd23f'; g.shadowColor = 'rgba(255,210,63,.7)'; g.shadowBlur = 18; g.font = `900 150px ${F}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(`${M.T[0].score}-${M.T[1].score}`, w / 2, 140); g.shadowBlur = 0;
+  g.fillStyle = '#9fd0b0'; g.font = `800 52px ${F}`; g.fillText(dk, w / 2, 250);
+  if (ust) { g.fillStyle = /GOO/.test(ust) ? '#c3271c' : '#1f3b3c'; g.fillRect(0, 300, w, 120); g.fillStyle = '#fff'; g.font = `900 64px ${F}`; g.fillText(ust, w / 2, 362, w - 40); }
+  else if (ad) { g.fillStyle = '#ffe14d'; g.font = `800 56px ${F}`; g.fillText('▼ ' + ad, w / 2, 360, w - 40); }
+  else if (M.demo) { g.fillStyle = '#cfe0dc'; g.font = `700 44px ${F}`; g.fillText('Bir Mr. Anduv! yapımıdır.', w / 2, 360); }
+  g.fillStyle = 'rgba(5,16,14,.35)'; for (let x = 3; x < w; x += 4) g.fillRect(x, 0, 1, h); for (let y = 3; y < h; y += 4) g.fillRect(0, y, w, 1);
+  tabelaT.needsUpdate = true;
+}
+
+/* ---------- oyuncular: 98–2000 yayın oyunu görünümünde 3B figürler; her vücut parçası tek çizimde (hepsi birlikte) ---------- */
+const cyl = (rt, rb, h, ty, seg = 10) => { const g = new THREE.CylinderGeometry(rt, rb, h, seg); if (ty) g.translate(0, ty, 0); return g; };
+const PARCA = {
+  thigh: cyl(0.084, 0.066, 0.46, -0.23), pant: cyl(0.104, 0.094, 0.2, -0.07), shin: cyl(0.061, 0.046, 0.44, -0.22),
+  boot: new THREE.BoxGeometry(0.11, 0.085, 0.26).translate(0, -0.04, 0.05), upper: cyl(0.064, 0.054, 0.3, -0.15), fore: cyl(0.048, 0.04, 0.31, -0.155),
+  hips: cyl(0.176, 0.162, 0.22, 0, 14), torso: cyl(0.218, 0.168, 0.52, 0, 16), neck: cyl(0.05, 0.056, 0.09, 0),
+  head: new THREE.SphereGeometry(0.112, 14, 10), hair: new THREE.SphereGeometry(0.119, 14, 7, 0, Math.PI * 2, 0, Math.PI * 0.56),
+};
+let OY = null;
+const golgeGeo = new THREE.CircleGeometry(0.4, 14).rotateX(-Math.PI / 2);
+function oyunculariKur(M) {
+  if (OY) { for (const k in OY.inst) dunya.remove(OY.inst[k]); dunya.remove(OY.golge); }
+  const riglar = M.P.map(() => rigYap()), inst = {};
+  for (const k in PARCA) { const say = riglar.reduce((a, r) => a + (r.P[k] ? r.P[k].length : 0), 0);
+    const m = new THREE.InstancedMesh(PARCA[k], new THREE.MeshLambertMaterial({ color: '#ffffff' }), say); m.frustumCulled = false; inst[k] = m; dunya.add(m); }
+  const golge = new THREE.InstancedMesh(golgeGeo, new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.28, depthWrite: false }), M.P.length); golge.frustumCulled = false; dunya.add(golge);
+  OY = { riglar, inst, golge, M };
+  renkleriAta(M);
+}
+function rigYap() {
+  const root = new THREE.Object3D(), body = new THREE.Object3D(); root.add(body); const P = {};
+  const part = (k, par, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) => { const o = new THREE.Object3D(); o.position.set(x, y, z); o.scale.set(sx, sy, sz); par.add(o); (P[k] || (P[k] = [])).push(o); return o; };
+  const leg = x => { const hip = new THREE.Object3D(); hip.position.set(x, 0.94, 0); body.add(hip); part('thigh', hip); part('pant', hip);
+    const knee = new THREE.Object3D(); knee.position.y = -0.46; hip.add(knee); part('shin', knee); part('boot', knee, 0, -0.44, 0); return { hip, knee }; };
+  const arm = x => { const sho = new THREE.Object3D(); sho.position.set(x, 1.42, 0); body.add(sho); part('upper', sho); const el = new THREE.Object3D(); el.position.y = -0.3; sho.add(el); part('fore', el); return { sho, el }; };
+  const lL = leg(-0.095), lR = leg(0.095), aL = arm(-0.24), aR = arm(0.24);
+  part('hips', body, 0, 0.96, 0, 1, 1, 0.74); part('torso', body, 0, 1.27, 0, 1, 1, 0.64); part('neck', body, 0, 1.57, 0);
+  part('head', body, 0, 1.67, 0, 0.95, 1.1, 1); part('hair', body, 0, 1.69, -0.012, 0.97, 1.05, 1.02);
+  return { root, body, lL, lR, aL, aR, P, yaw: 0 };
+}
+function renkleriAta(M) {
+  const C = new THREE.Color(), say = {};
+  M.P.forEach((p, i) => {
+    const kit = M.T[p.team].kit, gk = p.role === 'G';
+    const shirt = gk ? (p.team === 0 ? '#f3d35a' : '#3ec46d') : kit.c1, shorts = gk ? '#1d1d1d' : kit.c2, sock = gk ? '#1d1d1d' : kit.c1;
+    const renk = { thigh: p.skin, pant: shorts, shin: sock, boot: '#141414', upper: shirt, fore: gk ? '#f4f4f4' : p.skin, hips: shorts, torso: shirt, neck: p.skin, head: p.skin, hair: p.hair };
+    const r = OY.riglar[i]; r.renk = renk;
+    for (const k in r.P) for (let j = 0; j < r.P[k].length; j++) { const idx = say[k] = (say[k] ?? -1) + 1; C.set(renk[k] || '#888'); OY.inst[k].setColorAt(idx, C); }
+  });
+  for (const k in OY.inst) if (OY.inst[k].instanceColor) OY.inst[k].instanceColor.needsUpdate = true;
+}
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+function oyunculariCiz(M, now) {
+  if (!OY || OY.M !== M) return;
+  const buyut = MOD === 'maket' ? MAKET_OYUNCU : 1, say = {}, o = new THREE.Object3D();
+  const lastGoal = M.state === 'goal' && M.events.length ? M.events[M.events.length - 1].team : -1;
+  M.P.forEach((p, i) => {
+    const r = OY.riglar[i], gizli = (M.atilan || []).includes?.(p) || p.x < -20;
+    r.root.position.copy(V3(p.x, p.y, 0)); r.root.scale.setScalar(gizli ? 0.0001 : buyut);
+    const dx = p.dx || 0, dy = p.dy || 0;
+    if (dx || dy) { const t = Math.atan2(dx, dy); let d = t - r.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); r.yaw += d * 0.35; r.body.rotation.y = r.yaw; }
+    const B = r.body, lL = r.lL, lR = r.lR, aL = r.aL, aR = r.aR;
+    B.rotation.x = 0; B.position.y = 0; aL.sho.rotation.set(0, 0, 0.08); aR.sho.rotation.set(0, 0, -0.08); aL.el.rotation.set(0, 0, 0); aR.el.rotation.set(0, 0, 0);
+    if (p.slide > 0 || p.stun > 0.3) {                                         // yerde: ayaklar önde
+      B.rotation.x = -1.38; B.position.y = 0.2; lL.hip.rotation.x = lR.hip.rotation.x = -0.15; lL.knee.rotation.x = 0.05; lR.knee.rotation.x = 0.35;
+      aL.sho.rotation.x = aR.sho.rotation.x = -0.4; aL.sho.rotation.z = 0.9; aR.sho.rotation.z = -0.9; aL.el.rotation.x = aR.el.rotation.x = -0.3;
+    } else {
+      const spd = Math.hypot(p.vx, p.vy), a = Math.min(1, spd / 5.5), ph = p.anim * 4.1, sL = Math.sin(ph), sR = -sL;
+      lL.hip.rotation.x = -sL * (0.12 + 0.72 * a); lR.hip.rotation.x = -sR * (0.12 + 0.72 * a);
+      lL.knee.rotation.x = 0.05 + a * (0.25 + 1.05 * Math.max(0, Math.sin(ph - 1.3))); lR.knee.rotation.x = 0.05 + a * (0.25 + 1.05 * Math.max(0, Math.sin(ph + Math.PI - 1.3)));
+      aL.sho.rotation.x = sL * (0.1 + 0.6 * a); aR.sho.rotation.x = sR * (0.1 + 0.6 * a); aL.el.rotation.x = aR.el.rotation.x = -(0.25 + 1.05 * a);
+      B.rotation.x = 0.04 + 0.16 * a; B.position.y = Math.abs(Math.cos(ph)) * 0.05 * a; if (spd < 0.4) B.position.y = Math.sin(now / 600 + i) * 0.006;
+      if (M.ball.kicker === p && p.cd > 0.12) { const k = clamp((p.cd - 0.12) / 0.23, 0, 1); lR.hip.rotation.x = -1.3 * Math.sin(k * Math.PI) + 0.25 * k; lR.knee.rotation.x = 0.15 + 0.6 * k; aL.sho.rotation.z = 0.5; B.rotation.x = -0.05; }
+      if (lastGoal === p.team) { aL.sho.rotation.x = aR.sho.rotation.x = -2.7; aL.el.rotation.x = aR.el.rotation.x = -0.2; aL.sho.rotation.z = 0.25; aR.sho.rotation.z = -0.25; }
+      else if (lastGoal >= 0) { aL.sho.rotation.x = aR.sho.rotation.x = 0.05; B.rotation.x = 0.25; }
+    }
+    r.root.updateMatrixWorld(true);
+    for (const k in r.P) for (const part of r.P[k]) { const idx = say[k] = (say[k] ?? -1) + 1; OY.inst[k].setMatrixAt(idx, part.matrixWorld); }
+    o.position.copy(V3(p.x, p.y, 0.025)); o.scale.setScalar(gizli ? 0.0001 : buyut * (p.slide > 0 ? 1.8 : 1)); o.updateMatrix(); OY.golge.setMatrixAt(i, o.matrix);
+  });
+  for (const k in OY.inst) OY.inst[k].instanceMatrix.needsUpdate = true; OY.golge.instanceMatrix.needsUpdate = true;
+}
+/* top ve kontrol işaretleri */
+const top = new THREE.Mesh(new THREE.IcosahedronGeometry(0.17, 1), new THREE.MeshLambertMaterial({ color: '#ffffff', flatShading: true }));
+top.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.172, 0), new THREE.MeshBasicMaterial({ color: '#222222', wireframe: true }))); dunya.add(top);
+const topGolge = new THREE.Mesh(new THREE.CircleGeometry(0.2, 12).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.3, depthWrite: false })); dunya.add(topGolge);
+const halka = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.75, 28).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ffe14d', transparent: true, opacity: 0.9, depthWrite: false })); dunya.add(halka);
+const ok = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.6, 4).rotateX(Math.PI), new THREE.MeshBasicMaterial({ color: '#ffe14d' })); dunya.add(ok);
+function topCiz(M, now) {
+  const b = M.ball, bu = MOD === 'maket' ? MAKET_OYUNCU * 0.8 : 1;
+  top.position.copy(V3(b.x, b.y, (b.z || 0) + 0.17 * bu)); top.scale.setScalar(bu); top.rotation.x = (b.owner ? b.owner.anim : b.y) * 1.8; top.rotation.z = -(b.owner ? 0 : b.x) * 1.8;
+  topGolge.position.copy(V3(b.x, b.y, 0.02)); topGolge.scale.setScalar(bu);
+  const c = M.ctrl, g = !!c && !M.demo && M.state !== 'tekrar'; halka.visible = ok.visible = g;
+  if (g) { const s = MOD === 'maket' ? MAKET_OYUNCU : 1.5; halka.position.copy(V3(c.x, c.y, 0.03)); halka.scale.setScalar(MOD === 'maket' ? MAKET_OYUNCU : 1);
+    ok.position.copy(V3(c.x, c.y, (MOD === 'maket' ? 2.2 * MAKET_OYUNCU : 2.6) + Math.sin(now / 160) * 0.08 * s)); ok.scale.setScalar(s);
+    ok.material.color.set(Math.floor(now / 180) % 2 ? '#ffe14d' : '#ffffff'); }
+}
+
+/* ---------- KOLTUKLAR (kamera açılarının VR karşılığı) ----------
+   Hepsi sabit yer: kamera topu takip etmez. km: [x, y, zemin yüksekliği], bak: baktığın nokta. */
+const STDv = { side: 7, end: 8 };
+const KOLTUKLAR = [
+  { ad: 'Maket', alt: 'saha önündeki kaidede, sen ayaktasın', maket: true },
+  { ad: 'Saha kenarı', alt: 'teknik alanın önünde, çim seviyesinde', km: [PW + 1.6, PL / 2, 0], bak: [PW / 2, PL / 2, 0], dunyada: true },
+  { ad: 'TV', alt: 'ana tribün, yayın kamerasının yanı', km: [PW + STDv.side + 16, PL / 2, 14.3], bak: [PW / 2, PL / 2, 0], dunyada: true },
+  { ad: 'Dinamik', alt: 'kale arkası; devre arası kalelerle değişir', km: null, bak: null, dinamik: true, dunyada: true },
+  { ad: 'Tele', alt: 'köşe tribünü, açılı', km: [PW + STDv.side + 11.3, PL + STDv.end + 11.3, 14.3], bak: [PW * 0.42, PL * 0.4, 0], dunyada: true },
+  { ad: 'Stadyum', alt: 'çatı altındaki kamera köprüsü', km: [PW + STDv.side + 5, PL / 2, 27], bak: [PW / 2, PL / 2, 0], dunyada: true, kopru: true },
+];
+const DIN = flip => flip ? { km: [PW / 2, -STDv.end - 14, 1.2 + 28.8 * 14 / 36], bak: [PW / 2, PL * 0.62, 0] } : { km: [PW / 2, PL + STDv.end + 15.5, 12.6 + 13.4 * 1.5 / 16], bak: [PW / 2, PL * 0.38, 0] };
+KOLTUKLAR[3].km = DIN(false).km; KOLTUKLAR[3].km2 = DIN(true).km;
+function koltukZeminleri() {
+  /* her koltuğun altında küçük bir zemin: havada süzülme hissi olmasın (baş dönmesine karşı) */
+  const mat = new THREE.MeshLambertMaterial({ color: '#3a4046' });
+  for (const k of KOLTUKLAR) for (const km of [k.km, k.km2]) { if (!km) continue;
+    const z = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 2.2), mat); z.position.copy(V3(km[0], km[1], km[2] - 0.06)); dunya.add(z); }
+  /* kamera köprüsü: ızgara yol, korkuluk, çatıya askı */
+  const k = KOLTUKLAR[5].km, kop = new THREE.Group(), cel = new THREE.MeshLambertMaterial({ color: '#6c747c' });
+  const yol = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.08, 40), new THREE.MeshLambertMaterial({ color: '#4b525a' })); kop.add(yol);
+  for (const s of [-1, 1]) { const ray = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 40), cel); ray.position.set(s * 1.25, 1.05, 0); kop.add(ray);
+    for (let z = -18; z <= 18; z += 4) { const d = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.05, 0.05), cel); d.position.set(s * 1.25, 0.52, z); kop.add(d);
+      const a = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 4.2, 4), cel); a.position.set(s * 1.25, 2.1 + 0.05, z); kop.add(a); } }
+  kop.position.copy(V3(k[0], k[1], k[2] - 0.04)); dunya.add(kop);
+}
+let KI = 2, MOD = 'dunya';                                         // açılış: TV koltuğu
+const karartma = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 10), new THREE.MeshBasicMaterial({ color: '#000', side: THREE.BackSide, transparent: true, opacity: 0, depthTest: false }));
+karartma.renderOrder = 999; kamera.add(karartma);
+let gecis = null;                                                  // { hedef, t }  kararıp açılır
+function koltugaGec(i, hemen = false) {
+  i = (i + KOLTUKLAR.length) % KOLTUKLAR.length;
+  if (AR && !KOLTUKLAR[i].maket) return;                           // karma gerçeklikte yalnız maket
+  if (hemen) { KI = i; koltukUygula(); return; }
+  gecis = { hedef: i, t: 0 }; Ses.tik();
+}
+function koltukUygula() {
+  const k = KOLTUKLAR[KI]; MOD = k.maket ? 'maket' : 'dunya';
+  oda.visible = !!k.maket && !AR; gok.visible = zemin.visible = !k.maket && !AR;
+  if (k.maket) {
+    dunya.scale.setScalar(MAKET_OLCEK); dunya.position.set(0, 0.78, 0); dunya.rotation.y = 0;
+    arac.position.set(1.45, 0, 0); arac.rotation.y = Math.PI / 2; Ses.olcek(0.5); bakYaw = 0; bakPitch = -0.55;
+  } else {
+    dunya.scale.setScalar(1); dunya.position.set(0, 0, 0); dunya.rotation.y = 0;
+    const flip = !!(RL && RL.M && RL.M.flip), km = k.dinamik ? (flip ? k.km2 : k.km) : k.km, bak = k.dinamik ? DIN(flip).bak : k.bak;
+    const p = V3(...km), b = V3(...bak); arac.position.copy(p); arac.rotation.y = Math.atan2(-(b.x - p.x), -(b.z - p.z)); Ses.olcek(8);
+    bakYaw = 0; bakPitch = -Math.atan2(p.y + 1.2 - b.y, Math.hypot(b.x - p.x, b.z - p.z)) * 0.8;   /* yalnız bilgisayarda: ilk bakış sahaya */
+  }
+  menuYerlestir(); tabelaSon = '';
+}
+let sonFlip = false;
+
+/* ---------- menü (dünyada sabit panel; kumanda ışını / el çimdiği / fare) ---------- */
+const MW = 1024, MH = 820, menuC = document.createElement('canvas'); menuC.width = MW; menuC.height = MH;
+const menuT = new THREE.CanvasTexture(menuC); menuT.colorSpace = THREE.SRGBColorSpace;
+const menu = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.8), new THREE.MeshBasicMaterial({ map: menuT, transparent: true, depthTest: false })); menu.renderOrder = 998;
+arac.add(menu);
+function menuYerlestir() { const ayakta = MOD === 'maket' || KOLTUKLAR[KI].ad === 'Saha kenarı'; menu.position.set(0, ayakta ? 1.35 : 1.05, -1.05); menu.rotation.x = -0.18; }
+let MENU = true, MBTN = [], SAYFA = null;
+try { if (!localStorage.getItem('kmvr.ogretici')) { SAYFA = 0; localStorage.setItem('kmvr.ogretici', '1'); } } catch { /* */ }
+const SEC = { lig: 0, ev: 0, dep: 1, zor: 0, sure: 4 };
+try { Object.assign(SEC, JSON.parse(localStorage.getItem('kmvr.sec') || '{}')); } catch { /* */ }
+function satirSar(g, metin, x, y, w, lh) { for (const par of metin.split('\n')) { let s = ''; for (const k of par.split(' ')) { if (g.measureText(s + k).width > w && s) { g.fillText(s.trim(), x, y); y += lh; s = ''; } s += k + ' '; } g.fillText(s.trim(), x, y); y += lh; } }
+const YARDIM = [
+  ['Mide bulandırmayan VR', 'Kamera hiçbir zaman kendiliğinden hareket etmez. Tribündeki koltuğunda oturursun, maçı kafanı çevirerek izlersin. Yer değiştirmek istersen sağ çubuğu sola ya da sağa it: kısa bir kararma ile diğer koltuğa geçersin.\nRahat oyun için otururken oyna.'],
+  ['Kumanda', 'Sol çubuk: oyuncunu koştur (baktığın yöne göre: ileri it = baktığın yön).\nSağ tetik ya da A: pas · top rakipteyken oyuncu seç.\nB ya da sağ kavrama: şut · top rakipteyken kayarak müdahale.\nSol Y: menü. Tekrar sırasında B: tekrarı geç.'],
+  ['Koltuklar', 'Maket: stadyum maketi kaidede, sen ayaktasın; etrafında yürüyebilirsin. Quest 3/Pro\'da "Odamda oyna" ile maket kendi odanda durur.\nSaha kenarı: çim seviyesinde, en yakın.\nTV: ana tribün. Dinamik: kale arkası (devre arası kalelerle değişir).\nTele: köşe tribünü. Stadyum: çatı köprüsü.'],
+];
+function menuCiz() {
+  menu.visible = MENU; if (!MENU) return;
+  const g = menuC.getContext('2d'); MBTN = []; g.clearRect(0, 0, MW, MH);
+  g.fillStyle = '#f6efdf'; g.beginPath(); g.roundRect(6, 6, MW - 12, MH - 12, 30); g.fill();
+  g.fillStyle = '#1f3b3c'; g.beginPath(); g.roundRect(6, 6, MW - 12, 104, [30, 30, 0, 0]); g.fill();
+  g.textBaseline = 'middle';
+  const dug = (x, y, w, h, yazi, tur, act, v, renk) => {
+    const on = tur === 'on', ana = tur === 'ana';
+    g.fillStyle = ana ? '#e2702a' : on ? '#3e9a4c' : '#e9dcc0'; g.beginPath(); g.roundRect(x, y, w, h, 16); g.fill();
+    g.strokeStyle = ana ? '#b5551c' : on ? '#2d7a39' : '#c9b48a'; g.lineWidth = 3; g.stroke();
+    if (renk) { g.fillStyle = renk[0]; g.fillRect(x + 22, y + h / 2 - 22, 30, 44); g.fillStyle = renk[1]; g.fillRect(x + 44, y + h / 2 - 22, 8, 44); g.strokeStyle = '#0005'; g.lineWidth = 2; g.strokeRect(x + 22, y + h / 2 - 22, 30, 44); }
+    g.fillStyle = on || ana ? '#fff' : '#1d2526'; g.font = `bold ${h > 80 ? 36 : 30}px system-ui, sans-serif`; g.textAlign = 'center';
+    g.fillText(yazi, x + w / 2 + (renk ? 22 : 0), y + h / 2 + 1, w - (renk ? 90 : 26)); if (act) MBTN.push({ x, y, w, h, act, v });
+  };
+  const et = (y, m) => { g.fillStyle = '#5b6466'; g.font = 'bold 24px system-ui, sans-serif'; g.textAlign = 'left'; g.fillText(m, 34, y); };
+  g.fillStyle = '#f4efe2'; g.textAlign = 'left'; g.font = 'bold 48px system-ui, sans-serif';
+  if (SAYFA != null) {
+    const [bas, govde] = YARDIM[SAYFA]; g.fillText(`Nasıl oynanır · ${SAYFA + 1}/${YARDIM.length}`, 34, 58);
+    g.fillStyle = '#1d2526'; g.font = 'bold 42px system-ui, sans-serif'; g.fillText(bas, 34, 166);
+    g.font = '31px system-ui, sans-serif'; satirSar(g, govde, 34, 232, MW - 68, 44);
+    if (SAYFA > 0) dug(34, 700, 300, 92, '◀ Geri', '', 'sayfa', SAYFA - 1);
+    dug(MW - 434, 700, 400, 92, SAYFA < YARDIM.length - 1 ? 'İleri ▶' : 'Anladım ✓', 'ana', 'sayfa', SAYFA + 1);
+    menuT.needsUpdate = true; return;
+  }
+  g.fillText('Kaptan Mecit VR', 34, 46); g.font = '24px system-ui, sans-serif'; g.fillStyle = '#cfe0dc'; g.fillText('Bir Mr. Anduv! yapımıdır.', 36, 88);
+  const macVar = RL && RL.M && !RL.M.demo;
+  if (macVar) dug(MW - 260, 24, 226, 66, '✕ Maça dön', '', 'kapat');
+  if (!hazir) { g.fillStyle = '#5b6466'; g.font = 'bold 34px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText('Yükleniyor…', MW / 2, 400); menuT.needsUpdate = true; return; }
+  const lg = LG()[SEC.lig], L = LGS()[lg], T = L.t, ev = T[SEC.ev % T.length], dep = T[SEC.dep % T.length];
+  const sira = (y, etiket, yazi, act, renk) => { et(y - 18, etiket); dug(34, y, 100, 72, '◀', '', act, -1); dug(146, y, 732, 72, yazi, '', act + 'B', 0, renk); dug(890, y, 100, 72, '▶', '', act, 1); };
+  sira(146, 'Lig', `${L.kurgu} · ${L.ad}`, 'lig');
+  sira(254, 'Senin takımın', ev[1], 'ev', [ev[3], ev[4]]);
+  sira(362, 'Rakip', dep[1], 'dep', [dep[3], dep[4]]);
+  et(452, 'Zorluk'); ['Kolay', 'Orta', 'Zor'].forEach((z, i) => dug(34 + i * 162, 470, 150, 66, z, SEC.zor === i ? 'on' : '', 'zor', i));
+  et(452 + 0, ''); g.fillStyle = '#5b6466'; g.font = 'bold 24px system-ui, sans-serif'; g.textAlign = 'left'; g.fillText('Süre', 534, 434);
+  [2, 4, 6, 8].forEach((d, i) => dug(534 + i * 116, 470, 106, 66, d + ' dk', SEC.sure === d ? 'on' : '', 'sure', d));
+  et(560, 'Yerin (sağ çubukla da değişir)');
+  KOLTUKLAR.forEach((k, i) => dug(34 + i * 161, 578, 152, 66, k.ad, KI === i ? 'on' : '', 'koltuk', i));
+  dug(34, 676, 420, 112, macVar ? '▶ Yeni maç' : '▶ Maça başla', 'ana', 'basla');
+  dug(466, 676, 250, 112, '❓ Yardım', '', 'yardim');
+  dug(728, 676, 262, 112, Ses.acik ? '🔊 Ses açık' : '🔇 Ses kapalı', Ses.acik ? 'on' : '', 'ses');
+  menuT.needsUpdate = true;
+}
+function menuBas(uv) {
+  const x = uv.x * MW, y = (1 - uv.y) * MH, b = MBTN.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h); if (!b) return;
+  Ses.baslat(); Ses.tik();
+  const T = () => LGS()[LG()[SEC.lig]].t.length;
+  switch (b.act) {
+    case 'lig': SEC.lig = (SEC.lig + b.v + 6) % 6; SEC.ev = 0; SEC.dep = 1; break;
+    case 'ev': SEC.ev = (SEC.ev + b.v + T()) % T(); if (SEC.ev === SEC.dep) SEC.ev = (SEC.ev + b.v + T()) % T(); break;
+    case 'dep': SEC.dep = (SEC.dep + b.v + T()) % T(); if (SEC.ev === SEC.dep) SEC.dep = (SEC.dep + b.v + T()) % T(); break;
+    case 'zor': SEC.zor = b.v; break;
+    case 'sure': SEC.sure = b.v; break;
+    case 'koltuk': koltugaGec(b.v); break;
+    case 'basla': macBaslat(); MENU = false; break;
+    case 'kapat': MENU = false; break;
+    case 'yardim': SAYFA = 0; break;
+    case 'sayfa': SAYFA = b.v >= YARDIM.length ? null : b.v; break;
+    case 'ses': Ses.ac(!Ses.acik); break;
+  }
+  menuCiz();
+}
+function menuAcKapa() { if (!hazir) return; MENU = !MENU; SAYFA = null; menuCiz(); Ses.tik(); }
+
+/* ---------- giriş: kumanda (VR), klavye + fare (bilgisayar) ---------- */
+const tus = {};
+addEventListener('keydown', e => {
+  tus[e.code] = true; Ses.baslat();
+  if (e.code === 'KeyX') giris.pas = true; if (e.code === 'KeyZ' || e.code === 'Space') giris.sut = true;
+  if (e.code === 'KeyM' || e.code === 'Escape') menuAcKapa();
+  if (e.code === 'KeyQ') koltugaGec(KI - 1); if (e.code === 'KeyE') koltugaGec(KI + 1);
+});
+addEventListener('keyup', e => { tus[e.code] = false; });
+const onceki = new Map(), kenar = (k, v) => { const o = onceki.get(k); onceki.set(k, v); return v && !o; };
+const yon = new THREE.Vector3(), sag = new THREE.Vector3(), gv = new THREE.Vector3();
+let sagCubukKilit = false;
+function girisOku() {
+  let sx = 0, sy = 0;
+  if (tus.ArrowLeft || tus.KeyA) sx -= 1; if (tus.ArrowRight || tus.KeyD) sx += 1; if (tus.ArrowUp || tus.KeyW) sy += 1; if (tus.ArrowDown || tus.KeyS) sy -= 1;
+  const s = renderer.xr.getSession();
+  if (s) for (const src of s.inputSources) {
+    const gp = src.gamepad; if (!gp) continue;
+    const ax = gp.axes.length >= 4 ? [gp.axes[2], gp.axes[3]] : [gp.axes[0] || 0, gp.axes[1] || 0];
+    if (src.handedness === 'left') { if (Math.hypot(ax[0], ax[1]) > 0.15) { sx = ax[0]; sy = -ax[1]; } if (kenar('ly', gp.buttons[5]?.pressed)) menuAcKapa(); if (kenar('lx', gp.buttons[4]?.pressed)) menuAcKapa(); }
+    if (src.handedness === 'right') {
+      if (!MENU) { if (kenar('rt', gp.buttons[0]?.pressed) || kenar('ra', gp.buttons[4]?.pressed)) giris.pas = true;
+        if (kenar('rb', gp.buttons[5]?.pressed) || kenar('rg', gp.buttons[1]?.pressed)) { giris.sut = true; tekrarGec(); } }
+      /* sağ çubuk: koltuk değiştir (tek itiş = tek geçiş) */
+      if (Math.abs(ax[0]) > 0.75 && !sagCubukKilit) { sagCubukKilit = true; koltugaGec(KI + Math.sign(ax[0])); }
+      if (Math.abs(ax[0]) < 0.3) sagCubukKilit = false;
+    }
+  }
+  /* bakış yönü (yatay) → KM eksenleri; maket ve dünya aynı yönde */
+  const cam = renderer.xr.isPresenting ? renderer.xr.getCamera() : kamera;
+  cam.getWorldDirection(yon); yon.y = 0; if (yon.lengthSq() < 1e-6) yon.set(0, 0, -1); yon.normalize(); sag.set(-yon.z, 0, yon.x);
+  gv.copy(sag).multiplyScalar(sx).addScaledVector(yon, sy);
+  const d = Math.hypot(gv.x, gv.z); if (d < 0.15 || MENU) { giris.x = 0; giris.y = 0; return; }
+  const k = Math.min(1, d) / d; giris.x = gv.x * k; giris.y = gv.z * k;
+}
+function tekrarGec() { const M = RL && RL.M; if (M && M.state === 'tekrar' && M.tk) M.tk.i = 1e9; }
+
+/* kumanda ışınları */
+const isin = new THREE.Raycaster(), fareV = new THREE.Vector2(), tmpM = new THREE.Matrix4();
+const isinGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]);
+for (const i of [0, 1]) {
+  const c = renderer.xr.getController(i); arac.add(c);
+  const l = new THREE.Line(isinGeo, new THREE.LineBasicMaterial({ color: '#ffe14d' })); l.scale.z = 2.5; c.add(l); c.userData.cizgi = l;
+  c.addEventListener('select', () => { if (!MENU) return; tmpM.identity().extractRotation(c.matrixWorld); isin.ray.origin.setFromMatrixPosition(c.matrixWorld); isin.ray.direction.set(0, 0, -1).applyMatrix4(tmpM);
+    const h = isin.intersectObject(menu)[0]; if (h) menuBas(h.uv); });
+}
+/* fare: sürükle = etrafına bak (koltuk sabit), tıkla = menü */
+let suruk = null, bakYaw = 0, bakPitch = -0.12;
+renderer.domElement.addEventListener('pointerdown', e => { suruk = { x: e.clientX, y: e.clientY, m: false }; Ses.baslat(); });
+addEventListener('pointermove', e => { if (!suruk) return; const dx = e.clientX - suruk.x, dy = e.clientY - suruk.y; if (Math.abs(dx) + Math.abs(dy) > 4) suruk.m = true;
+  if (suruk.m) { bakYaw -= dx * 0.004; bakPitch = clamp(bakPitch - dy * 0.004, -1.3, 1.1); suruk.x = e.clientX; suruk.y = e.clientY; } });
+addEventListener('pointerup', e => { if (suruk && !suruk.m && MENU) { fareV.set(e.clientX / innerWidth * 2 - 1, -e.clientY / innerHeight * 2 + 1); isin.setFromCamera(fareV, kamera); const h = isin.intersectObject(menu)[0]; if (h) menuBas(h.uv); } suruk = null; });
+
+/* ---------- VR / karma gerçeklik oturumları ---------- */
+let AR = false;
+const vrB = document.getElementById('vrB'), arB = document.getElementById('arB');
+const oturumAc = async mod => {
+  Ses.baslat();
+  const s = await navigator.xr.requestSession(mod, { requiredFeatures: ['local-floor'], optionalFeatures: ['hand-tracking', 'layers'] });
+  AR = mod === 'immersive-ar'; if (AR) { KI = 0; } koltukUygula();
+  renderer.xr.setFoveation(1); await renderer.xr.setSession(s);
+  s.addEventListener('end', () => { AR = false; koltukUygula(); });
+};
+if (navigator.xr) {
+  navigator.xr.isSessionSupported('immersive-vr').then(ok => { vrB.hidden = !ok; });
+  navigator.xr.isSessionSupported('immersive-ar').then(ok => { arB.hidden = !ok; });
+  /* Quest uygulaması olarak açıldıysa doğrudan VR'a gir (araya 2B sayfa girmesin) */
+  const pwa = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+  if (pwa) navigator.xr.isSessionSupported('immersive-vr').then(ok => ok && oturumAc('immersive-vr').catch(() => {}));
+}
+vrB.onclick = () => oturumAc('immersive-vr').catch(e => alert('VR açılamadı: ' + e.message));
+arB.onclick = () => oturumAc('immersive-ar').catch(e => alert('Karma gerçeklik açılamadı: ' + e.message));
+
+/* ---------- kare döngüsü ---------- */
+const saat = new THREE.Clock(); let birikim = 0;
+koltukUygula(); menuCiz(); cerceveHazir();                       /* çerçeve bu betikten önce yüklenmiş olabilir */
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(0.05, saat.getDelta()), now = performance.now();
+  if (!renderer.xr.isPresenting) { kamera.rotation.set(bakPitch, bakYaw, 0, 'YXZ'); kamera.position.set(0, MOD === 'maket' || KOLTUKLAR[KI].ad === 'Saha kenarı' ? 1.6 : 1.2, 0); }
+  /* yer değiştirme: kararır → yeni koltuk → açılır (kayma yok) */
+  if (gecis) { gecis.t += dt; const T = 0.22; if (gecis.t >= T && gecis.hedef != null) { KI = gecis.hedef; gecis.hedef = null; koltukUygula(); menuCiz(); }
+    karartma.material.opacity = gecis.t < T ? gecis.t / T : Math.max(0, 1 - (gecis.t - T) / T); if (gecis.t > 2 * T) { gecis = null; karartma.material.opacity = 0; } }
+  if (hazir) {
+    let M = RL.M;
+    if (!M) { if (sonM && !sonM.demo && !sonSonuc) { sonSonuc = sonM; mesaj = 'MAÇ SONU'; mesajT = 1e9; MENU = true; menuCiz(); } demoBaslat(); M = RL.M; DEMO = true; }   /* sonuç dev ekranda kalır, arkada gösteri maçı sürer */
+    girisOku();
+    birikim += dt; let n = 0; while (birikim >= 1 / 60 && n < 4) { RL.M && RL.step(1 / 60); birikim -= 1 / 60; n++; } if (n >= 4) birikim = 0;
+    M = RL.M;
+    if (M) {
+      if (M !== OY?.M) macHazirla(M.demo);
+      if (!!M.flip !== sonFlip) { sonFlip = !!M.flip; if (KOLTUKLAR[KI].dinamik) { gecis = { hedef: KI, t: 0 }; } }
+      oyunculariCiz(M, now); topCiz(M, now);
+      W.ledTick(); for (const P of PANOLAR) if (LEDo.dirty[P.i]) { LEDo.dirty[P.i] = false; P.tx.needsUpdate = true; }
+      mesajT = Math.max(0, mesajT - dt); if (sonSonuc && mesajT > 1e8) { const s = sonSonuc; mesaj = `MAÇ SONU · ${s.T[0].t.short} ${s.T[0].score}-${s.T[1].score} ${s.T[1].t.short}`; }
+      tabelaCiz(sonSonuc && M.demo ? sonSonuc : M);
+      if (seyirci) { seyirci.material.uniforms.t.value = now / 1000; const c = seyirci.material.uniforms.cosku; c.value += ((M.state === 'goal' ? 1 : 0) - c.value) * Math.min(1, dt * 4); }
+      const by = M.ball.y, h = 1 - Math.min(by, PL - by) / (PL / 2); Ses.heyecan(h * h);
+    }
+  }
+  const cam = renderer.xr.isPresenting ? renderer.xr.getCamera() : kamera; Ses.dinleyici(cam);
+  for (const i of [0, 1]) { const c = renderer.xr.getController(i); if (c.userData.cizgi) c.userData.cizgi.visible = MENU; }
+  renderer.render(sahne, kamera);
+});
+window.__KMVR = { get M() { return RL && RL.M; }, giris, koltugaGec, get KI() { return KI; }, get MENU() { return MENU; }, menuBas, macBaslat, renderer, sahne, set menuAcik(v) { MENU = v; menuCiz(); } };
+</script>
+</body>
+</html>

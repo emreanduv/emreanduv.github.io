@@ -1,0 +1,17 @@
+{
+ "name": "Kaptan Mecit VR",
+ "short_name": "Kaptan Mecit VR",
+ "lang": "tr",
+ "description": "Tribündeki koltuğundan oynanan, mide bulandırmayan VR futbolu: gerçek boy stadyum, maket saha, 6 lig, 120 kulüp.",
+ "start_url": "index.html",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "landscape",
+ "background_color": "#0d1318",
+ "theme_color": "#1f3b3c",
+ "icons": [
+  {"src": "ikon-192.png", "sizes": "192x192", "type": "image/png"},
+  {"src": "ikon-512.png", "sizes": "512x512", "type": "image/png"},
+  {"src": "ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+ ]
+}
