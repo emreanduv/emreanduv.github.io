@@ -19,3 +19,4 @@ Kaynak: yalnız serbest lisanslı açık veri — openfootball/football.json (ka
 
 ## Nutuk Salonu (VR)
 `nutuk-salonu/` — Nutuk Akışı'nın VR salonu (WebXR). Kaynak: emreanduv/nutuk-akisi deposundaki `docs/salon/`; buraya kopyalanır (Meta Quest paketi bu adrese bağlanır, assetlinks bu alan adında). Gizlilik: https://emreanduv.github.io/nutuk-salonu/gizlilik.html
+`kaptan-mecit-vr/` — Kaptan Mecit VR (WebXR, Meta Quest): gerçek boy stadyum + maket, 6 sabit koltuk (mide bulandırmayan kamera). Motor: `kaptanmecit.html` (emreanduv/kaptan-mecit deposundaki `www/index.html`'in kopyası; oyun güncellenince buraya da kopyalanır). Quest paketi: kaptan-mecit deposunda `km-vr-quest.yml` (com.anduv.kaptanmecit.vr). Gizlilik: https://emreanduv.github.io/kaptan-mecit-vr/gizlilik.html
