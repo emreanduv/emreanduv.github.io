@@ -133,7 +133,7 @@ function macHazirla(demo) {
   stadyumKur(M); seyirciRenk(M); oyunculariKur(M); tabelaSon = ''; if (!demo) { sonM = M; sonSonuc = null; mesajT = 0; }
 }
 function macBaslat() {
-  const SS = RL.S(); SS.set.diff = SEC.zor; SS.set.dur = SEC.sure;
+  const SS = RL.S(); SS.set.diff = SEC.zor; SS.set.dur = SEC.sure; SS.set.dz = SEC.dz;
   const lg = LG()[SEC.lig], T = LGS()[lg].t, a = RL.team(lg, T[SEC.ev % T.length][0]), b = RL.team(lg, T[SEC.dep % T.length][0]);
   RL.startMatch(a, b, null, false, {}); macHazirla(false); DEMO = false;
   W.__RL.M && (W.__RL.M.paused = true);
@@ -461,7 +461,7 @@ arac.add(menu);
 function menuYerlestir() { const ayakta = MOD === 'maket' || KOLTUKLAR[KI].ad === 'Saha kenarı'; menu.position.set(0, ayakta ? 1.35 : 1.05, -1.05); menu.rotation.x = -0.18; }
 let MENU = true, MBTN = [], SAYFA = null;
 try { if (!localStorage.getItem('kmvr.ogretici')) { SAYFA = 0; localStorage.setItem('kmvr.ogretici', '1'); } } catch { /* */ }
-const SEC = { lig: 0, ev: 0, dep: 1, zor: 0, sure: 4 };
+const SEC = { lig: 0, ev: 0, dep: 1, zor: 0, sure: 4, dz: 'oto' };
 try { Object.assign(SEC, JSON.parse(localStorage.getItem('kmvr.sec') || '{}')); } catch { /* */ }
 function satirSar(g, metin, x, y, w, lh) { for (const par of metin.split('\n')) { let s = ''; for (const k of par.split(' ')) { if (g.measureText(s + k).width > w && s) { g.fillText(s.trim(), x, y); y += lh; s = ''; } s += k + ' '; } g.fillText(s.trim(), x, y); y += lh; } }
 const YARDIM = [
@@ -498,18 +498,19 @@ function menuCiz() {
   if (macVar) dug(MW - 260, 24, 226, 66, '✕ Maça dön', '', 'kapat');
   if (!hazir) { g.fillStyle = '#5b6466'; g.font = 'bold 34px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText('Yükleniyor…', MW / 2, 400); menuT.needsUpdate = true; return; }
   const lg = LG()[SEC.lig], L = LGS()[lg], T = L.t, ev = T[SEC.ev % T.length], dep = T[SEC.dep % T.length];
-  const sira = (y, etiket, yazi, act, renk) => { et(y - 18, etiket); dug(34, y, 100, 72, '◀', '', act, -1); dug(146, y, 732, 72, yazi, '', act + 'B', 0, renk); dug(890, y, 100, 72, '▶', '', act, 1); };
-  sira(146, 'Lig', `${L.kurgu} · ${L.ad}`, 'lig');
-  sira(254, 'Senin takımın', ev[1], 'ev', [ev[3], ev[4]]);
-  sira(362, 'Rakip', dep[1], 'dep', [dep[3], dep[4]]);
-  et(452, 'Zorluk'); ['Kolay', 'Orta', 'Zor'].forEach((z, i) => dug(34 + i * 162, 470, 150, 66, z, SEC.zor === i ? 'on' : '', 'zor', i));
-  et(452 + 0, ''); g.fillStyle = '#5b6466'; g.font = 'bold 24px system-ui, sans-serif'; g.textAlign = 'left'; g.fillText('Süre', 534, 434);
-  [2, 4, 6, 8].forEach((d, i) => dug(534 + i * 116, 470, 106, 66, d + ' dk', SEC.sure === d ? 'on' : '', 'sure', d));
-  et(560, 'Yerin (sağ çubukla da değişir)');
-  KOLTUKLAR.forEach((k, i) => dug(34 + i * 161, 578, 152, 66, k.ad, KI === i ? 'on' : '', 'koltuk', i));
-  dug(34, 676, 420, 112, macVar ? '▶ Yeni maç' : '▶ Maça başla', 'ana', 'basla');
-  dug(466, 676, 250, 112, '❓ Yardım', '', 'yardim');
-  dug(728, 676, 262, 112, Ses.acik ? '🔊 Ses açık' : '🔇 Ses kapalı', Ses.acik ? 'on' : '', 'ses');
+  const sira = (y, etiket, yazi, act, renk) => { et(y - 16, etiket); dug(34, y, 100, 64, '◀', '', act, -1); dug(146, y, 732, 64, yazi, '', act + 'B', 0, renk); dug(890, y, 100, 64, '▶', '', act, 1); };
+  sira(140, 'Lig', `${L.kurgu} · ${L.ad}`, 'lig');
+  sira(232, 'Senin takımın', ev[1], 'ev', [ev[3], ev[4]]);
+  sira(324, 'Rakip', dep[1], 'dep', [dep[3], dep[4]]);
+  sira(416, 'Dizilişin (Otomatik: asistan kadroya en uygununu seçer)', SEC.dz === 'oto' ? 'Otomatik' : SEC.dz, 'dz');
+  et(496, 'Zorluk'); ['Kolay', 'Orta', 'Zor'].forEach((z, i) => dug(34 + i * 162, 512, 150, 60, z, SEC.zor === i ? 'on' : '', 'zor', i));
+  g.fillStyle = '#5b6466'; g.font = 'bold 24px system-ui, sans-serif'; g.textAlign = 'left'; g.fillText('Süre', 534, 496);
+  [2, 4, 6, 8].forEach((d, i) => dug(534 + i * 116, 512, 106, 60, d + ' dk', SEC.sure === d ? 'on' : '', 'sure', d));
+  et(592, 'Yerin (sağ çubukla da değişir)');
+  KOLTUKLAR.forEach((k, i) => dug(34 + i * 161, 608, 152, 60, k.ad, KI === i ? 'on' : '', 'koltuk', i));
+  dug(34, 692, 420, 104, macVar ? '▶ Yeni maç' : '▶ Maça başla', 'ana', 'basla');
+  dug(466, 692, 250, 104, '❓ Yardım', '', 'yardim');
+  dug(728, 692, 262, 104, Ses.acik ? '🔊 Ses açık' : '🔇 Ses kapalı', Ses.acik ? 'on' : '', 'ses');
   menuT.needsUpdate = true;
 }
 function menuBas(uv) {
@@ -521,6 +522,7 @@ function menuBas(uv) {
     case 'ev': SEC.ev = (SEC.ev + b.v + T()) % T(); if (SEC.ev === SEC.dep) SEC.ev = (SEC.ev + b.v + T()) % T(); break;
     case 'dep': SEC.dep = (SEC.dep + b.v + T()) % T(); if (SEC.ev === SEC.dep) SEC.dep = (SEC.dep + b.v + T()) % T(); break;
     case 'zor': SEC.zor = b.v; break;
+    case 'dz': { const D = ['oto', ...W.eval('DIZILIS_SIRA')], i = Math.max(0, D.indexOf(SEC.dz)); SEC.dz = D[(i + b.v + D.length) % D.length]; break; }
     case 'sure': SEC.sure = b.v; break;
     case 'koltuk': koltugaGec(b.v); break;
     case 'basla': macBaslat(); MENU = false; break;
