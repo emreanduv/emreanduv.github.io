@@ -414,6 +414,43 @@ const FOE_GEO = { piyade: piyadeG(), okcu: okcuG, katafrakt: katafraktG, varang:
 const ATLI_GEO = { katafrakt: katafraktG, akrit: akritG, sovalye: sovalyeG, alan: alanG, sirpsovalye: sirpSovalyeG, macar: macarG, zirhli: zirhliG, husar: husarG,
   kirasiyer: kirasiyerG, stradiot: stradiotG, kanatlihusar: kanatliG, kazak: kazakG, fransizsuvari: fransizSuvariG };
 
+// Sipahi: kızıl-altın çullu doru at, firuze kaftan, sorguçlu miğfer, yuvarlak kalkan, flamalı mızrak.
+// rider=false: binicisiz (Sipahi Gözü görünümünde oyuncu bu atın üstündedir; yalnızca eller ve dizginler görünür)
+function sipahiParts(rider) {
+  return [
+    P(BOX(.44, .48, 1.2), 0x6a3a1e, Mx(0, .94, 0)),
+    P(BOX(.5, .24, .78), 0xb3202a, Mx(0, 1.08, .1)), P(BOX(.51, .04, .79), 0xe3a92b, Mx(0, .96, .1)),
+    ...[[-.15, .45], [.15, .45], [-.15, -.45], [.15, -.45]].map(([x, z]) => P(BOX(.11, .72, .11), 0x3a2416, Mx(x, .36, z))),
+    P(BOX(.22, .5, .3), 0x6a3a1e, Mx(0, 1.34, -.62, 1, 1, 1, -.5, 0, 0)),
+    P(BOX(.18, .21, .42), 0x5a301a, Mx(0, 1.58, -.82, 1, 1, 1, -.2, 0, 0)),
+    P(BOX(.19, .07, .3), 0xd5dbe0, Mx(0, 1.7, -.84, 1, 1, 1, -.2, 0, 0)),
+    P(BOX(.06, .44, .12), 0x1a1210, Mx(0, 1.44, -.5, 1, 1, 1, -.5, 0, 0)),
+    P(BOX(.07, .5, .08), 0x1a1210, Mx(0, .86, .66, 1, 1, 1, .35, 0, 0)),
+    P(SPH(.07, 6, 4), 0xc8303a, Mx(0, 1.5, -.72)),
+    P(BOX(.035, .035, 2.0), 0x6b4a2b, Mx(.24, 1.5, -.5)),
+    P(CONE(.04, .2, 4), 0xd5dbe0, Mx(.24, 1.5, -1.6, 1, 1, 1, -Math.PI / 2, 0, 0)),
+    P(BOX(.012, .16, .34), 0xc8303a, Mx(.24, 1.58, -1.3)),
+    ...[-.1, .1].map(x => P(BOX(.02, .02, .5), 0x3a2416, Mx(x, 1.48, -.42, 1, 1, 1, .32, 0, 0))),
+    ...(rider ? [
+      P(BOX(.5, .14, .36), ARMY1D, Mx(0, 1.22, .02)),
+      P(CYL(.16, .21, .5, 7), ARMY1, Mx(0, 1.52, .02)),
+      P(CYL(.2, .2, .06, 7), ARMY2, Mx(0, 1.33, .02)),
+      P(SPH(.13, 7, 5), 0xe2b68c, Mx(0, 1.88, .02)),
+      P(CYL(.17, .17, .08, 7), 0xf3ead6, Mx(0, 1.96, .02)),
+      P(CONE(.15, .34, 7), 0xd5dbe0, Mx(0, 2.15, .02)),
+      P(BOX(.04, .24, .04), 0xc8303a, Mx(0, 2.4, .07, 1, 1, 1, .3, 0, 0)),
+      P(CYL(.24, .24, .05, 12), ARMY2, Mx(-.27, 1.5, .02, 1, 1, 1, 0, 0, Math.PI / 2)),
+      P(SPH(.06, 6, 4), 0xc8303a, Mx(-.3, 1.5, .02))
+    ] : [
+      ...[-.13, .13].map(x => P(SPH(.055, 6, 4), 0xe2b68c, Mx(x, 1.44, -.24))),
+      ...[-.13, .13].map(x => P(BOX(.09, .09, .3), ARMY1, Mx(x * 1.3, 1.48, -.08, 1, 1, 1, .4, 0, 0)))
+    ])
+  ];
+}
+const sipahiG = merge(sipahiParts(true)), binekG = merge(sipahiParts(false));
+// Serdar: ordunun önünde sancak taşıyan sipahi
+const serdarG = merge([...sipahiParts(true), P(BOX(.04, 2.3, .04), 0x5b3a1e, Mx(-.34, 2.3, .2)), P(BOX(.02, .6, .9), 0xb3202a, Mx(-.34, 3.05, .66)),
+  P(BOX(.022, .07, .91), 0xe3a92b, Mx(-.34, 2.72, .66)), P(SPH(.07, 6, 4), 0xe3a92b, Mx(-.34, 3.48, .2))]);
 const armyMat = new THREE.MeshLambertMaterial({ vertexColors: true });
 const goldMat = new THREE.MeshPhongMaterial({ color: 0xe8b33a, specular: 0xfff2b0, shininess: 90, emissive: 0x3d2800 });
 const dummy = new THREE.Object3D();
@@ -421,6 +458,9 @@ function inst(g, m, n) { const im = new THREE.InstancedMesh(g, m, n); im.castSha
 const MAXC = 220, MAXE = 500, MAXA = 280;
 const crowdMesh = inst(akinciG, armyMat, MAXC);
 const heroMesh = inst(akinciG, goldMat, M.MAX_HERO);
+const MAXS = 36, sipahiMesh = inst(sipahiG, armyMat, MAXS);   // ordunun dış halkasında atlı sipahiler
+const serdar = new THREE.Mesh(serdarG, armyMat), binek = new THREE.Mesh(binekG, armyMat);   // önde sancaklı serdar; Sipahi Gözü'nde oyuncunun atı
+serdar.castShadow = binek.castShadow = true; binek.visible = false; scene.add(serdar); scene.add(binek);
 const foeMesh = {}; for (const k in FOE_GEO) foeMesh[k] = inst(FOE_GEO[k], armyMat, MAXE);
 const arrowMat = new THREE.MeshBasicMaterial({ color: M.WEAPONS[0].c });
 const arrowMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(.07, .07, .8), arrowMat, MAXA); arrowMesh.frustumCulled = false; arrowMesh.count = 0; scene.add(arrowMesh);
@@ -522,6 +562,8 @@ const rainLines = new THREE.LineSegments(precipGeo, new THREE.LineBasicMaterial(
 const snowPts = new THREE.Points(precipGeo, new THREE.PointsMaterial({ color: 0xffffff, size: .32, transparent: true, opacity: .9, depthWrite: false }));
 [rainLines, snowPts].forEach(o => { o.frustumCulled = false; o.visible = false; scene.add(o); });
 let curMood = 'ogle';
+// görüş: 'kus' (kuşbakışı) ya da 'sipahi' (Sipahi Gözü); yalnız bölüm oynanırken at sırtına geçilir
+const sipahiGozu = () => window.VR && VR.on ? !!VR.ride : S.view === 'sipahi' && (mode === 'play' || mode === 'dying');
 function updatePrecip(dt, cx, cz) {
   const rain = rainLines.visible, snow = snowPts.visible; if (!rain && !snow) return;
   for (let k = 0; k < PN; k++) {
@@ -957,6 +999,14 @@ $('brCamp').addEventListener('click', () => { SFX.click(); openCamp('brief'); })
 $('cBack').addEventListener('click', () => { SFX.click(); if (campFrom === 'brief') openBrief(briefI); else { previewLevel(nextLevel()); show('menu'); } });
 $('bStart').addEventListener('click', () => { unlockAudio(); startGame(briefI); });
 $('pauseBtn').addEventListener('click', () => { SFX.click(); pause(true); });
+// görüş değiştir: Kuşbakışı ⇄ Sipahi Gözü (oyun sırasında da)
+function setView(v) { S.view = v; persist(); drawViewBtn(); if (curScr === 'set') renderSet(); }
+function drawViewBtn() { const fp = S.view === 'sipahi'; $('viewBtn').textContent = fp ? '🦅' : '🐎'; $('viewBtn').setAttribute('aria-label', t(fp ? 'Kuşbakışı görüş' : 'Sipahi Gözü')); }
+$('viewBtn').addEventListener('click', e => { e.stopPropagation(); SFX.click(); setView(S.view === 'sipahi' ? 'kus' : 'sipahi'); });
+$('viewBtn').addEventListener('pointerdown', e => e.stopPropagation());
+$('setView').addEventListener('click', e => { const v = e.target.dataset && e.target.dataset.v; if (!v) return; SFX.click(); setView(v); });
+window.addEventListener('keydown', e => { if ((e.key === 'v' || e.key === 'V') && mode === 'play') setView(S.view === 'sipahi' ? 'kus' : 'sipahi'); });
+drawViewBtn();
 $('pResume').addEventListener('click', () => { SFX.click(); pause(false); });
 $('pRestart').addEventListener('click', () => { SFX.click(); startGame(G.i); });
 $('pMenu').addEventListener('click', () => { SFX.click(); previewLevel(nextLevel()); show('menu'); });
@@ -972,7 +1022,7 @@ let setFrom = 'menu';
 $('setBtn').addEventListener('click', () => { SFX.click(); setFrom = curScr || 'menu'; show('set'); });
 function segOn(id, v) { $(id).querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === String(v))); }
 function renderSet() {
-  segOn('setLang', D.lang); segOn('setQ', S.q); segOn('setFs', S.fs ? 1 : 0);
+  segOn('setLang', D.lang); segOn('setView', S.view === 'sipahi' ? 'sipahi' : 'kus'); segOn('setQ', S.q); segOn('setFs', S.fs ? 1 : 0);
   $('setSfx').value = S.vol.sfx; $('setMus').value = S.vol.mus;
   $('setFsRow').hidden = !(HOST || document.fullscreenEnabled) || D.platform === 'android' || D.platform === 'ios';
   $('setFullRow').hidden = !PAID;
@@ -1100,6 +1150,7 @@ function pollPad(dt) {
   if (mode === 'play' && !paused && G) {
     const v = Math.abs(ax) > 0.15 ? ax : b(14) ? -1 : b(15) ? 1 : 0; G.tx += v * 14 * dt;
     if (edge(9) || edge(1)) pause(true);
+    if (edge(3)) setView(S.view === 'sipahi' ? 'kus' : 'sipahi');   // Y / △: görüş
     return;
   }
   for (const k of ['l', 'r', 'u', 'd']) { const v = stick[k], was = padPrev['s' + k]; padPrev['s' + k] = v; if (v && !was) {
@@ -1135,12 +1186,20 @@ function updateDead(dt) {
 /* ================= ÇİZİM ================= */
 function renderCrowd(t) {
   const m = Math.min(G.count, MAXC), moving = mode === 'play' && !paused || G.state === 'march';
+  // her 7 askerden biri atlı sipahidir; atlılar ordunun dış halkasında (kanatlarda) gider
+  const ns = m < 8 ? 0 : Math.min(MAXS, Math.floor(m / 7)), na = m - ns;
   for (let i = 0; i < m; i++) {
-    const o = OFF[i]; const bob = moving ? Math.abs(Math.sin(t * 11 + o.ph)) * 0.12 : Math.sin(t * 2 + o.ph) * 0.02;
-    dummy.position.set(G.x + o.x, bob, G.z + o.z); dummy.rotation.set(moving ? -0.1 : 0, 0, moving ? Math.sin(t * 11 + o.ph) * 0.06 : 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); crowdMesh.setMatrixAt(i, dummy.matrix);
+    const o = OFF[i], atli = i >= na; const bob = moving ? Math.abs(Math.sin(t * (atli ? 9 : 11) + o.ph)) * (atli ? 0.16 : 0.12) : Math.sin(t * 2 + o.ph) * 0.02;
+    dummy.position.set(G.x + o.x * (atli ? 1.12 : 1), bob, G.z + o.z * (atli ? 1.08 : 1)); dummy.rotation.set(moving ? (atli ? Math.sin(t * 9 + o.ph) * 0.07 : -0.1) : 0, 0, moving && !atli ? Math.sin(t * 11 + o.ph) * 0.06 : 0);
+    const k = atli ? 0.82 : 1; dummy.scale.set(k, k, k); dummy.updateMatrix();
+    if (atli) sipahiMesh.setMatrixAt(i - na, dummy.matrix); else crowdMesh.setMatrixAt(i, dummy.matrix);
   }
-  crowdMesh.count = m; crowdMesh.instanceMatrix.needsUpdate = true;
-  const h = G.heroes; for (let i = 0; i < h; i++) { dummy.position.set(G.x + (i - (h - 1) / 2) * 1.4, moving ? Math.abs(Math.sin(t * 8 + i)) * 0.15 : 0, G.z - G.Rz - 1.0); dummy.rotation.set(0, 0, 0); dummy.scale.set(2, 2, 2); dummy.updateMatrix(); heroMesh.setMatrixAt(i, dummy.matrix); }
+  dummy.scale.set(1, 1, 1);
+  crowdMesh.count = na; crowdMesh.instanceMatrix.needsUpdate = true; sipahiMesh.count = ns; sipahiMesh.instanceMatrix.needsUpdate = true;
+  // serdar (ya da Sipahi Gözü'nde oyuncunun bineği) ordunun önünde
+  const fp = sipahiGozu(), lead = fp ? binek : serdar; serdar.visible = !fp && G.count > 0; binek.visible = fp && G.count > 0;
+  const gal = moving ? Math.sin(t * 9) : 0; lead.position.set(G.x, moving ? Math.abs(gal) * 0.12 : 0, G.z - G.Rz - (fp ? 0.7 : -0.1)); lead.rotation.set(gal * 0.05, 0, (G.tx - G.x) * -0.02);
+  const h = G.heroes; for (let i = 0; i < h; i++) { dummy.position.set(G.x + (fp ? (i % 2 ? 1 : -1) * (1.7 + Math.floor(i / 2) * 1.4) : (i - (h - 1) / 2) * 1.4), moving ? Math.abs(Math.sin(t * 8 + i)) * 0.15 : 0, G.z - G.Rz - 1.0); dummy.rotation.set(0, 0, 0); dummy.scale.set(2, 2, 2); dummy.updateMatrix(); heroMesh.setMatrixAt(i, dummy.matrix); }
   heroMesh.count = h; heroMesh.instanceMatrix.needsUpdate = true; dummy.scale.set(1, 1, 1);
 }
 function renderFoes(t) {
@@ -1163,7 +1222,7 @@ function renderFoes(t) {
   for (const k in foeMesh) { foeMesh[k].count = idx[k]; foeMesh[k].instanceMatrix.needsUpdate = true; }
 }
 function renderArrows() {
-  let i = 0; for (const a of G.arrows) { if (i >= MAXA) break; dummy.position.set(a.x, a.y, a.z); dummy.rotation.set(0, 0, 0); dummy.updateMatrix(); arrowMesh.setMatrixAt(i++, dummy.matrix); }
+  const fpz = sipahiGozu() ? binek.position.z - 5.5 : 1e9; let i = 0; for (const a of G.arrows) { if (i >= MAXA) break; if (a.z > fpz) continue; dummy.position.set(a.x, a.y, a.z); dummy.rotation.set(0, 0, 0); dummy.updateMatrix(); arrowMesh.setMatrixAt(i++, dummy.matrix); }
   arrowMesh.count = i; arrowMesh.instanceMatrix.needsUpdate = true;
   let j = 0; for (const s of G.foeShots) { if (j >= 60) break; const x = s.x + (s.tx - s.x) * s.t, z = s.z + (s.tz - s.z) * s.t, y = 1 + Math.sin(s.t * Math.PI) * 3;
     dummy.position.set(x, y, z); dummy.rotation.set(Math.cos(s.t * Math.PI) * -0.9, 0, 0); dummy.updateMatrix(); foeArrowMesh.setMatrixAt(j++, dummy.matrix); }
@@ -1203,7 +1262,13 @@ function frame(now) {
     const tx = G.x * 0.55, tz = G.z;
     camX += (tx - camX) * Math.min(1, dt * 5); camZ += (tz - camZ) * Math.min(1, dt * 8);
     if (window.VR && VR.on) { VR.update(dt); if (VR.test) VR.testCam(); }   // VR: savaş alanı harp masasının üstünde (js/vr.js)
+    else if (sipahiGozu()) {   // Sipahi Gözü: ordunun önündeki atın sırtından
+      const b = binek.position, sw = (G.tx - G.x) * 0.012;
+      camera.fov = window.innerWidth / window.innerHeight < 0.8 ? 84 : 70; camera.updateProjectionMatrix();
+      camera.position.set(b.x, 2.2 + b.y * 0.8, b.z + 0.3); camera.up.set(Math.sin(sw), 1, 0); camera.lookAt(b.x + sw * 6, 0.7, b.z - 14);
+    }
     else {
+      if (camera.fov > 60 && window.innerWidth / window.innerHeight >= 0.8 || camera.fov > 80) { camera.up.set(0, 1, 0); resize(); }
       const far = mode === 'menu' ? 1 : 0, ck = 1 + (G.road - 6) * 0.075;   // geniş yolda kamera geri çekilir
       camera.position.set(camX + (far ? Math.sin(T * 0.25) * 1.5 : 0), (12.5 + far * 1.5) * ck, camZ + (12.5 + far * 2) * ck); camera.lookAt(camX * 0.7, 0, camZ - 12 * ck);
     }
@@ -1211,7 +1276,7 @@ function frame(now) {
     sun.position.set(G.x + 8, 24, G.z + 8); sun.target.position.set(G.x, 0, G.z - 8);
     const showBubble = !(window.VR && VR.on) && (mode === 'play' || mode === 'menu' || mode === 'dying') && G.count + G.heroes > 0 && $('scrLevels').hidden && $('scrCamp').hidden;
     const b = $('bubble');
-    if (showBubble) { const p = toScreen(G.x, 2.4 + (G.heroes ? 2.6 : 0), G.z); b.hidden = !p.vis; b.style.left = p.x + 'px'; b.style.top = p.y + 'px'; const label = fmt(G.count) + (G.heroes ? '<small>+' + G.heroes + ' Alp</small>' : ''); if (b.innerHTML !== label) b.innerHTML = label; } else b.hidden = true;
+    if (showBubble) { const p = sipahiGozu() ? { vis: true, x: window.innerWidth * 0.3, y: window.innerHeight * 0.88 } : toScreen(G.x, 2.4 + (G.heroes ? 2.6 : 0), G.z); b.hidden = !p.vis; b.style.left = p.x + 'px'; b.style.top = p.y + 'px'; const label = fmt(G.count) + (G.heroes ? '<small>+' + G.heroes + ' Alp</small>' : ''); if (b.innerHTML !== label) b.innerHTML = label; } else b.hidden = true;
     $('progFill').style.width = (M.progress(G) * 100).toFixed(1) + '%';
   }
   renderer.render(scene, camera);
@@ -1219,7 +1284,7 @@ function frame(now) {
 }
 // VR (Harp Masası) modülüne oyunun sahnesini ve durumunu ver
 if (window.VR_KUR) window.VR_KUR({ scene, renderer, camera, $, t, fmt, D, SFX, NL, canPlay, startGame, previewLevel, show, unlockAudio, nextLevel, resize, frame,
-  buyFull: PAID ? () => buyFull().then(ok => { if (ok) { S.full = true; persist(); drawFullChip(); } return ok; }) : null, G: () => G, mode: () => mode, mood: () => curMood, MOODS, precip: [rainLines, snowPts], lastRes: () => lastRes, setMode: v => { mode = v; }, setPaused: v => { paused = v; }, setLast: v => { last = v; } });
+  binek: () => binek, buyFull: PAID ? () => buyFull().then(ok => { if (ok) { S.full = true; persist(); drawFullChip(); } return ok; }) : null, G: () => G, mode: () => mode, mood: () => curMood, MOODS, precip: [rainLines, snowPts], lastRes: () => lastRes, setMode: v => { mode = v; }, setPaused: v => { paused = v; }, setLast: v => { last = v; } });
 
 // Mağaza görselleri için sahne modu: ?kare=BÖLÜM&hiz=2 (araclar/magaza-gorselleri.js kullanır)
 const Q = new URLSearchParams(location.search);
@@ -1254,6 +1319,7 @@ function boot() {
   if (Q.has('temiz')) document.body.classList.add('temiz');
   if (D.platform === 'steam') $('hint').textContent = t('← → ya da A / D ile yönlendir');
   if (Q.has('kare')) {
+    if (Q.get('gorus')) S.view = Q.get('gorus');
     S.sound = false; S.unlocked = NL; const kq = +Q.get('kare') || 0, uq = Math.round(kq < 50 ? Math.max(8, kq * 0.2 + 2) : Math.min(M.upCap(M.seferOf(kq)), 12 + (kq - 50) * 0.1)); S.up = { start: uq, dmg: uq, rate: uq, zirh: uq }; S.coins = 1840;
     S.stars = [3, 3, 3, 2, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 1, 3, 3]; persist = () => {};
     const sc = +Q.get('hiz') || 1, ekran = Q.get('ekran');

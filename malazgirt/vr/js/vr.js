@@ -244,22 +244,45 @@ window.VR_KUR = function (O) {
   function unclipAll() { for (const m of clipped) { m.clippingPlanes = null; m.needsUpdate = true; } clipped.clear(); }
 
   /* ---------- her kare ---------- */
+  // görüş kenarı karartması (yalnız at sırtında): kameraya bağlı halka
+  const vigTex = canvasTex(256, 256, (g) => { const r = g.createRadialGradient(128, 128, 40, 128, 128, 128); r.addColorStop(0, 'rgba(0,0,0,0)'); r.addColorStop(0.55, 'rgba(0,0,0,.6)'); r.addColorStop(1, 'rgba(0,0,0,1)'); g.fillStyle = r; g.fillRect(0, 0, 256, 256); });
+  const vig = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.62), new THREE.MeshBasicMaterial({ map: vigTex, color: 0xffffff, transparent: true, opacity: 0, depthTest: false, depthWrite: false, fog: false }));
+  vig.position.z = -0.2; vig.renderOrder = 20; vig.visible = false; camera.add(vig);
+  let rideX = null;
+  function toggleRide() { VR.ride = !VR.ride; rideX = null; say(t(VR.ride ? 'At sırtı: sipahinin gözünden' : 'Harp masasına dönüldü'), 2.5); if (!VR.ride) unclipAll(); clipT = 0; }
   let camXv = 0, camZv = 0, grab = null, btnPrev = {}, msgT = 0, msg = '';
   function update(dt) {
     if (needCal && !VR.test) { calT += dt; if ((calT > 0.25 && renderer.xr.isPresenting && camera.position.y > 0.3 && camera.position.y < 2.4) || calT > 1.5) calibrate(); }
     const s = TABLE.s, g = O.G();
     camXv += (g.x * 0.6 - camXv) * Math.min(1, dt * 4); camZv += (g.z - camZv) * Math.min(1, dt * 6);
     const c = placeRig();
+    if (VR.ride) {
+      // at sırtı: savaş alanı gerçek boyda, oyuncunun başı sipahinin eyerinde (göz 2,2 m)
+      const b = O.binek().position, h = rig.head || new V3(0, 1.2, 0);
+      mScene.makeTranslation(h.x, h.y - 2.2 - b.y * 0.6, h.z).multiply(_m.makeRotationY(rig.yaw)).multiply(_m.makeTranslation(-b.x, 0, -(b.z + 0.3)));
+      const fx = -Math.sin(rig.yaw), fz = -Math.cos(rig.yaw);
+      mYaw.makeRotationY(rig.yaw).setPosition(h.x + fx * 1.5, h.y - 0.26, h.z + fz * 1.5);
+      // yanlara kayarken görüş kenarları kararır (mide bulantısına karşı)
+      const vx = Math.abs(b.x - (rideX === null ? b.x : rideX)) / Math.max(dt, 1e-3); rideX = b.x;
+      vig.material.opacity += (Math.min(0.8, vx * 0.09) - vig.material.opacity) * Math.min(1, dt * 8);
+    } else {
     // sahne = masa · ölçek · (savaş alanında masanın ortasına gelecek nokta)
     const ax = camXv, ay = -0.4, az = camZv - TABLE.army / s;
     mScene.copy(mTable).multiply(_m.makeScale(s, s, s)).multiply(_m.makeTranslation(-ax, -ay, -az));
+    }
+    tableG.visible = room.visible = !VR.ride; for (const o of [...legs, foot, bar]) o.visible = !VR.ride;
+    board.visible = !VR.ride || msgT > 0 || O.mode() !== 'play'; vig.visible = !!VR.ride && vig.material.opacity > 0.02;
+    renderer.localClippingEnabled = !VR.ride;
     scene.matrixAutoUpdate = false; scene.matrix.copy(mScene); scene.matrixWorldNeedsUpdate = true;
     W.matrix.copy(mScene).invert(); W.matrixWorldNeedsUpdate = true;
     tableG.matrix.copy(mTable); yawG.matrix.copy(mYaw); room.matrix.copy(mRoom);
     for (const o of [tableG, yawG, room]) o.matrixWorldNeedsUpdate = true;
     setClip();
+    if (VR.ride) { const Mo = (O.MOODS && O.MOODS[O.mood()]) || {}, fg = Mo.fog || [70, 200]; scene.fog.near = fg[0]; scene.fog.far = fg[1]; if (O.precip) { O.precip[0].visible = !!Mo.rain; O.precip[1].visible = !!Mo.snow; } }
+    else {
     scene.fog.near = 1e5; scene.fog.far = 2e5;   // minyatürde sis yok
     if (O.precip) for (const p of O.precip) p.visible = false;   // yağmur/kar otağın dışında, gerçek boyda yağar
+    }
     if ((clipT -= dt) <= 0) { clipT = 0.5; clipAll(); }
     paint(); animateRoom(dt);
     if (!VR.test) readInput(dt);
@@ -287,7 +310,11 @@ window.VR_KUR = function (O) {
       const ax = gp.axes.length >= 4 ? gp.axes[2] : gp.axes[0] || 0, ay = gp.axes.length >= 4 ? gp.axes[3] : gp.axes[1] || 0;
       if (O.mode() === 'play' && Math.abs(ax) > 0.15) O.G().tx += ax * 14 * dt;
       // sol çubuk yukarı-aşağı: masa yüksekliği
-      if (src.handedness === 'left' && Math.abs(ay) > 0.5) rig.hAdj = Math.max(-0.5, Math.min(0.4, rig.hAdj - ay * 0.35 * dt));
+      // A / X: at sırtı ⇄ harp masası
+      const ax4 = gp.buttons[4] && gp.buttons[4].pressed, k4 = src.handedness + '4';
+      if (ax4 && !btnPrev[k4]) toggleRide();
+      btnPrev[k4] = ax4;
+      if (!VR.ride && src.handedness === 'left' && Math.abs(ay) > 0.5) rig.hAdj = Math.max(-0.5, Math.min(0.4, rig.hAdj - ay * 0.35 * dt));
       // B / Y: masayı bakılan yöne ve göz hizasına göre yeniden yerleştir
       const by = gp.buttons[5] && gp.buttons[5].pressed, key = src.handedness + '5';
       if (by && !btnPrev[key]) { calibrate(); say(t('Masa önüne alındı'), 1.5); }
@@ -297,7 +324,7 @@ window.VR_KUR = function (O) {
     if (grab && O.mode() === 'play') {
       right.set(Math.cos(rig.yaw), 0, -Math.sin(rig.yaw));
       const p = grab.ctrl.position, d = (p.x - grab.p.x) * right.x + (p.z - grab.p.z) * right.z;
-      O.G().tx += d / TABLE.s * 0.9; grab.p.copy(p);
+      O.G().tx += d * (VR.ride ? 2.2 : 0.9 / TABLE.s); grab.p.copy(p);
     }
   }
 
@@ -326,7 +353,7 @@ window.VR_KUR = function (O) {
     c.addEventListener('connected', e => {
       if (lab) c.remove(lab);
       const left = e.data && e.data.handedness === 'left';
-      lab = labelPlane(left ? [t('Tetik: başla / sürükle'), t('Çubuk ↕: masa yüksekliği'), t('Y: masayı önüne al')] : [t('Tetik: başla / sürükle'), t('Çubuk: yönlendir'), t('B: masayı önüne al')]);
+      lab = labelPlane(left ? [t('Tetik: başla / sürükle'), t('Çubuk ↕: masa yüksekliği'), t('X: at sırtı ⇄ masa'), t('Y: masayı önüne al')] : [t('Tetik: başla / sürükle'), t('Çubuk: yönlendir'), t('A: at sırtı ⇄ masa'), t('B: masayı önüne al')]);
       lab.position.set(0, 0.07, -0.02); lab.rotation.x = -0.7; c.add(lab);
     });
     VR['ctrl' + k] = c;
@@ -353,7 +380,7 @@ window.VR_KUR = function (O) {
     VR.on = true; document.body.classList.add('vr-on'); const gt = document.getElementById('vrGate'); if (gt) gt.hidden = true;
     renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor');
     renderer.localClippingEnabled = true;
-    scene.add(W); W.add(VR.ctrl0); W.add(VR.ctrl1);
+    scene.add(W); W.add(VR.ctrl0); W.add(VR.ctrl1); W.add(camera); VR.ride = false;
     fogNear = scene.fog.near; fogFar = scene.fog.far; camNear = camera.near; camera.near = 0.03; camera.updateProjectionMatrix();
     moodKey = ''; needCal = true; calT = 0;
     renderer.xr.setSession(session);
@@ -365,7 +392,7 @@ window.VR_KUR = function (O) {
   function leave() {
     VR.on = false; document.body.classList.remove('vr-on'); grab = null; const gt = document.getElementById('vrGate'); if (gt) gt.hidden = false;
     renderer.setAnimationLoop(null); renderer.xr.enabled = false;
-    unclipAll(); W.remove(VR.ctrl0); W.remove(VR.ctrl1); scene.remove(W);
+    unclipAll(); W.remove(VR.ctrl0); W.remove(VR.ctrl1); W.remove(camera); camera.up.set(0, 1, 0); VR.ride = false; vig.visible = false; renderer.localClippingEnabled = false; scene.remove(W);
     scene.matrixAutoUpdate = true; scene.scale.setScalar(1); scene.position.set(0, 0, 0); scene.quaternion.identity(); scene.updateMatrix();
     scene.fog.near = fogNear; scene.fog.far = fogFar; camera.near = camNear; camera.updateProjectionMatrix();
     if (O.precip) { const Mo = (O.MOODS && O.MOODS[O.mood()]) || {}; O.precip[0].visible = !!Mo.rain; O.precip[1].visible = !!Mo.snow; }
@@ -374,7 +401,8 @@ window.VR_KUR = function (O) {
     requestAnimationFrame(ts => { O.setLast(ts); frame(ts); });
   }
   VR.state = () => ({ mode: O.mode(), lvl: O.G() && O.G().i, count: O.G() && O.G().count, x: O.G() && O.G().x, mood: O.mood && O.mood(), yaw: +rig.yaw.toFixed(2), head: rig.head && rig.head.toArray().map(v => +v.toFixed(2)) });
-  VR.dbg = () => ({ table: new V3().setFromMatrixPosition(mTable).toArray(), cam: camera.position.toArray(), clip: clip.map(p => [p.normal.toArray(), p.constant]), nClipped: clipped.size, pres: renderer.xr.isPresenting, lce: renderer.localClippingEnabled });
+  VR.toggleRide = toggleRide;
+  VR.dbg = () => ({ ride: !!VR.ride, table: new V3().setFromMatrixPosition(mTable).toArray(), cam: camera.position.toArray(), clip: clip.map(p => [p.normal.toArray(), p.constant]), nClipped: clipped.size, pres: renderer.xr.isPresenting, lce: renderer.localClippingEnabled });
   VR.start = async function () {
     try {
       const session = await xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'hand-tracking'] });

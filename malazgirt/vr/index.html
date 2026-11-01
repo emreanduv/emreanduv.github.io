@@ -33,6 +33,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:3px}
   padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));pointer-events:none}
 .prog{flex:1;min-width:0;height:14px;border-radius:999px;background:rgba(18,42,75,.6);border:2px solid rgba(255,255,255,.3);overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--tq),var(--tq-l));border-radius:999px}
+#viewBtn{pointer-events:auto;width:40px;height:40px;border-radius:12px;border:2px solid rgba(255,255,255,.35);background:rgba(18,42,75,.85);display:grid;place-items:center;flex:none;padding:0;font-size:22px;line-height:1;cursor:pointer}
 #pauseBtn{pointer-events:auto;width:40px;height:40px;border-radius:12px;border:2px solid rgba(255,255,255,.35);background:rgba(18,42,75,.85);display:grid;place-items:center;flex:none;padding:0}
 #pauseBtn i{display:flex;gap:5px}#pauseBtn i::before,#pauseBtn i::after{content:"";width:5px;height:16px;border-radius:2px;background:#fff}
 #weapon{position:fixed;left:max(14px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 58px);z-index:3;
@@ -194,6 +195,7 @@ body.vr-on #hud,body.vr-on #weapon,body.vr-on #bubble,body.vr-on #pops,body.vr-o
 <div id="hud" hidden>
   <div class="pill" id="hLvl">Bölüm 1</div>
   <div class="prog" aria-hidden="true"><i id="progFill"></i></div>
+  <button id="viewBtn" aria-label="Sipahi Gözü">🐎</button>
   <button id="pauseBtn" data-ta="Duraklat" aria-label="Duraklat"><i></i></button>
 </div>
 <div id="weapon" hidden></div>
@@ -297,6 +299,7 @@ body.vr-on #hud,body.vr-on #weapon,body.vr-on #bubble,body.vr-on #pops,body.vr-o
     <div class="setrow"><span data-t>Dil</span><div class="seg" id="setLang"><button data-v="tr">Türkçe</button><button data-v="en">English</button></div></div>
     <label class="setrow"><span data-t>Ses efektleri</span><input type="range" id="setSfx" min="0" max="100" step="5"></label>
     <label class="setrow"><span data-t>Mehter (müzik)</span><input type="range" id="setMus" min="0" max="100" step="5"></label>
+    <div class="setrow"><span data-t>Görüş</span><div class="seg" id="setView"><button data-v="kus" data-t>Kuşbakışı</button><button data-v="sipahi" data-t>Sipahi Gözü</button></div></div>
     <div class="setrow"><span data-t>Grafik kalitesi</span><div class="seg" id="setQ"><button data-v="dusuk" data-t>Düşük</button><button data-v="orta" data-t>Orta</button><button data-v="yuksek" data-t>Yüksek</button></div></div>
     <div class="setrow" id="setFsRow"><span data-t>Tam ekran</span><div class="seg" id="setFs"><button data-v="1" data-t>Açık</button><button data-v="0" data-t>Kapalı</button></div></div>
     <div class="setrow" id="setFullRow" hidden><span data-t>Tam Sürüm</span><button class="alt" id="setBuy" data-t>Satın al</button><button class="alt" id="setRestore" data-t>Satın alımları geri yükle</button></div>
