@@ -16,7 +16,6 @@
   .mod{display:flex;gap:6px;flex-wrap:wrap} .mod button{background:#1f2b2c;color:var(--ink);border:1px solid #35494b;border-radius:8px;padding:6px 12px;font:600 14px system-ui,sans-serif;cursor:pointer} .mod button.on{background:var(--green);border-color:var(--green)}
   #bilgi{position:fixed;left:16px;bottom:76px;max-width:520px;font-size:13px;line-height:1.5;background:#0d1314cc;border:1px solid #2b3a3c;border-radius:10px;padding:10px 14px;z-index:5}
   #bilgi kbd{background:#2b3a3c;border-radius:4px;padding:1px 6px;font-family:inherit}
-  #km{position:fixed;width:2px;height:2px;left:-10px;top:-10px;border:0;opacity:0;pointer-events:none}
   #VRButton{font-weight:700}
 </style>
 <script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
@@ -24,7 +23,6 @@
 <body>
 <div id="ust"><b>Champion <em>Battle</em> VR</b><span class="mod"><button id="menuB">☰ Menü</button><button id="hiz">⏩ ×1</button></span><span class="imza">Bir Mr. Anduv! yapımıdır.</span></div>
 <div id="bilgi"></div>
-<iframe id="km" title="Kaptan Mecit motoru" src="kaptanmecit.html?vr=1"></iframe>
 <script type="module">
 import * as THREE from 'three';
 import { VRButton } from './lib/VRButton.js';
@@ -159,7 +157,7 @@ const oku = k => { try { return localStorage.getItem(k); } catch { return null; 
 let DIL = oku('cbmvr.dil') || (/^tr/i.test(navigator.language || '') ? 'tr' : 'en');
 const t = (tr, en) => DIL === 'en' ? en : tr;
 /* menü durumu (aşağıda kullanılır; burada tanımlı ki çerçeve erken yüklenirse hata olmasın) */
-let MENU = true, BASLADI = false, BEKLE = false, SAYFA = oku('cbmvr.ogretici') ? null : 0, LIGLER_IZ = null, sonDurum = '';
+let MENU = true, BASLADI = false, SAYFA = oku('cbmvr.ogretici') ? null : 0, LIGLER_IZ = null, sonDurum = '';
 const SEC = (() => { try { const v = JSON.parse(oku('cbmvr.secim')); if (v?.izle && v?.oyna) return v; } catch { /* */ } return { mod: 'izle', izle: { lig: 0, ev: 0, dep: 1 }, oyna: { lig: 0, ev: 0, dep: 1 } }; })();
 /* ---------- 🔓 Tam Sürüm (Meta Horizon Store uygulama içi satın alma, tek seferlik): Türkiye ligi ücretsiz, diğer 5 lig Tam Sürüm'de.
    Mağaza dışında (tarayıcıdan açılan web sürümü) her şey açık — telefon sürümlerindeki kuralın aynısı. ---------- */
@@ -189,73 +187,26 @@ const kilitli = lig => !TAM && lig && lig.kod !== UCRETSIZ_LIG;
 tamHazirla();
 const ULKE = { tr: ['Türkiye', 'Turkey'], en: ['İngiltere', 'England'], es: ['İspanya', 'Spain'], it: ['İtalya', 'Italy'], de: ['Almanya', 'Germany'], fr: ['Fransa', 'France'] };
 
-/* ---------- Kaptan Mecit motoru (gizli çerçeve): adımı biz atarız, girişi biz veririz ---------- */
-let MOD = /[?&]oyna/.test(location.search) ? 'oyna' : 'izle', IZM = null, IZ = null, izAcc = 0, HIZ = 1, sonOlay = '', sonOlayT = 0, izBitisT = 0, izleYukle = null;
-const fr = document.getElementById('km');
-let W = null, RL = null, hazir = false, golYazi = 0, sonSkor = '0-0';
-const giris = { x: 0, y: 0, pas: false, sut: false };
-let bitisT = 0, KMSEC = null;
-function kmYeniMac(lg = 'tr', a = 'gs', b = 'fb') {
-  KMSEC = [lg, a, b];
-  for (const f of figurler.values()) saha.remove(f); figurler.clear();
-  RL.startMatch(RL.team(lg, a) || RL.team('tr', 'gs'), RL.team(lg, b) || RL.team('tr', 'fb'), null, false, {});
-  const M = RL.M; M.paused = true;                               // kendi döngüsü adım atmasın; adımı biz atarız
-  W.document.querySelectorAll('#pmenu').forEach(x => x.hidden = true);
-  sonSkor = '0-0'; tabelaSon = ''; bitisT = 0;
-}
-function baslat() {
-  if (hazir || !fr.contentWindow?.__RL) return;
-  W = fr.contentWindow; RL = W.__RL;
-  try {                                                          // KM'nin düz sesleri kapalı; düdük 3B sese yönlenir, vuruş ve gol sesini biz üretiriz
-    const S = W.eval('SND'); S.on = false;
-    S.whistle = n => Ses.duduk(n >= 2); S.ambStart = S.ambStop = () => {};
-  } catch { /* eski KM */ }
-  W.__bot = M2 => { M2.input.x = giris.x; M2.input.y = giris.y; if (giris.pas) { M2.input.pasE = true; giris.pas = false; } if (giris.sut) { M2.input.sutE = true; giris.sut = false; } };
-  hazir = true;
-  setTimeout(() => BEKLE ? basla() : menuCiz());                 // menü kodu aşağıda tanımlı
-}
-fr.addEventListener('load', baslat);
-baslat();                                                        // çerçeve bu betikten önce yüklendiyse
-const bekleT = setInterval(() => { if (hazir) clearInterval(bekleT); else baslat(); }, 300);
+/* ---------- maç: Champion maç motoru (izle ve yönet) ---------- */
+const MOD = 'izle';
+let IZM = null, IZ = null, izAcc = 0, HIZ = 1, sonOlay = '', sonOlayT = 0, izBitisT = 0, izleYukle = null, golYazi = 0, sonSkor = '0-0';
 
 /* ---------- giriş: kumanda çubuğu bakış yönüne göre, tuşlar kenar tetiklemeli ---------- */
-const tus = {};
-addEventListener('keydown', e => { tus[e.code] = true; if (MENU) return; if (e.code === 'KeyX') giris.pas = true; if (e.code === 'KeyZ' || e.code === 'Space') giris.sut = true; });
-addEventListener('keyup', e => { tus[e.code] = false; });
 const onceki = new Map();
 const kenar = (k, v) => { const o = onceki.get(k); onceki.set(k, v); return v && !o; };
-const geciciV = new THREE.Vector3(), yon = new THREE.Vector3(), sag = new THREE.Vector3();
-function girisOku(dt) {
-  let sx = 0, sy = 0;                                            // sx: sağ, sy: ileri (+)
-  if (!MENU) { if (tus.ArrowLeft || tus.KeyA) sx -= 1; if (tus.ArrowRight || tus.KeyD) sx += 1; if (tus.ArrowUp || tus.KeyW) sy += 1; if (tus.ArrowDown || tus.KeyS) sy -= 1; }
+function girisOku() {
   const s = renderer.xr.getSession();
   if (s) for (const src of s.inputSources) {
     const gp = src.gamepad; if (!gp) continue;
-    const ax = gp.axes.length >= 4 ? [gp.axes[2], gp.axes[3]] : [gp.axes[0] || 0, gp.axes[1] || 0];
     if (src.handedness === 'left') {
       if (kenar('ly', gp.buttons[5]?.pressed)) menuAcKapa();
       if (kenar('lg', gp.buttons[1]?.pressed)) masa.rotation.y += Math.PI;
-      if (!MENU && Math.hypot(ax[0], ax[1]) > 0.15) { sx = ax[0]; sy = -ax[1]; }
     }
-    if (src.handedness === 'right' && !MENU) {
-      if (MOD === 'izle') { if (kenar('ra', gp.buttons[4]?.pressed)) hizDegis(); continue; }
-      if (kenar('rt', gp.buttons[0]?.pressed) || kenar('ra', gp.buttons[4]?.pressed)) giris.pas = true;
-      if (kenar('rb', gp.buttons[5]?.pressed) || kenar('rg', gp.buttons[1]?.pressed)) giris.sut = true;
-    }
+    if (src.handedness === 'right' && !MENU && kenar('ra', gp.buttons[4]?.pressed)) hizDegis();
   }
-  /* bakış yönü (yatay) → masa düzlemi → KM eksenleri */
-  const cam = renderer.xr.isPresenting ? renderer.xr.getCamera() : kamera;
-  cam.getWorldDirection(yon); yon.y = 0; yon.normalize(); sag.set(-yon.z, 0, yon.x);
-  geciciV.copy(sag).multiplyScalar(sx).addScaledVector(yon, sy);
-  geciciV.applyAxisAngle(new THREE.Vector3(0, 1, 0), -masa.rotation.y);   // masa döndüyse
-  const d = Math.hypot(geciciV.x, geciciV.z);
-  if (d < 0.15) { giris.x = 0; giris.y = 0; return; }
-  const k = Math.min(1, d) / d;
-  giris.y = geciciV.x * k;                                       // sahne x → KM y
-  giris.x = geciciV.z * k;                                       // sahne z → KM x
 }
 
-/* ---------- mod: 🎮 Maçı oyna (Kaptan Mecit) · 👁 Maçı izle (Champion maç motoru) ---------- */
+/* ---------- 👁 Maçı izle ve yönet (Champion maç motoru) ---------- */
 function figurTemizle() { for (const f of figurler.values()) saha.remove(f); figurler.clear(); tabelaSon = ''; sonSkor = '0-0'; sonDurum = ''; }
 async function izleYeniMac(sec = null) {
   izleYukle ||= import('./izle.js');
@@ -280,7 +231,7 @@ addEventListener('keydown', e => {
   Ses.baslat();
   if (e.code === 'Escape' || e.code === 'KeyM' || e.code === 'Tab') { e.preventDefault(); menuAcKapa(); }
   else if (e.code === 'Enter' && MENU && SAYFA == null) basla();
-  else if (e.code === 'KeyH' && MOD === 'izle') hizDegis();
+  else if (e.code === 'KeyH') hizDegis();
 });
 izleYeniMac();                                                   // menünün arkasında canlı bir maç dönsün
 
@@ -328,15 +279,12 @@ const menuC = document.createElement('canvas'); menuC.width = MW; menuC.height =
 const menu = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.625), new THREE.MeshBasicMaterial({ map: menuT, transparent: true }));
 menu.position.set(0, 1.42, -0.62); menu.rotation.x = -0.12; sahne.add(menu);
 let MBTN = [];
-const kmLigler = () => { if (!W) return []; try { const L = W.eval('LEAGUES'); return Object.keys(L).map(k => ({ kod: k, ad: L[k].kurgu, kulupler: L[k].t.map(r => ({ id: r[0], ad: r[1], kisa: r[2], c1: r[3] })) })); } catch { return []; } };
-let KML = null;
-const ligListe = m => m === 'izle' ? (LIGLER_IZ || []) : (KML ||= kmLigler(), KML.length ? KML : (KML = null, []));
+const ligListe = () => LIGLER_IZ || [];
 const ligAd = l => `${ULKE[l.kod]?.[DIL === 'en' ? 1 : 0] || l.kod} · ${l.ad}`;
-function secim() { const S = SEC[SEC.mod], L = ligListe(SEC.mod), lig = L[S.lig % Math.max(1, L.length)]; return { S, L, lig, ev: lig?.kulupler[S.ev], dep: lig?.kulupler[S.dep] }; }
+function secim() { const S = SEC.izle, L = ligListe(), lig = L[S.lig % Math.max(1, L.length)]; return { S, L, lig, ev: lig?.kulupler[S.ev], dep: lig?.kulupler[S.dep] }; }
 function satirSar(g, metin, x, y, gen, sat) { for (const par of metin.split('\n')) { let s = ''; for (const k of par.split(' ')) { const d = s ? s + ' ' + k : k; if (g.measureText(d).width > gen && s) { g.fillText(s, x, y); y += sat; s = k; } else s = d; } g.fillText(s, x, y); y += sat * 1.25; } return y; }
 const SAYFALAR = () => [
   [t('Maket saha', 'Tabletop pitch'), t('Saha önündeki masanın üstünde: sen ayaktasın, maç masada oynanır. Masanın etrafında yürüyebilir, eğilip yakından bakabilirsin.\nSol Y: bu menüyü aç / kapat.\nSol kavrama: sahayı kendine doğru çevir.\nMenüde seçim: kumanda ışınını bir düğmeye tut, tetiğe bas (ya da elinle çimdikle).', 'The match is played on the table in front of you. Walk around it, lean in for a closer look.\nLeft Y: open / close this menu.\nLeft grip: turn the pitch around.\nIn menus: point the controller ray at a button and pull the trigger (or pinch with your hand).')],
-  [t('🎮 Maçı oyna', '🎮 Play the match'), t('Ev sahibi takım senin. Topa en yakın oyuncunu sarı halka gösterir.\nSol çubuk: koş (baktığın yöne göre).\nSağ tetik ya da A: pas, topsuzken oyuncu değiştir.\nB ya da sağ kavrama: şut, topsuzken kayarak müdahale.', 'You control the home team; the yellow ring marks your player.\nLeft stick: run (relative to where you look).\nRight trigger or A: pass, or switch player without the ball.\nB or right grip: shoot, or slide tackle without the ball.')],
   [t('👁 Maçı izle', '👁 Watch & manage'), t('Champion maç motoru: altı ligden kulüpler, gerçek dizilişler. Ev sahibi senin takımın.\nMasanın kenarındaki teknik alan panosundan zihniyet, diziliş ve oyuncu değişikliği yap.\nSağ A: hız ×1 / ×2 / ×4.', 'Champion match engine: clubs from six leagues with real formations. The home side is yours.\nUse the technical area board at the table edge for mentality, formation and substitutions.\nRight A: speed ×1 / ×2 / ×4.')],
 ];
 function menuCiz() {
@@ -368,19 +316,17 @@ function menuCiz() {
   }
   g.fillText('Champion Battle VR', 34, 46); g.font = '24px system-ui, sans-serif'; g.fillStyle = '#cfe0dc'; g.fillText(t('Bir Mr. Anduv! yapımıdır.', 'A Mr. Anduv! production.'), 36, 88);
   if (BASLADI) dug(MW - 250, 24, 216, 66, t('✕ Maça dön', '✕ Resume'), '', 'kapat');
-  et(140, t('Mod', 'Mode'));
-  dug(34, 160, 468, 84, t('🎮 Maçı oyna', '🎮 Play match'), SEC.mod === 'oyna' ? 'on' : '', 'mod', 'oyna');
-  dug(522, 160, 468, 84, t('👁 Maçı izle ve yönet', '👁 Watch & manage'), SEC.mod === 'izle' ? 'on' : '', 'mod', 'izle');
+  g.fillStyle = '#1d2526'; g.font = 'bold 34px system-ui, sans-serif'; g.textAlign = 'left'; g.fillText(t('👁 Maçı izle, teknik alandan yönet', '👁 Watch the match, manage from the touchline'), 34, 172);
   const { lig, ev, dep } = secim();
   if (!lig) { g.fillStyle = '#5b6466'; g.font = 'bold 34px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(t('Yükleniyor…', 'Loading…'), MW / 2, 420); }
   else {
     const sira = (y, etiket, yazi, act, renk) => { et(y - 20, etiket); dug(34, y, 110, 76, '◀', '', act, -1); dug(156, y, 712, 76, yazi, '', act + 'Bilgi', 0, renk); dug(880, y, 110, 76, '▶', '', act, 1); };
-    sira(290, t('Lig', 'League'), (kilitli(lig) ? '🔒 ' : '') + ligAd(lig), 'lig');
-    sira(410, t('Senin takımın (ev sahibi)', 'Your team (home)'), ev.ad, 'ev', ev.c1);
+    sira(270, t('Lig', 'League'), (kilitli(lig) ? '🔒 ' : '') + ligAd(lig), 'lig');
+    sira(400, t('Senin takımın (ev sahibi)', 'Your team (home)'), ev.ad, 'ev', ev.c1);
     sira(530, t('Rakip (deplasman)', 'Opponent (away)'), dep.ad, 'dep', dep.c1);
   }
   if (kilitli(lig)) dug(34, 640, 400, 104, ALINIYOR ? '…' : `🔓 ${t('Tam Sürümü al', 'Get Full Version')}\n${TAM_FIYAT ? TAM_FIYAT + t(' · tek seferlik', ' · one-time') : t('tek seferlik', 'one-time')}`, 'ana', 'tamal');
-  else dug(34, 640, 400, 104, BEKLE ? t('Yükleniyor…', 'Loading…') : BASLADI ? t('▶ Yeni maç', '▶ New match') : t('▶ Başla', '▶ Start'), 'ana', 'basla');
+  else dug(34, 640, 400, 104, BASLADI ? t('▶ Yeni maç', '▶ New match') : t('▶ Başla', '▶ Start'), 'ana', 'basla');
   dug(446, 640, 248, 104, t('❓ Yardım', '❓ Help'), '', 'yardim');
   dug(706, 640, 136, 104, Ses.acik ? '🔊' : '🔇', Ses.acik ? 'on' : '', 'ses');
   dug(854, 640, 136, 104, DIL === 'tr' ? 'EN' : 'TR', '', 'dil');
@@ -398,7 +344,6 @@ function menuBas(uv) {
   const { S, L, lig } = secim();
   if (b.act === 'sayfa') { SAYFA = b.v < SAYFALAR().length ? b.v : null; if (SAYFA == null) sakla('cbmvr.ogretici', '1'); }
   else if (b.act === 'kapat') menuAcKapa();
-  else if (b.act === 'mod') SEC.mod = b.v;
   else if (b.act === 'lig' && L.length) { S.lig = (S.lig + b.v + L.length) % L.length; S.ev = 0; S.dep = 1; }
   else if ((b.act === 'ev' || b.act === 'dep') && lig) takimKaydir(S, b.act, b.v, lig.kulupler.length);
   else if ((b.act === 'evBilgi' || b.act === 'depBilgi') && lig) takimKaydir(S, b.act.slice(0, -5), 1, lig.kulupler.length);
@@ -412,11 +357,10 @@ function menuBas(uv) {
 }
 function basla() {
   const { lig, ev, dep } = secim();
-  if (SEC.mod === 'oyna' && !hazir) { BEKLE = true; menuCiz(); return; }
   if (!lig || kilitli(lig)) return;
-  BEKLE = false; BASLADI = true; MENU = false; SAYFA = null; kaydet();
-  MOD = SEC.mod; HIZ = 1; figurTemizle();
-  if (MOD === 'izle') izleYeniMac({ lig: lig.kod, ev: ev.id, dep: dep.id }); else kmYeniMac(lig.kod, ev.id, dep.id);
+  BASLADI = true; MENU = false; SAYFA = null; kaydet();
+  HIZ = 1; figurTemizle();
+  izleYeniMac({ lig: lig.kod, ev: ev.id, dep: dep.id });
   menuCiz(); panelCiz(); ustYaz();
 }
 const basKonum = new THREE.Vector3(), basYon = new THREE.Vector3();
@@ -437,8 +381,8 @@ function ustYaz() {
   document.querySelector('#ust .imza').textContent = t('Bir Mr. Anduv! yapımıdır.', 'A Mr. Anduv! production.');
   document.documentElement.lang = DIL;
   document.getElementById('bilgi').innerHTML = t(
-    `<b>Maket saha</b> — saha masanın üstünde. Gözlükte <b>VR'a gir</b>'e bas.<br>Menüyü fareyle tıkla (ya da kumanda ışını + tetik). <b>Sol Y</b> / <kbd>Esc</kbd>: menü.<br><b>Oyna:</b> <kbd>WASD</kbd>/<kbd>↑↓←→</kbd> koş · <kbd>X</kbd> pas · <kbd>Z</kbd> şut. <b>İzle:</b> teknik alan panosuna tıkla · <kbd>H</kbd> hız. Fareyle sürükle: masanın etrafında dön.`,
-    `<b>Tabletop pitch</b> — the match is on the table. On a headset press <b>Enter VR</b>.<br>Click the menu with the mouse (or controller ray + trigger). <b>Left Y</b> / <kbd>Esc</kbd>: menu.<br><b>Play:</b> <kbd>WASD</kbd>/<kbd>↑↓←→</kbd> run · <kbd>X</kbd> pass · <kbd>Z</kbd> shoot. <b>Watch:</b> click the technical area board · <kbd>H</kbd> speed. Drag to orbit the table.`);
+    `<b>Maket saha</b> — saha masanın üstünde. Gözlükte <b>VR'a gir</b>'e bas.<br>Menüyü fareyle tıkla (ya da kumanda ışını + tetik). <b>Sol Y</b> / <kbd>Esc</kbd>: menü.<br>Teknik alan panosuna tıkla · <kbd>H</kbd> hız. Fareyle sürükle: masanın etrafında dön.`,
+    `<b>Tabletop pitch</b> — the match is on the table. On a headset press <b>Enter VR</b>.<br>Click the menu with the mouse (or controller ray + trigger). <b>Left Y</b> / <kbd>Esc</kbd>: menu.<br>Click the technical area board · <kbd>H</kbd> speed. Drag to orbit the table.`);
 }
 ustYaz(); menuCiz();
 
@@ -471,15 +415,10 @@ let sesT = 0;
 renderer.setAnimationLoop(() => {
   const dt = Math.min(0.05, saat.getDelta());
   orbit.update();
-  girisOku(dt);
+  girisOku();
   const dur = MENU && BASLADI;                                   // menü açıkken maç bekler (ilk açılışta arkada canlı maç döner)
   for (let i = 0; i < 2; i++) { const k = renderer.xr.getController(i); if (k.userData.cizgi) k.userData.cizgi.visible = MENU || MOD === 'izle'; }
-  if (MOD === 'oyna' && hazir && RL.M) {
-    if (RL.M.state === 'over') { bitisT ||= performance.now(); if (performance.now() - bitisT > 8000 && !MENU) { MENU = true; menuYerlestir(); menuCiz(); } }   // maç bitti: menü gelir
-    if (!dur) { const n = Math.max(1, Math.ceil(dt * 60 - 1e-3)), h = dt / n; for (let i = 0; i < n && RL.M; i++) RL.step(h); }
-    if (RL.M) ciz(kmGorunum(RL.M, dt), dt, dur ? 0 : dt);
-  } else if (MOD === 'oyna' && hazir && !RL.M && BASLADI && !MENU) { MENU = true; menuYerlestir(); menuCiz();
-  } else if (MOD === 'izle' && IZ) {
+  if (IZ) {
     const M = IZ.M;
     if (!M.bitti) { if (!dur) { izAcc += dt * HIZ; let n = 0; while (izAcc > 1 / 60 && n++ < 12) { M.adim(1 / 60); izAcc -= 1 / 60; } } }
     else { izBitisT ||= performance.now(); if (performance.now() - izBitisT > 8000) { if (!BASLADI) izleYeniMac(); else if (!MENU) { MENU = true; menuYerlestir(); menuCiz(); } } }
@@ -488,13 +427,6 @@ renderer.setAnimationLoop(() => {
   Ses.dinleyici(renderer.xr.isPresenting ? renderer.xr.getCamera() : kamera);
   renderer.render(sahne, kamera);
 });
-/* KM: koordinatlar zaten KM düzeninde (x taç-taç, y kale-kale) */
-function kmGorunum(M, dt) {
-  const skor = [M.T[0].score, M.T[1].score];
-  return { anahtar: 'km', kit: [M.T[0].kit, M.T[1].kit], ad: [M.T[0].t.short, M.T[1].t.short], skor,
-    oyuncular: M.P.map(p => ({ o: p, team: p.team, gk: p.role === 'G', x: p.x, y: p.y, dx: p.dx, dy: p.dy, v: Math.hypot(p.vx || 0, p.vy || 0), anim: p.anim || 0, skin: p.skin, hair: p.hair, gizli: p.x < -20 })),
-    top: M.ball, ctrl: M.ctrl, dk: typeof W.minTxt === 'function' ? W.minTxt() : '', durum: M.state === 'half' ? t('DEVRE ARASI', 'HALF TIME') : M.state === 'over' ? t('MAÇ SONU', 'FULL TIME') : '' };
-}
 /* Champion motoru: x kale-kale (0–105), y taç-taç (0–68) → KM düzenine çevrilir */
 const SAC = ['#2a1a10', '#4a2e1a', '#1a1a1a', '#7a4a20', '#c8a050'];
 function izGorunum(I, dt) {
@@ -536,7 +468,7 @@ function ciz(G, dt, sdt = dt) {
   const vurgu = golYazi > 0 ? t('GOOOL!', 'GOAL!') : G.durum || (G.anahtar === 'iz' && sonOlayT > 0 ? sonOlay : '');
   tabelaCiz({ kit: G.kit, ad: G.ad, skor: G.skor, alt: vurgu || G.dk, vurgu: !!vurgu });
 }
-window.__VR = { get M() { return RL && RL.M; }, get IZ() { return IZ; }, get MOD() { return MOD; }, get MENU() { return MENU; }, get SAYFA() { return SAYFA; }, get DIL() { return DIL; }, SEC, basla, menuAcKapa, menuBas, giris, sahne, masa, panel, menu, kamera, BTN: () => BTN, MBTN: () => MBTN, Ses };
+window.__VR = { get IZ() { return IZ; }, get MOD() { return MOD; }, get MENU() { return MENU; }, get SAYFA() { return SAYFA; }, get DIL() { return DIL; }, SEC, basla, menuAcKapa, menuBas, sahne, masa, panel, menu, kamera, orbit, tabela, BTN: () => BTN, MBTN: () => MBTN, Ses };
 </script>
 </body>
 </html>
