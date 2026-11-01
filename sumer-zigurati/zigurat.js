@@ -409,12 +409,13 @@ function ova(){
   // uzakta ateş ışıkları (evlerden sızan)
   const n = 120, pos = new Float32Array(n * 3); for(let i = 0; i < n; i++){ const a = r() * Math.PI * 2, d = 60 + r() * 220; pos.set([Math.cos(a) * d, ZEMIN + 2, Math.sin(a) * d], i * 3); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color:'#ffb060', size:1.4, transparent:true, opacity:.9, depthWrite:false })));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ map:noktaDoku(), color:'#ffb060', size:2.2, transparent:true, opacity:.9, depthWrite:false })));
 }
+function noktaDoku(){ if(noktaDoku.d) return noktaDoku.d; const [c, x] = tuval(32, 32); const g = x.createRadialGradient(16, 16, 0, 16, 16, 16); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.35, 'rgba(255,255,255,.7)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 32, 32); return noktaDoku.d = doku(c); }
 function tozlar(){
   const n = 300, pos = new Float32Array(n * 3); for(let i = 0; i < n; i++) pos.set([(Math.random() - .5) * TW, Math.random() * 6, (Math.random() - .5) * TD], i * 3);
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  tozP = new THREE.Points(g, new THREE.PointsMaterial({ color:'#ffd9a0', size:.03, transparent:true, opacity:.55, depthWrite:false, blending:THREE.AdditiveBlending })); scene.add(tozP);
+  tozP = new THREE.Points(g, new THREE.PointsMaterial({ map:noktaDoku(), color:'#ffd9a0', size:.05, transparent:true, opacity:.55, depthWrite:false, blending:THREE.AdditiveBlending })); scene.add(tozP);
 }
 function adTabletiCiz(){
   if(!sunakAd) return;

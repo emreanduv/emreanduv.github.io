@@ -1,5 +1,5 @@
 // Sümer Ziguratı: çevrimdışı önbellek (gözlükte internetsiz açılsın)
-const SURUM = 'zigurat-1';
+const SURUM = 'zigurat-2';
 const DOSYALAR = ['./', 'index.html', 'zigurat.js', 'veri.json', 'manifest.webmanifest', 'simge-192.png', 'simge-512.png',
   'vendor/three.module.js', 'vendor/addons/webxr/XRControllerModelFactory.js', 'vendor/addons/loaders/GLTFLoader.js',
   'vendor/addons/libs/motion-controllers.module.js', 'vendor/addons/utils/BufferGeometryUtils.js',
