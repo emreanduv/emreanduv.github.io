@@ -70,6 +70,13 @@ jobs:
             "appVersion": "${SURUM}"
           }
           JSON
+      - name: Sitenin yayına çıkmasını bekle (Pages)
+        run: |
+          for i in $(seq 1 40); do
+            curl -fsS https://emreanduv.github.io/sumer-zigurati/manifest.webmanifest >/dev/null && curl -fsS -o /dev/null https://emreanduv.github.io/sumer-zigurati/simge-512.png && { echo "site hazır"; exit 0; }
+            sleep 15
+          done
+          echo "site 10 dakikada yayına çıkmadı"; exit 1
       - name: Projeyi üret ve imzasız derle
         working-directory: proje
         run: |
