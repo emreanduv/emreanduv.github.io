@@ -428,7 +428,10 @@ window.VR_KUR = function (O) {
     d.querySelector('#vgGo').addEventListener('click', () => { SFX.click(); VR.start(); });
   }
   const quest = /OculusBrowser|Quest|Meta Quest/i.test(navigator.userAgent);
-  if (xr && xr.isSessionSupported) xr.isSessionSupported('immersive-vr').then(ok => { if (ok) { addButton(); if (quest || new URLSearchParams(location.search).has('vr')) addGate(); } }).catch(() => {});
+  // Meta Horizon Store uygulaması (immersive PWA): açılır açılmaz VR oturumu istenmeli, yoksa gözlük yükleme ekranında bekler.
+  // Uygulama simgesine tıklamak kullanıcı etkileşimi sayılır; başarısız olursa giriş ekranındaki düğme kalır.
+  const pwa = !!window.QUEST_SURUM && ('getDigitalGoodsService' in window || (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || document.referrer.startsWith('android-app://'));
+  if (xr && xr.isSessionSupported) xr.isSessionSupported('immersive-vr').then(ok => { if (ok) { addButton(); if (quest || pwa || new URLSearchParams(location.search).has('vr')) addGate(); if (pwa) VR.start(); } }).catch(() => {});
 
   /* ---------- gözlüksüz deneme: ?vrtest=1 (masayı oturan bir oyuncunun gözünden gösterir; &bak=sol|sag|arka|yukari) ---------- */
   if (VR.test) {
