@@ -16,3 +16,6 @@ Kaynak: yalnız serbest lisanslı açık veri — openfootball/football.json (ka
 
 ## CBM türetilmiş kadrolar
 `veri/cbm/v1/dunya.json` — Champion Battle Manager'ın kurmaca dünyası, Winning Eleven usulü gerçekten **türetilmiştir**: kulüp ve kadrolar bu sezonun gerçek liglerinden gelir, ama oyuncu adları değiştirilir (Lukaku → Lakaka) ve kulüpler şehir + renk adıyla anılır. Yaş, uyruk, mevki, boy ve "ünlülük" gibi olgular açık kaynaklardan (Vikipedi kadro şablonları, Wikidata CC0) okunur; yetenek puanlarını oyun kendisi hesaplar. Gerçek isimler depoya yazılmaz. `araclar/kadro_turet.py` (isim türetici: `araclar/isim_turet.py`), iş akışı `cbm-kadro.yml` haftada bir.
+
+## Nutuk Salonu (VR)
+`nutuk-salonu/` — Nutuk Akışı'nın VR salonu (WebXR). Kaynak: emreanduv/nutuk-akisi deposundaki `docs/salon/`; buraya kopyalanır (Meta Quest paketi bu adrese bağlanır, assetlinks bu alan adında). Gizlilik: https://emreanduv.github.io/nutuk-salonu/gizlilik.html
