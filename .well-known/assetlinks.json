@@ -1,0 +1,14 @@
+[
+ {
+  "relation": [
+   "delegate_permission/common.handle_all_urls"
+  ],
+  "target": {
+   "namespace": "android_app",
+   "package_name": "com.anduv.malazgirt.vr",
+   "sha256_cert_fingerprints": [
+    "8D:7F:19:B0:2A:9E:91:96:A8:43:A3:D6:DE:B5:52:5E:A3:A5:CD:AE:71:66:D9:46:D4:57:8B:2A:E3:C6:E3:38"
+   ]
+  }
+ }
+]

@@ -1,0 +1,30 @@
+{
+ "name": "Malazgirt Akıncıları",
+ "short_name": "Malazgirt",
+ "lang": "tr",
+ "description": "Akıncılarını büyüt, kapıyı seç: Malazgirt'ten Fetih Yolu'na 1453 bölüm. Harp masasında VR.",
+ "start_url": "index.html?vr=1",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "landscape",
+ "background_color": "#081224",
+ "theme_color": "#12305a",
+ "icons": [
+  {
+   "src": "ikon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "ikon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "ikon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
