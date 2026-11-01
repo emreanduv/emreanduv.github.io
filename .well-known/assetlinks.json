@@ -34,5 +34,17 @@
     "44:DC:92:8F:AC:8A:D3:2D:DF:53:F3:7A:8F:86:B0:87:EA:18:B1:B6:DC:0D:0A:6B:F0:5B:18:35:79:79:CD:08"
    ]
   }
+ },
+ {
+  "relation": [
+   "delegate_permission/common.handle_all_urls"
+  ],
+  "target": {
+   "namespace": "android_app",
+   "package_name": "com.anduv.yasamrehberi.vr",
+   "sha256_cert_fingerprints": [
+    "41:4E:8F:FB:51:4C:11:C7:51:1D:7D:DA:07:79:42:48:B8:F2:B0:D3:22:6D:41:F3:D1:34:48:8C:B8:36:8F:FC"
+   ]
+  }
  }
 ]
