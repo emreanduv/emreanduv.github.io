@@ -13,6 +13,7 @@
   #ust{position:fixed;left:0;right:0;top:0;padding:12px 16px;display:flex;gap:12px;align-items:center;z-index:5;background:linear-gradient(#101718ee,#10171800)}
   #ust b{font-size:18px} #ust b em{color:var(--green);font-style:normal}
   #ust .imza{margin-left:auto;font-size:13px;opacity:.8}
+  .mod{display:flex;gap:6px;flex-wrap:wrap} .mod button{background:#1f2b2c;color:var(--ink);border:1px solid #35494b;border-radius:8px;padding:6px 12px;font:600 14px system-ui,sans-serif;cursor:pointer} .mod button.on{background:var(--green);border-color:var(--green)}
   #bilgi{position:fixed;left:16px;bottom:76px;max-width:520px;font-size:13px;line-height:1.5;background:#0d1314cc;border:1px solid #2b3a3c;border-radius:10px;padding:10px 14px;z-index:5}
   #bilgi kbd{background:#2b3a3c;border-radius:4px;padding:1px 6px;font-family:inherit}
   #km{position:fixed;width:2px;height:2px;left:-10px;top:-10px;border:0;opacity:0;pointer-events:none}
@@ -21,10 +22,12 @@
 <script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
 </head>
 <body>
-<div id="ust"><b>Champion <em>Battle</em> VR · Kaptan Mecit maket saha</b><span class="imza">Bir Mr. Anduv! yapımıdır.</span></div>
+<div id="ust"><b>Champion <em>Battle</em> VR · maket saha</b><span class="mod"><button data-mod="oyna">🎮 Maçı oyna</button><button data-mod="izle">👁 Maçı izle</button><button id="hiz" title="İzleme hızı">⏩ Hız</button></span><span class="imza">Bir Mr. Anduv! yapımıdır.</span></div>
 <div id="bilgi"><b>Maket saha</b> — saha masanın üstünde, sen ayaktasın. Gözlükte <b>VR'a gir</b>'e bas.<br>
-  <b>Kumanda:</b> sol çubuk koş (baktığın yöne göre) · sağ tetik ya da A <b>pas / oyuncu seç</b> · B ya da sağ kavrama <b>şut / kayarak müdahale</b> · sol kavrama: sahayı kendine çevir · Y: yeni maç.<br>
-  <b>Bilgisayarda:</b> <kbd>↑↓←→</kbd>/<kbd>WASD</kbd> koş · <kbd>X</kbd> pas · <kbd>Z</kbd> şut · fareyle sürükle: masanın etrafında dön.</div>
+  <b>🎮 Maçı oyna</b> (Kaptan Mecit): sol çubuk koş (baktığın yöne göre) · sağ tetik ya da A <b>pas / oyuncu seç</b> · B ya da sağ kavrama <b>şut / kayarak müdahale</b>.<br>
+  <b>👁 Maçı izle</b> (Champion maç motoru, altı ligden kulüpler ve dizilişleri): sağ tetik ya da A <b>hız ×1 / ×2 / ×4</b>.<br>
+  <b>Her iki modda:</b> sol X <b>mod değiştir</b> · Y <b>yeni maç</b> · sol kavrama sahayı kendine çevir.<br>
+  <b>Bilgisayarda:</b> <kbd>↑↓←→</kbd>/<kbd>WASD</kbd> koş · <kbd>X</kbd> pas · <kbd>Z</kbd> şut · <kbd>M</kbd> mod · <kbd>H</kbd> hız · <kbd>N</kbd> yeni maç · fareyle sürükle: masanın etrafında dön.</div>
 <iframe id="km" title="Kaptan Mecit motoru" src="kaptanmecit.html?vr=1"></iframe>
 <script type="module">
 import * as THREE from 'three';
@@ -108,14 +111,17 @@ const tabelaC = document.createElement('canvas'); tabelaC.width = 1024; tabelaC.
 const tabela = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.156), new THREE.MeshBasicMaterial({ map: tabelaT, transparent: true }));
 tabela.position.set(0, MASA_Y + 0.62, -EN / 2 - 0.2); masa.add(tabela);
 let tabelaSon = '';
-function tabelaCiz(M, dk, ust = '') {
-  const k = `${M.T[0].score}-${M.T[1].score}|${dk}|${ust}`; if (k === tabelaSon) return; tabelaSon = k;
+/* G: o karenin görünümü — { kit:[{c1,c2}], ad:[kısa,kısa], skor:[a,b], alt: dakika ya da olay, vurgu } */
+function tabelaCiz(G) {
+  const k = `${G.ad}|${G.skor}|${G.alt}|${G.vurgu}`; if (k === tabelaSon) return; tabelaSon = k;
   const g = tabelaC.getContext('2d'); g.clearRect(0, 0, 1024, 160); g.fillStyle = '#0d1314e8'; g.beginPath(); g.roundRect(8, 8, 1008, 144, 24); g.fill();
-  const t = i => M.T[i]; g.textBaseline = 'middle'; g.font = 'bold 56px system-ui, sans-serif';
-  g.fillStyle = t(0).kit.c1; g.fillRect(40, 50, 26, 60); g.fillStyle = t(1).kit.c1; g.fillRect(958, 50, 26, 60);
-  g.fillStyle = '#f4efe2'; g.textAlign = 'left'; g.fillText(t(0).t.short, 84, 82); g.textAlign = 'right'; g.fillText(t(1).t.short, 940, 82);
-  g.textAlign = 'center'; g.font = 'bold 76px system-ui, sans-serif'; g.fillText(`${t(0).score} - ${t(1).score}`, 512, 74);
-  g.font = 'bold 40px system-ui, sans-serif'; g.fillStyle = ust ? '#f2c14e' : '#9fb3b0'; g.fillText(ust || dk, 512, 128);
+  g.textBaseline = 'middle'; g.font = 'bold 56px system-ui, sans-serif';
+  g.fillStyle = G.kit[0].c1; g.fillRect(40, 50, 26, 60); g.fillStyle = G.kit[1].c1; g.fillRect(958, 50, 26, 60);
+  g.fillStyle = '#f4efe2'; g.textAlign = 'left'; g.fillText(G.ad[0], 84, 82); g.textAlign = 'right'; g.fillText(G.ad[1], 940, 82);
+  g.textAlign = 'center'; g.font = 'bold 76px system-ui, sans-serif'; g.fillText(`${G.skor[0]} - ${G.skor[1]}`, 512, 74);
+  g.font = 'bold 36px system-ui, sans-serif'; g.fillStyle = G.vurgu ? '#f2c14e' : '#9fb3b0';
+  let t = G.alt || ''; while (g.measureText(t).width > 960 && t.length > 4) t = t.slice(0, -2); if (t !== (G.alt || '')) t += '…';
+  g.fillText(t, 512, 128);
   tabelaT.needsUpdate = true;
 }
 
@@ -145,12 +151,13 @@ const topGolge = new THREE.Mesh(new THREE.CircleGeometry(0.008, 16), new THREE.M
 topGolge.rotation.x = -Math.PI / 2; saha.add(topGolge);
 
 /* ---------- Kaptan Mecit motoru (gizli çerçeve): adımı biz atarız, girişi biz veririz ---------- */
+let MOD = /[?&]izle/.test(location.search) ? 'izle' : 'oyna', IZ = null, izAcc = 0, HIZ = 1, sonOlay = '', sonOlayT = 0, izBitisT = 0, izleYukle = null;
 const fr = document.getElementById('km');
 let W = null, RL = null, hazir = false, golYazi = 0, sonSkor = '0-0';
 const giris = { x: 0, y: 0, pas: false, sut: false };
 const TAKIMLAR = [['gs', 'fb'], ['bjk', 'ts'], ['fb', 'bjk'], ['ts', 'gs']];
 let macNo = 0, bitisT = 0;
-function yeniMac() {
+function kmYeniMac() {
   const [a, b] = TAKIMLAR[macNo++ % TAKIMLAR.length];
   for (const f of figurler.values()) saha.remove(f); figurler.clear();
   RL.startMatch(RL.team('tr', a) || RL.team('tr', 'gs'), RL.team('tr', b) || RL.team('tr', 'fb'), null, false, {});
@@ -162,7 +169,7 @@ function baslat() {
   if (hazir || !fr.contentWindow?.__RL) return;
   W = fr.contentWindow; RL = W.__RL;
   W.SND && (W.SND.on = false);                                   // VR'da ses: ileride tribün sesi 3B olacak
-  yeniMac();
+  if (MOD === 'oyna') kmYeniMac();
   W.__bot = M2 => { M2.input.x = giris.x; M2.input.y = giris.y; if (giris.pas) { M2.input.pasE = true; giris.pas = false; } if (giris.sut) { M2.input.sutE = true; giris.sut = false; } };
   hazir = true;
 }
@@ -184,8 +191,9 @@ function girisOku(dt) {
   if (s) for (const src of s.inputSources) {
     const gp = src.gamepad; if (!gp) continue;
     const ax = gp.axes.length >= 4 ? [gp.axes[2], gp.axes[3]] : [gp.axes[0] || 0, gp.axes[1] || 0];
-    if (src.handedness === 'left') { if (Math.hypot(ax[0], ax[1]) > 0.15) { sx = ax[0]; sy = -ax[1]; } if (kenar('lg', gp.buttons[1]?.pressed)) masa.rotation.y += Math.PI; if (kenar('ly', gp.buttons[5]?.pressed)) yeniMac(); }
+    if (src.handedness === 'left') { if (Math.hypot(ax[0], ax[1]) > 0.15) { sx = ax[0]; sy = -ax[1]; } if (kenar('lg', gp.buttons[1]?.pressed)) masa.rotation.y += Math.PI; if (kenar('ly', gp.buttons[5]?.pressed)) yeniMac(); if (kenar('lx', gp.buttons[4]?.pressed)) modDegis(MOD === 'oyna' ? 'izle' : 'oyna'); }
     if (src.handedness === 'right') {
+      if (MOD === 'izle') { if (kenar('rt', gp.buttons[0]?.pressed) || kenar('ra', gp.buttons[4]?.pressed)) hizDegis(); continue; }
       if (kenar('rt', gp.buttons[0]?.pressed) || kenar('ra', gp.buttons[4]?.pressed)) giris.pas = true;
       if (kenar('rb', gp.buttons[5]?.pressed) || kenar('rg', gp.buttons[1]?.pressed)) giris.sut = true;
     }
@@ -202,45 +210,87 @@ function girisOku(dt) {
   giris.x = geciciV.z * k;                                       // sahne z → KM x
 }
 
+/* ---------- mod: 🎮 Maçı oyna (Kaptan Mecit) · 👁 Maçı izle (Champion maç motoru) ---------- */
+function figurTemizle() { for (const f of figurler.values()) saha.remove(f); figurler.clear(); tabelaSon = ''; sonSkor = '0-0'; }
+async function izleYeniMac() {
+  izleYukle ||= import('./izle.js');
+  const { izleMac } = await izleYukle;
+  figurTemizle();
+  IZ = izleMac((metin, tur) => { if (tur === 'gol' || /GOL|⚽|kart|penalt|VAR|🟥|🟨/i.test(metin)) { sonOlay = metin; sonOlayT = 4; } });
+  izAcc = 0; izBitisT = 0;
+}
+function yeniMac() { if (MOD === 'izle') izleYeniMac(); else if (hazir) { figurTemizle(); kmYeniMac(); } }
+function modDegis(m) {
+  if (m === MOD) return; MOD = m; figurTemizle();
+  document.querySelectorAll('[data-mod]').forEach(b => b.classList.toggle('on', b.dataset.mod === MOD));
+  if (MOD === 'izle') izleYeniMac(); else if (hazir) kmYeniMac();
+}
+function hizDegis() { HIZ = HIZ === 1 ? 2 : HIZ === 2 ? 4 : 1; tabelaSon = ''; }
+document.querySelectorAll('[data-mod]').forEach(b => { b.classList.toggle('on', b.dataset.mod === MOD); b.onclick = () => modDegis(b.dataset.mod); });
+document.getElementById('hiz').onclick = () => hizDegis();
+addEventListener('keydown', e => { if (e.code === 'KeyH' && MOD === 'izle') hizDegis(); if (e.code === 'KeyN') yeniMac(); if (e.code === 'KeyM') modDegis(MOD === 'oyna' ? 'izle' : 'oyna'); });
+if (MOD === 'izle') izleYeniMac();
+
 /* ---------- kare döngüsü ---------- */
 const saat = new THREE.Clock();
 renderer.setAnimationLoop(() => {
   const dt = Math.min(0.05, saat.getDelta());
   orbit.update();
-  if (hazir && (!RL.M || RL.M.state === 'over')) {             // maç bitti: tabelada sonuç, birkaç saniye sonra yeni maç
-    bitisT ||= performance.now(); if (performance.now() - bitisT > 9000) yeniMac();
-  }
-  if (hazir && RL.M) {
-    const M = RL.M;
-    girisOku(dt);
-    const n = Math.max(1, Math.ceil(dt * 60 - 1e-3)), h = dt / n;
-    for (let i = 0; i < n && RL.M; i++) RL.step(h);
-    if (RL.M) ciz(RL.M, dt);
+  girisOku(dt);
+  if (MOD === 'oyna' && hazir) {
+    if (!RL.M || RL.M.state === 'over') { bitisT ||= performance.now(); if (performance.now() - bitisT > 9000) kmYeniMac(); }   // maç bitti: birkaç saniye sonra yeni maç
+    if (RL.M) {
+      const n = Math.max(1, Math.ceil(dt * 60 - 1e-3)), h = dt / n;
+      for (let i = 0; i < n && RL.M; i++) RL.step(h);
+      if (RL.M) ciz(kmGorunum(RL.M, dt), dt);
+    }
+  } else if (MOD === 'izle' && IZ) {
+    const M = IZ.M;
+    if (!M.bitti) { izAcc += dt * HIZ; let n = 0; while (izAcc > 1 / 60 && n++ < 12) { M.adim(1 / 60); izAcc -= 1 / 60; } }
+    else { izBitisT ||= performance.now(); if (performance.now() - izBitisT > 10000) izleYeniMac(); }
+    ciz(izGorunum(IZ, dt), dt);
   }
   renderer.render(sahne, kamera);
 });
-function ciz(M, dt) {
-  for (const p of M.P) {
-    let f = figurler.get(p);
-    if (!f || f.userData.c1 !== M.T[p.team].kit.c1 || f.userData.rol !== (p.role === 'G')) {
+/* KM: koordinatlar zaten KM düzeninde (x taç-taç, y kale-kale) */
+function kmGorunum(M, dt) {
+  const skor = [M.T[0].score, M.T[1].score];
+  return { anahtar: 'km', kit: [M.T[0].kit, M.T[1].kit], ad: [M.T[0].t.short, M.T[1].t.short], skor,
+    oyuncular: M.P.map(p => ({ o: p, team: p.team, gk: p.role === 'G', x: p.x, y: p.y, dx: p.dx, dy: p.dy, v: Math.hypot(p.vx || 0, p.vy || 0), anim: p.anim || 0, skin: p.skin, hair: p.hair, gizli: p.x < -20 })),
+    top: M.ball, ctrl: M.ctrl, dk: typeof W.minTxt === 'function' ? W.minTxt() : '', durum: M.state === 'half' ? 'DEVRE ARASI' : M.state === 'over' ? 'MAÇ SONU' : '' };
+}
+/* Champion motoru: x kale-kale (0–105), y taç-taç (0–68) → KM düzenine çevrilir */
+const SAC = ['#2a1a10', '#4a2e1a', '#1a1a1a', '#7a4a20', '#c8a050'];
+function izGorunum(I, dt) {
+  const M = I.M;
+  return { anahtar: 'iz', kit: [I.ev, I.dep], ad: [I.ev.kisa, I.dep.kisa], skor: M.skor,
+    oyuncular: M.players.map((p, i) => { const v = Math.hypot(p.vx || 0, p.vy || 0); if (v > 0.3) { p._dx = p.vy / v; p._dy = p.vx / v; }
+      return { o: p, team: p.team, gk: p.gk, x: p.y, y: p.x, dx: p._dx ?? 0, dy: p._dy ?? (p.team ? -1 : 1), v, anim: (p._an = (p._an || 0) + v * dt), skin: p.skin, hair: SAC[i % SAC.length], gizli: p.atildi != null }; }),
+    top: { x: M.ball.y, y: M.ball.x, z: M.ball.z }, ctrl: null, dk: M.saatYazi() + (HIZ > 1 ? `  ·  ×${HIZ}` : ''),
+    durum: M.bitti ? 'MAÇ SONU' : M.devreArasi ? 'DEVRE ARASI' : '' };
+}
+function ciz(G, dt) {
+  for (const p of G.oyuncular) {
+    let f = figurler.get(p.o);
+    const kit = G.kit[p.team];
+    if (!f || f.userData.c1 !== kit.c1 || f.userData.gk !== p.gk) {
       if (f) saha.remove(f);
-      f = figur(p, M.T[p.team].kit); f.userData = { c1: M.T[p.team].kit.c1, rol: p.role === 'G' }; figurler.set(p, f); saha.add(f);
+      f = figur({ role: p.gk ? 'G' : 'O', skin: p.skin, hair: p.hair }, kit); f.userData = { c1: kit.c1, gk: p.gk }; figurler.set(p.o, f); saha.add(f);
     }
-    f.visible = !(M.atilan || []).includes?.(p) && p.x > -20;
-    f.position.set(kmX(p.x, p.y), 0, kmZ(p.x, p.y));
+    f.visible = !p.gizli;
+    f.position.set(kmX(p.x, p.y), Math.abs(Math.sin(p.anim * 1.6)) * Math.min(1, p.v / 6) * 0.004, kmZ(p.x, p.y));
     if (p.dx || p.dy) f.rotation.y = Math.atan2(-p.dx, p.dy) - Math.PI / 2;
-    const v = Math.hypot(p.vx || 0, p.vy || 0); f.position.y = Math.abs(Math.sin((p.anim || 0) * 1.6)) * Math.min(1, v / 6) * 0.004;
   }
-  const c = M.ctrl;
+  const c = G.ctrl;
   halka.visible = ok.visible = !!c;
   if (c) { const x = kmX(c.x, c.y), z = kmZ(c.x, c.y); halka.position.set(x, 0.002, z); ok.position.set(x, 2.4 * OLC * OYUNCU_BUYUT + Math.sin(performance.now() / 200) * 0.004, z); }
-  const b = M.ball; top.position.set(kmX(b.x, b.y), 0.009 + (b.z || 0) * OLC * 1.6, kmZ(b.x, b.y)); topGolge.position.set(top.position.x, 0.001, top.position.z);
-  const skor = `${M.T[0].score}-${M.T[1].score}`; if (skor !== sonSkor) { sonSkor = skor; golYazi = 2.5; }
-  golYazi = Math.max(0, golYazi - dt);
-  const dk = typeof W.minTxt === 'function' ? W.minTxt() : '';
-  tabelaCiz(M, dk, golYazi > 0 ? 'GOOOL!' : M.state === 'half' ? 'DEVRE ARASI' : M.state === 'over' ? 'MAÇ SONU' : '');
+  const b = G.top; top.position.set(kmX(b.x, b.y), 0.009 + (b.z || 0) * OLC * 1.6, kmZ(b.x, b.y)); topGolge.position.set(top.position.x, 0.001, top.position.z);
+  const skor = `${G.skor[0]}-${G.skor[1]}`; if (skor !== sonSkor) { if (sonSkor !== '0-0' || skor !== '0-0') golYazi = 2.5; sonSkor = skor; }
+  golYazi = Math.max(0, golYazi - dt); sonOlayT = Math.max(0, sonOlayT - dt);
+  const vurgu = golYazi > 0 ? 'GOOOL!' : G.durum || (G.anahtar === 'iz' && sonOlayT > 0 ? sonOlay : '');
+  tabelaCiz({ kit: G.kit, ad: G.ad, skor: G.skor, alt: vurgu || G.dk, vurgu: !!vurgu });
 }
-window.__VR = { get M() { return RL && RL.M; }, giris, sahne, masa };
+window.__VR = { get M() { return RL && RL.M; }, get IZ() { return IZ; }, get MOD() { return MOD; }, modDegis, giris, sahne, masa };
 </script>
 </body>
 </html>
