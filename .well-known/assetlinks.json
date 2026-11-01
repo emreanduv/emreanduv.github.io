@@ -22,5 +22,17 @@
     "09:6F:1C:7A:5C:AC:BA:62:1B:CF:FB:D0:AE:2D:3F:84:B4:D2:91:0B:6B:0D:26:2A:8D:8E:06:F6:11:53:3B:B0"
    ]
   }
+ },
+ {
+  "relation": [
+   "delegate_permission/common.handle_all_urls"
+  ],
+  "target": {
+   "namespace": "android_app",
+   "package_name": "com.anduv.nutuksalonu",
+   "sha256_cert_fingerprints": [
+    "44:DC:92:8F:AC:8A:D3:2D:DF:53:F3:7A:8F:86:B0:87:EA:18:B1:B6:DC:0D:0A:6B:F0:5B:18:35:79:79:CD:08"
+   ]
+  }
  }
 ]
