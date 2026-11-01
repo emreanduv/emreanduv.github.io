@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#132545">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="simge-192.png">
+<link rel="apple-touch-icon" href="simge-192.png">
+<title>Sümer Ziguratı</title>
+<meta name="description" content="Ur Ziguratı'nın tepesinde, MÖ 2000'lerin bir gecesinde dur: kil tabletin satırları önce çivi yazısıyla parlar, sonra Türkçeye çözülür. Gılgamış Destanı, İnanna, tufan ve Babil göğü. VR gözlükte, bilgisayarda ve telefonda çalışır.">
+<style>
+  @font-face{font-family:'DM Sans';font-weight:500;src:url(fonts/dm-sans-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'DM Sans';font-weight:500;src:url(fonts/dm-sans-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'DM Sans';font-weight:700;src:url(fonts/dm-sans-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'DM Sans';font-weight:700;src:url(fonts/dm-sans-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'DM Sans';font-weight:800;src:url(fonts/dm-sans-latin-ext-800-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'DM Sans';font-weight:800;src:url(fonts/dm-sans-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'DM Sans';font-weight:900;src:url(fonts/dm-sans-latin-ext-900-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'DM Sans';font-weight:900;src:url(fonts/dm-sans-latin-900-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'Barlow Condensed';font-weight:800;src:url(fonts/barlow-condensed-latin-ext-800-normal.woff2) format('woff2');unicode-range:U+0100-024F,U+1E00-1EFF}
+  @font-face{font-family:'Barlow Condensed';font-weight:800;src:url(fonts/barlow-condensed-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+  @font-face{font-family:'Sumer Cuneiform';font-weight:400;src:url(fonts/noto-sans-cuneiform.woff2) format('woff2');unicode-range:U+12000-1254F}
+  :root{--ink:#1c2a44;--deep:#101c33;--lapis:#1f4fa0;--clay:#c4683a;--gold:#e0b04a;--paper:#fbf7ef}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:#070d1c;color:#fff;font:500 15px/1.4 'DM Sans','Sumer Cuneiform',system-ui,sans-serif}
+  canvas{display:block;touch-action:none}
+  .cun{font-family:'Sumer Cuneiform',serif}
+  .band{position:fixed;left:0;right:0;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;
+    background:radial-gradient(ellipse at 18% -30%,#4a6fb8,transparent 60%),repeating-linear-gradient(90deg,#132545 0 60px,#162b52 60px 120px);box-shadow:0 3px 0 #e0b04a}
+  .crest{flex:none;width:38px;height:40px;border-radius:10px 10px 50% 50%;background:radial-gradient(circle at 35% 30%,#f6d58a,#c4683a 62%,#7a3a18);box-shadow:0 0 0 2px #fff;display:grid;place-items:center}
+  .crest svg{width:80%;height:80%}
+  .band h1{margin:0;font:900 20px/1 'DM Sans',sans-serif}.band h1 em{font-style:normal;color:#f2c870}
+  .band small{display:block;color:#d3def3;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .band .t{min-width:0;flex:1}
+  .vr,.ses{flex:none;border:0;border-radius:10px;padding:9px 14px;font:900 14px 'DM Sans',sans-serif;color:#fff;background:linear-gradient(#f2c870,#c4683a);box-shadow:0 2px 0 #0005;cursor:pointer}
+  .ses{padding:9px 11px;background:linear-gradient(#4f6a99,#1f4fa0)}
+  .vr[disabled]{background:linear-gradient(#5b6b8c,#3c4a68);cursor:default;opacity:.85}
+  .alt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;display:flex;gap:8px;align-items:center;
+    padding:8px;border-radius:14px;background:#101c33e6;box-shadow:0 0 0 1px #2a467a,0 6px 20px #0008;max-width:calc(100% - 24px)}
+  .alt button,.alt select{border:0;border-radius:10px;padding:10px 13px;font:800 15px 'DM Sans',sans-serif;background:linear-gradient(#f7f2e8,#ddd3c1);color:var(--ink);box-shadow:0 2px 0 #0004;cursor:pointer}
+  .alt select{max-width:46vw}
+  .alt .on{background:linear-gradient(#ffe39a,#e0b04a)}
+  .ipucu{position:fixed;left:12px;top:calc(66px + env(safe-area-inset-top,0px));z-index:4;font-size:12.5px;color:#d3def3;background:#101c33b3;padding:6px 10px;border-radius:8px;max-width:calc(100% - 24px)}
+  .giris{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:20px;overflow:auto;background:radial-gradient(ellipse at 50% 20%,#1f3a6e,#070d1c 70%)}
+  .kart{max-width:540px;width:100%;border-radius:18px;padding:22px 22px 18px;color:#2a1d0c;background:radial-gradient(ellipse at 30% 0%,#fff3d9,#ecc796 75%);box-shadow:inset 6px 0 0 #1f4fa0,0 6px 0 #8a5a2b66,0 20px 50px #000a}
+  .kart small{font-weight:900;letter-spacing:.6px;color:#8a4a1c;font-size:12.5px}
+  .kart h2{margin:6px 0 8px;font:900 32px/1.05 'DM Sans',sans-serif;color:#101c33}
+  .kart h2 .cun{font-size:26px;color:#8a4a1c;margin-left:6px}
+  .kart p{margin:0 0 10px;font-size:15.5px}
+  .kart ul{margin:0 0 12px;padding-left:18px;font-size:14px;color:#4a3a22}
+  .kart label{display:block;font-weight:900;font-size:13.5px;color:#6b3d1c;margin:4px 0 6px}
+  .kart input{width:100%;border:0;border-radius:12px;padding:12px 14px;font:800 17px 'DM Sans',sans-serif;color:#1c2a44;background:#fffaf0;box-shadow:inset 0 0 0 2px #c98c52;margin-bottom:6px}
+  .kart .ad{min-height:30px;text-align:center;font-size:26px;color:#4a2810;letter-spacing:4px}
+  .kart .ad small{display:block;letter-spacing:0;font-size:12px;color:#8a4a1c}
+  .kart button{width:100%;margin-top:6px;border:0;border-radius:12px;padding:14px;font:900 18px 'DM Sans',sans-serif;color:#fff;background:linear-gradient(#4f6a99,#1f4fa0);box-shadow:0 3px 0 #0c2a5e;cursor:pointer}
+  .kart .made{margin:12px 0 0;text-align:center;font-weight:800;color:#6b3d1c;font-size:13px}
+  .kart .not{font-size:12px;color:#7d6a4f;margin:8px 0 0}
+  .kart .yuk{font-weight:800}
+  .hata{color:#ffb4b4}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body>
+<header class="band">
+  <div class="crest"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6l3.2 7.6 8.2.6-6.3 5.3 2 8-7.1-4.4-7.1 4.4 2-8-6.3-5.3 8.2-.6z" fill="#ffe08a" stroke="#5a3a12" stroke-width="1.6"/><path d="M14 90h72v-12H14zM22 78h56V66H22zM31 66h38V54H31zM39 54h22V44H39z" fill="#f2e3c0" stroke="#3b2410" stroke-width="3" stroke-linejoin="round"/><path d="M46 90V70h8v20" fill="#3b2410"/></svg></div>
+  <div class="t"><h1>Sümer <em>Ziguratı</em></h1><small id="alt">Ur · MÖ 2000 civarı · gece</small></div>
+  <button class="ses" id="ses" title="Gece sesleri">🔇</button>
+  <button class="vr" id="vr" disabled>🥽 VR</button>
+</header>
+<div class="ipucu" id="ipucu">Sürükle: etrafına bak · Zemine çift tıkla: oraya yürü · Raftaki ve sunaktaki tabletlere dokun · Yukarı bak: bu geceki Babil göğü</div>
+<div class="alt">
+  <button id="geri" aria-label="Önceki satır">◀</button>
+  <button id="oto" aria-label="Kendiliğinden ilerlesin">⏵ Oto</button>
+  <button id="ileri" aria-label="Sonraki satır">▶</button>
+  <select id="sec" aria-label="Tablet seç"></select>
+</div>
+<div class="giris" id="giris">
+  <div class="kart">
+    <small>𒀭 UR ZİGURATI · MÖ 2000 CİVARI · GECE</small>
+    <h2>Sümer Ziguratı <span class="cun">𒂍𒆧𒉡𒃲</span></h2>
+    <p>Ay tanrısı Nanna'nın tapınağının önünde, ziguratın tepesindesin. Taş levhada kil tabletlerin satırları önce çivi yazısıyla parlar, sonra Türkçeye çözülür. Rafta Gılgamış'ın 12 tableti, sunakta en sevilen metinler, gökte bu gecenin Ay'ı ve gezegenleri.</p>
+    <ul>
+      <li><b>VR gözlükte:</b> tetik sonraki satır, kavrama önceki · tablete ya da zemine nişan alıp tetik · çubukla dön</li>
+      <li><b>Bilgisayar ve telefonda:</b> sürükleyerek bak, zemine çift dokunup yürü · ◀ ▶ tuşları</li>
+    </ul>
+    <label for="adim">✍️ Adın sunaktaki kil tablete kazınsın (isteğe bağlı)</label>
+    <input id="adim" maxlength="16" placeholder="Adın…" autocomplete="off">
+    <div class="ad cun" id="adOn"></div>
+    <button id="basla"><span class="yuk" id="yuk">Zigurat hazırlanıyor…</span></button>
+    <p class="not">Sahne temsilîdir; ölçüler yaklaşıktır. Satırlar serbest Türkçe anlatımdır. İnternet gerekmez, hiçbir veri toplanmaz.</p>
+    <p class="made">Bir Mr. Anduv! yapımıdır.</p>
+  </div>
+</div>
+<script type="module" src="zigurat.js"></script>
+</body>
+</html>
