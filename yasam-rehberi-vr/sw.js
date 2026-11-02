@@ -1,5 +1,5 @@
 // Yaşam Rehberi VR: çevrimdışı önbellek (gözlükte internetsiz açılsın)
-const SURUM = 'yrvr-2';
+const SURUM = 'yrvr-3';
 const DOSYALAR = ['./', 'index.html', 'cami.js', 'manifest.webmanifest', 'simge-192.png', 'simge-512.png',
   'vendor/three.module.js', 'vendor/addons/webxr/XRControllerModelFactory.js', 'vendor/addons/loaders/GLTFLoader.js',
   'vendor/addons/libs/motion-controllers.module.js', 'vendor/addons/utils/BufferGeometryUtils.js',

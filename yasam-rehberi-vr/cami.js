@@ -581,7 +581,7 @@ async function vrHazirla(){
       $('#basla').innerHTML = "🥽 VR'a gir";
       $('#basla').onclick = async () => { try { const s = await navigator.xr.requestSession('immersive-vr', VR_OZ); renderer.xr.setFoveation(1); await renderer.xr.setSession(s); camera.position.set(0, 0, 0); $('#giris').remove(); s.addEventListener('end', () => camera.position.set(0, 1.6, 0)); } catch(e){ $('#yuk') && ($('#yuk').textContent = 'VR açılamadı'); } };
     } else if(erken) $('#giris').remove();
-  } catch(e){ console.error(e); $('#yuk').innerHTML = '<span class="hata">Açılamadı. Sayfayı yenile.</span>'; }
+  } catch(e){ console.error(e); window.__hataGoster ? __hataGoster((e && e.message) || e) : ($('#yuk').innerHTML = '<span class="hata">Açılamadı. Sayfayı yenile.</span>'); }
 })();
 
 if('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

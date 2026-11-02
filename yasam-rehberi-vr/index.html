@@ -52,6 +52,11 @@
 <script>
 // Quest uygulaması (immersive) olarak açıldıysa VR oturumunu HEMEN iste: simgeye dokunuş "kullanıcı etkileşimi" sayılır ama birkaç saniye geçerlidir.
 // Sahne arkadan hazırlanır; oturum alınamazsa giriş kartındaki düğme VR'a sokar.
+window.__hatalar = [];
+function __hataGoster(m){ try { window.__hatalar.push(String(m)); var y = document.getElementById('yuk'); if(y) y.innerHTML = '<span class="hata">Hata: ' + String(m).replace(/</g,'&lt;').slice(0,200) + '</span>'; } catch(e){} }
+addEventListener('error', function(e){ __hataGoster((e.message || e) + (e.filename ? ' @' + e.filename.split('/').pop() + ':' + e.lineno : '')); });
+addEventListener('unhandledrejection', function(e){ __hataGoster(e.reason && (e.reason.message || e.reason)); });
+setTimeout(function(){ var y = document.getElementById('yuk'); if(y && /Hazırlanıyor/.test(y.textContent)) __hataGoster('20 sn içinde açılmadı (ES modülü yüklenmedi?)'); }, 20000);
 (function(){ try {
   var pwa = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || 'getDigitalGoodsService' in window || document.referrer.indexOf('android-app://') === 0;
   window.__pwa = pwa;
