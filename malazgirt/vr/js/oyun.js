@@ -1060,6 +1060,15 @@ $('setMus').addEventListener('input', e => { S.vol.mus = +e.target.value; applyV
 $('setOk').addEventListener('click', () => { SFX.click(); persist(); if (setFrom === 'pause') show('pause'); else { previewLevel(nextLevel()); show('menu'); } });
 $('setBack').addEventListener('click', () => $('setOk').click());
 $('setQuit').addEventListener('click', () => { persist(); HOST && HOST.quit && HOST.quit(); });
+// Verilerimi sil: cihazdaki bütün ilerleme ve ayarları siler (gizlilik politikası, Meta VRC.Quest.Privacy). Tam Sürüm mağazadan geri yüklenebilir.
+let eraseArm = 0;
+function eraseData() {
+  if (Date.now() - eraseArm > 4000) { eraseArm = Date.now(); return false; }   // ilk dokunuş: onay iste
+  try { localStorage.removeItem(SKEY); } catch (e) {}
+  if (HOST && HOST.save) try { HOST.save(''); } catch (e) {}
+  setTimeout(() => location.reload(), 150); return true;
+}
+$('setErase').addEventListener('click', () => { SFX.click(); const done = eraseData(); $('setErase').textContent = done ? t('Silindi') : t('Emin misin? Tekrar dokun'); if (!done) setTimeout(() => { $('setErase').textContent = t('Verilerimi sil'); }, 4000); });
 $('setRestore').addEventListener('click', () => restorePurchases(true));
 function applyFullscreen() {
   if (HOST && HOST.setFullscreen) { HOST.setFullscreen(!!S.fs); return; }
@@ -1308,7 +1317,7 @@ function frame(now) {
 }
 // VR (Harp Masası) modülüne oyunun sahnesini ve durumunu ver
 if (window.VR_KUR) window.VR_KUR({ scene, renderer, camera, $, t, fmt, D, SFX, NL, canPlay, startGame, previewLevel, show, unlockAudio, nextLevel, resize, frame,
-  binek: () => binek, paused: () => paused, darbe, S: () => S, persist, upCapNow, totalStars: () => totalStars(), setView, achieve: id => achieve(id), pause, fmtN: fmt, buyFull: PAID ? () => buyFull().then(ok => { if (ok) { S.full = true; persist(); drawFullChip(); } return ok; }) : null, G: () => G, mode: () => mode, mood: () => curMood, MOODS, precip: [rainLines, snowPts], lastRes: () => lastRes, setMode: v => { mode = v; }, setPaused: v => { paused = v; }, setLast: v => { last = v; } });
+  binek: () => binek, paused: () => paused, eraseData, darbe, S: () => S, persist, upCapNow, totalStars: () => totalStars(), setView, achieve: id => achieve(id), pause, fmtN: fmt, buyFull: PAID ? () => buyFull().then(ok => { if (ok) { S.full = true; persist(); drawFullChip(); } return ok; }) : null, G: () => G, mode: () => mode, mood: () => curMood, MOODS, precip: [rainLines, snowPts], lastRes: () => lastRes, setMode: v => { mode = v; }, setPaused: v => { paused = v; }, setLast: v => { last = v; } });
 
 // Mağaza görselleri için sahne modu: ?kare=BÖLÜM&hiz=2 (araclar/magaza-gorselleri.js kullanır)
 const Q = new URLSearchParams(location.search);
