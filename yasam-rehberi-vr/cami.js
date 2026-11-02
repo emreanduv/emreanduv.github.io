@@ -22,7 +22,7 @@ function doku(c, tekrar){ const t = new THREE.CanvasTexture(c); t.colorSpace = T
 function sar(ctx, metin, genislik){ const kel = String(metin).split(/\s+/), sat = []; let cur = '';
   for(const k of kel){ const t = cur ? cur + ' ' + k : k; if(ctx.measureText(t).width > genislik && cur){ sat.push(cur); cur = k; } else cur = t; } if(cur) sat.push(cur); return sat; }
 function yuvarlak(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
-const gurultu = (x, n, a, renk) => { for(let i = 0; i < n; i++){ x.fillStyle = `rgba(${renk},${Math.random() * a})`; x.fillRect(Math.random() * x.canvas.width, Math.random() * x.canvas.height, 2, 2); } };
+const gurultu = (x, n, a, renk) => { x.save(); x.fillStyle = `rgb(${renk})`; for(let i = 0; i < n; i++){ x.globalAlpha = Math.random() * a; x.fillRect(Math.random() * x.canvas.width, Math.random() * x.canvas.height, 2, 2); } x.restore(); };
 
 // sıva / mermer / altın mozaik / halı dokuları
 function sivaDokusu(){ const [c, x] = tuval(512, 512); x.fillStyle = '#d9c9a4'; x.fillRect(0, 0, 512, 512); gurultu(x, 5000, .07, '90,70,40');
@@ -31,10 +31,14 @@ function mermerDokusu(ton = '#ece6da', damar = '120,110,100'){ const [c, x] = tu
   for(let i = 0; i < 18; i++){ x.strokeStyle = `rgba(${damar},${.08 + Math.random() * .12})`; x.lineWidth = .6 + Math.random() * 1.6; x.beginPath(); let px = Math.random() * 512, py = 0; x.moveTo(px, py);
     while(py < 512){ px += (Math.random() - .5) * 40; py += 20 + Math.random() * 30; x.lineTo(px, py); } x.stroke(); } return c; }
 function yesilMermer(){ return mermerDokusu('#2f5a49', '20,40,30'); }
-function mozaikDokusu(w = 1024, h = 512, koyu = false){ const [c, x] = tuval(w, h);
-  x.fillStyle = koyu ? '#8a6a2a' : '#b8922f'; x.fillRect(0, 0, w, h);
-  for(let yy = 0; yy < h; yy += 4) for(let xx = 0; xx < w; xx += 4){ const k = .82 + Math.random() * .3; x.fillStyle = `rgb(${200 * k | 0},${158 * k | 0},${60 * k | 0})`; x.fillRect(xx, yy, 3.4, 3.4); }
-  return c; }
+function mozaikDokusu(w = 1024, h = 512, koyu = false){ // 4 px'lik altın tesseralar (ImageData ile hızlı)
+  const [c, x] = tuval(w, h), im = x.createImageData(w, h), d = im.data, T = koyu ? .72 : 1;
+  for(let ty = 0; ty < h; ty += 4) for(let tx = 0; tx < w; tx += 4){
+    const k = (.82 + Math.random() * .3) * T, r = 200 * k, g = 158 * k, b = 60 * k;
+    for(let yy = ty; yy < ty + 4 && yy < h; yy++) for(let xx = tx; xx < tx + 4 && xx < w; xx++){
+      const i = (yy * w + xx) * 4, ara = (yy - ty === 3 || xx - tx === 3);
+      d[i] = ara ? r * .55 : r; d[i + 1] = ara ? g * .55 : g; d[i + 2] = ara ? b * .55 : b; d[i + 3] = 255; } }
+  x.putImageData(im, 0, 0); return c; }
 function kubbeDokusu(){ // ekvator → tepe: altın mozaik, 40 kaburga, tepede madalyon (yazısız süsleme)
   const [c, x] = tuval(2048, 1024); x.drawImage(mozaikDokusu(2048, 1024), 0, 0);
   for(let i = 0; i < 40; i++){ const u = i / 40 * 2048; const g = x.createLinearGradient(u - 14, 0, u + 14, 0); g.addColorStop(0, 'rgba(90,60,20,0)'); g.addColorStop(.5, 'rgba(90,60,20,.55)'); g.addColorStop(1, 'rgba(90,60,20,0)'); x.fillStyle = g; x.fillRect(u - 14, 0, 28, 1024); }
@@ -565,18 +569,18 @@ async function vrHazirla(){
 (async () => {
   try {
     await Promise.all(["900 50px 'DM Sans'", "500 30px 'DM Sans'", "700 30px 'DM Sans'", "800 30px 'DM Sans'", "800 30px 'Barlow Condensed'", "700 60px Amiri"].map(f => document.fonts.load(f))).catch(() => {});
+    // erken istenen VR oturumu (Quest uygulaması) varsa ona bağlan
+    const erken = window.__erkenXR ? await window.__erkenXR : null;
+    if(erken){ renderer.xr.setFoveation(1); await renderer.xr.setSession(erken); camera.position.set(0, 0, 0); erken.addEventListener('end', () => camera.position.set(0, 1.6, 0)); }
     kur(); vakitCiz(); vrHazirla();
     $('#say').onclick = () => say(null); $('#zikir').onclick = zikirDegis;
     $('#kubbe').onclick = () => { if(!renderer.xr.isPresenting){ pitch = 1.2; } };
     $('#basla').innerHTML = 'İçeri gir'; $('#basla').onclick = () => { $('#giris').remove(); setTimeout(() => $('#ipucu') && $('#ipucu').remove(), 10000); };
-    // Quest uygulaması olarak (TWA) açıldıysa doğrudan VR'a gir (Meta mağaza kuralı)
-    const pwaMi = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || 'getDigitalGoodsService' in window;
-    if(pwaMi && navigator.xr){
-      $('#giris').remove();
-      navigator.xr.isSessionSupported('immersive-vr').then(ok => ok && navigator.xr.requestSession('immersive-vr', VR_OZ)
-        .then(async s => { renderer.xr.setFoveation(1); await renderer.xr.setSession(s); camera.position.set(0, 0, 0); s.addEventListener('end', () => camera.position.set(0, 1.6, 0)); })
-        .catch(() => {}));
-    }
+    // Quest uygulamasıyken oturum açılamadıysa: giriş düğmesi doğrudan VR'a soksun
+    if(window.__pwa && !erken && navigator.xr){
+      $('#basla').innerHTML = "🥽 VR'a gir";
+      $('#basla').onclick = async () => { try { const s = await navigator.xr.requestSession('immersive-vr', VR_OZ); renderer.xr.setFoveation(1); await renderer.xr.setSession(s); camera.position.set(0, 0, 0); $('#giris').remove(); s.addEventListener('end', () => camera.position.set(0, 1.6, 0)); } catch(e){ $('#yuk') && ($('#yuk').textContent = 'VR açılamadı'); } };
+    } else if(erken) $('#giris').remove();
   } catch(e){ console.error(e); $('#yuk').innerHTML = '<span class="hata">Açılamadı. Sayfayı yenile.</span>'; }
 })();
 
