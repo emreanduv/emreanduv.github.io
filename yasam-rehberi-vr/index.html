@@ -58,9 +58,9 @@ addEventListener('error', function(e){ __hataGoster((e.message || e) + (e.filena
 addEventListener('unhandledrejection', function(e){ __hataGoster(e.reason && (e.reason.message || e.reason)); });
 setTimeout(function(){ var y = document.getElementById('yuk'); if(y && /Hazırlanıyor/.test(y.textContent)) __hataGoster('20 sn içinde açılmadı (ES modülü yüklenmedi?)'); }, 20000);
 (function(){ try {
-  var pwa = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || 'getDigitalGoodsService' in window || document.referrer.indexOf('android-app://') === 0;
+  var pwa = /[?&]quest=1/.test(location.search) || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || 'getDigitalGoodsService' in window || document.referrer.indexOf('android-app://') === 0;
   window.__pwa = pwa;
-  if (pwa && navigator.xr) window.__erkenXR = navigator.xr.requestSession('immersive-vr', { optionalFeatures:['local-floor','bounded-floor','hand-tracking','layers'] }).catch(function(e){ console.warn('erken VR', e); return null; });
+  if (pwa && navigator.xr) window.__erkenXR = navigator.xr.requestSession('immersive-vr', { optionalFeatures:['local-floor','hand-tracking'] }).catch(function(e){ console.warn('erken VR', e); return null; });
 } catch(e){} })();
 </script>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>

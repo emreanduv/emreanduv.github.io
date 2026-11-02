@@ -3,7 +3,7 @@
   "short_name": "Yaşam Rehberi VR",
   "description": "Ayasofya'nın kubbesi altında dur: hat levhaları, mihrap, minber ve 1500 yıllık hikâye. Sıradaki vakit ve elinde tesbih. Bir Mr. Anduv! yapımıdır.",
   "lang": "tr",
-  "start_url": "index.html",
+  "start_url": "index.html?quest=1",
   "scope": "./",
   "display": "standalone",
   "background_color": "#14171a",

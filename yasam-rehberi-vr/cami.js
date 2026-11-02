@@ -550,7 +550,7 @@ addEventListener('resize', boyut); boyut();
 if(new URLSearchParams(location.search).has('cekim')) window.__cami = { bak:(y, p) => { yaw = y; pitch = p; }, git:(x, z) => { rig.position.set(x, 0, z); }, fov:(f) => { camera.fov = f; camera.updateProjectionMatrix(); }, kart:(i) => kartAc(HIKAYE[i]), kapat:kartKapat, dilim:(d) => { const o = vakitDurum; window.__d = d; } };
 
 // ── VR düğmesi ──
-const VR_OZ = { optionalFeatures:['local-floor', 'bounded-floor', 'hand-tracking', 'layers'] };
+const VR_OZ = { optionalFeatures:['local-floor', 'hand-tracking'] };
 async function vrHazirla(){
   const b = $('#vr');
   if(!navigator.xr){ b.textContent = 'VR yok'; b.title = 'Bu tarayıcı WebXR desteklemiyor. VR gözlüğün tarayıcısıyla aç.'; return; }
@@ -584,4 +584,6 @@ async function vrHazirla(){
   } catch(e){ console.error(e); window.__hataGoster ? __hataGoster((e && e.message) || e) : ($('#yuk').innerHTML = '<span class="hata">Açılamadı. Sayfayı yenile.</span>'); }
 })();
 
-if('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+// Hisar gibi: service worker yok (eskisi kaldıysa kaldır, önbelleği temizle)
+if('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(r => r.forEach(x => x.unregister())).catch(() => {});
+if(window.caches) caches.keys().then(k => k.forEach(x => caches.delete(x))).catch(() => {});
