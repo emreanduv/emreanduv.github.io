@@ -105,6 +105,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPrefere
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 function applyQuality(first) { const q = S.q; renderer.setPixelRatio(q === 'dusuk' ? 1 : Math.min(window.devicePixelRatio || 1, q === 'orta' ? 1.5 : 2)); renderer.shadowMap.enabled = q !== 'dusuk'; renderer.shadowMap.needsUpdate = true; if (!first) resize(); }
 applyQuality(true);
+window.VRINFO = () => { let vis = 0; scene.traverseVisible(o => { if (o.isMesh || o.isPoints || o.isLine || o.isSprite) vis++; }); const by = {}; const cnt = (g, k) => { let n = 0; g.traverseVisible(o => { if (o.isMesh || o.isPoints || o.isLine || o.isSprite) n++; }); by[k] = (by[k] || 0) + n; }; scene.children.forEach((c, i) => cnt(c, c === world ? 'world' : c === levelGroup ? 'level' : (c.type + (c.isGroup ? i : '')))); return { by, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, shadow: renderer.shadowMap.enabled, vis, prog: renderer.info.programs.length }; };   // performans ölçümü (VR testleri)
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xead09a); scene.fog = new THREE.Fog(0xead09a, 70, 200);
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 500);
@@ -1317,7 +1318,7 @@ function frame(now) {
 }
 // VR (Harp Masası) modülüne oyunun sahnesini ve durumunu ver
 if (window.VR_KUR) window.VR_KUR({ scene, renderer, camera, $, t, fmt, D, SFX, NL, canPlay, startGame, previewLevel, show, unlockAudio, nextLevel, resize, frame,
-  binek: () => binek, paused: () => paused, eraseData, darbe, S: () => S, persist, upCapNow, totalStars: () => totalStars(), setView, achieve: id => achieve(id), pause, fmtN: fmt, buyFull: PAID ? () => buyFull().then(ok => { if (ok) { S.full = true; persist(); drawFullChip(); } return ok; }) : null, G: () => G, mode: () => mode, mood: () => curMood, MOODS, precip: [rainLines, snowPts], lastRes: () => lastRes, setMode: v => { mode = v; }, setPaused: v => { paused = v; }, setLast: v => { last = v; } });
+  binek: () => binek, levelGroup, world, sun, paused: () => paused, eraseData, darbe, S: () => S, persist, upCapNow, totalStars: () => totalStars(), setView, achieve: id => achieve(id), pause, fmtN: fmt, buyFull: PAID ? () => buyFull().then(ok => { if (ok) { S.full = true; persist(); drawFullChip(); } return ok; }) : null, G: () => G, mode: () => mode, mood: () => curMood, MOODS, precip: [rainLines, snowPts], lastRes: () => lastRes, setMode: v => { mode = v; }, setPaused: v => { paused = v; }, setLast: v => { last = v; } });
 
 // Mağaza görselleri için sahne modu: ?kare=BÖLÜM&hiz=2 (araclar/magaza-gorselleri.js kullanır)
 const Q = new URLSearchParams(location.search);

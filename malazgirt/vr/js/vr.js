@@ -154,6 +154,36 @@ window.VR_KUR = function (O) {
   const mist = [];
   for (let k = 0; k < 14; k++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false, fog: false })); const a = Math.random() * 6.283, r = 7 + Math.random() * 18; sp.position.set(Math.cos(a) * r, 1 + Math.random(), Math.sin(a) * r); sp.scale.set(14, 4, 1); sp.visible = false; room.add(sp); mist.push(sp); }
 
+  /* ---------- performans: otağın ve ordugâhın kıpırdamayan parçaları birkaç çizime birleştirilir ----------
+     (Quest'te her nesne her göz için ayrı çizilir; çadır, direk, pirinç süsler tek tek 100'ü aşkın çizim tutuyordu) */
+  function bake(meshes, mat, colorize) {
+    room.updateMatrixWorld(true);
+    const pos = [], nor = [], col = [], nm = new THREE.Matrix3(), v = new V3(), c = new THREE.Color();
+    for (const m of meshes) {
+      const g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry, P = g.attributes.position, N = g.attributes.normal;
+      nm.getNormalMatrix(m.matrixWorld); c.copy(m.material.color);
+      for (let i = 0; i < P.count; i++) {
+        v.fromBufferAttribute(P, i).applyMatrix4(m.matrixWorld); pos.push(v.x, v.y, v.z);
+        v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); nor.push(v.x, v.y, v.z);
+        if (colorize) col.push(c.r, c.g, c.b);
+      }
+      m.parent.remove(m);
+    }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+    if (colorize) geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    const out = new THREE.Mesh(geo, mat); out.matrixAutoUpdate = false; room.add(out); return out;
+  }
+  {
+    const brassL = [], woodL = [], colL = [];
+    room.traverse(o => { if (!o.isMesh || o.parent === null) return;
+      if (o.material === brass) brassL.push(o);
+      else if (o.material === darkWood && !legs.includes(o)) woodL.push(o);
+      else if (o.material.isMeshLambertMaterial && !o.material.map && !o.material.vertexColors && (tents.includes(o.parent) || o.geometry.type === 'CylinderGeometry' && o.geometry.parameters.height === 0.1)) colL.push(o);
+    });
+    bake(brassL, brass, false); bake(woodL, darkWood, false); bake(colL, new THREE.MeshLambertMaterial({ vertexColors: true }), true);
+    for (const g of tents) room.remove(g);
+  }
+
   /* ---------- bölümün havasına göre boya ---------- */
   const _a = new THREE.Color(), _b = new THREE.Color(), _c = new THREE.Color();
   const SUN = { ogle: [0.4, 0.95, 0xfff6d8], sabah: [0.9, 0.2, 0xffd0a0], ikindi: [-0.8, 0.45, 0xffe2a0], aksam: [-0.6, 0.1, 0xff8040], gece: [0.7, 0.62, 0xd8e4ff], bulut: [0.4, 0.8, 0xffffff], yagmur: [0.4, 0.8, 0xffffff], sis: [0.4, 0.6, 0xffffff], bahar: [0.4, 0.9, 0xfff6d8], guz: [-0.5, 0.5, 0xffd8a0], kis: [0.5, 0.5, 0xfff8f0] };
@@ -244,6 +274,43 @@ window.VR_KUR = function (O) {
   }
   function unclipAll() { for (const m of clipped) { m.clippingPlanes = null; m.needsUpdate = true; } clipped.clear(); }
 
+  /* ---------- performans: masanın dışında kalan (kırpılacak) nesneleri hiç çizme ----------
+     Masa savaş alanının ~64 × 72 birimlik bir penceresini gösterir; at sırtında sis 110 birimden ötesini zaten yutar.
+     Görünürlüğü oyun.js yönettiği için (ölen nesne gizlenir) burada katman (layer) kullanılır: 3. katmanı hiçbir kamera görmez. */
+  const HIDE = 3, cullCache = new Map();
+  function meshesOf(o) { let l = cullCache.get(o); if (!l) { l = []; o.traverse(m => { if (m.isMesh || m.isSprite || m.isPoints || m.isLine) l.push(m); }); cullCache.set(o, l); } return l; }
+  // nesnenin oyun düzlemindeki kapladığı alan (bir kez hesaplanır; taşınan nesneler için konum farkı eklenir)
+  const _bx = new THREE.Box3(), _mi = new M4(), _mm = new M4();
+  function extentOf(o, grp) {
+    let e = o.userData.vrExt;
+    if (!e) {
+      _bx.makeEmpty(); _mi.copy(grp.matrixWorld).invert(); let any = false;
+      o.updateMatrixWorld(true);
+      o.traverse(m => { if (!m.geometry) return; if (!m.geometry.boundingBox) m.geometry.computeBoundingBox(); const bb = m.geometry.boundingBox.clone().applyMatrix4(_mm.multiplyMatrices(_mi, m.matrixWorld)); _bx.union(bb); any = true; });
+      if (!any || !isFinite(_bx.min.x)) return null;
+      e = o.userData.vrExt = { x0: _bx.min.x, x1: _bx.max.x, z0: _bx.min.z, z1: _bx.max.z, px: o.position.x, pz: o.position.z };
+    }
+    const dx = o.position.x - e.px, dz = o.position.z - e.pz;
+    return dx || dz ? { x0: e.x0 + dx, x1: e.x1 + dx, z0: e.z0 + dz, z1: e.z1 + dz } : e;
+  }
+  function setHidden(o, h) { if (!!o.userData.vrHid === h) return; o.userData.vrHid = h; for (const m of meshesOf(o)) h ? m.layers.set(HIDE) : m.layers.set(0); }
+  function cull(win) {
+    const g = O.G(); if (!g) return;
+    for (const grp of [O.levelGroup, O.world]) {
+      if (!grp) continue;
+      for (const o of grp.children) {
+        if (o.isInstancedMesh) continue;   // yol boyu tek parça (orman, çalılar): her zaman
+        const e = extentOf(o, grp); if (!e) continue;
+        let hide;
+        if (win) hide = e.z0 > win[1] + 36 + 2 || e.z1 < win[1] - 36 - 2 || e.x0 > win[0] + 32 + 2 || e.x1 < win[0] - 32 - 2;
+        else hide = e.z1 < g.z - 120 || e.z0 > g.z + 25;
+        setHidden(o, hide);
+      }
+    }
+    if (cullCache.size > 4000) cullCache.clear();
+  }
+  function uncull() { for (const grp of [O.levelGroup, O.world]) if (grp) for (const o of grp.children) if (o.userData.vrHid) setHidden(o, false); cullCache.clear(); }
+
   /* ---------- her kare ---------- */
   // görüş kenarı karartması (yalnız at sırtında): kameraya bağlı halka
   const vigTex = canvasTex(256, 256, (g) => { const r = g.createRadialGradient(128, 128, 40, 128, 128, 128); r.addColorStop(0, 'rgba(0,0,0,0)'); r.addColorStop(0.55, 'rgba(0,0,0,.6)'); r.addColorStop(1, 'rgba(0,0,0,1)'); g.fillStyle = r; g.fillRect(0, 0, 256, 256); });
@@ -251,7 +318,7 @@ window.VR_KUR = function (O) {
   vig.position.z = -0.2; vig.renderOrder = 20; vig.visible = false; camera.add(vig);
   let rideX = null;
   function toggleRide() { VR.ride = !VR.ride; rideX = null; say(t(VR.ride ? 'At sırtı: sipahinin gözünden' : 'Harp masasına dönüldü'), 2.5); if (!VR.ride) unclipAll(); clipT = 0; }
-  let camXv = 0, camZv = 0, grab = null, btnPrev = {}, msgT = 0, msg = '';
+  let boardT = 0, camXv = 0, camZv = 0, grab = null, btnPrev = {}, msgT = 0, msg = '';
   function update(dt) {
     if (needCal && !VR.test) { calT += dt; if ((calT > 0.25 && renderer.xr.isPresenting && camera.position.y > 0.3 && camera.position.y < 2.4) || calT > 1.5) calibrate(); }
     const s = TABLE.s, g = O.G();
@@ -285,6 +352,7 @@ window.VR_KUR = function (O) {
     if (O.precip) for (const p of O.precip) p.visible = false;   // yağmur/kar otağın dışında, gerçek boyda yağar
     }
     if ((clipT -= dt) <= 0) { clipT = 0.5; clipAll(); }
+    cull(VR.ride ? null : [camXv, camZv - TABLE.army / s]);
     paint(); animateRoom(dt);
     if (!VR.test) { readInput(dt); swing(dt); }
     const pv = updatePanel(dt);
@@ -294,7 +362,7 @@ window.VR_KUR = function (O) {
     // tabela
     const lv = t('Bölüm {n}', { n: g.i + 1 });
     if (msgT > 0) { msgT -= dt; drawBoard(lv, msg); }
-    else if (O.mode() === 'play') drawBoard(lv + ' · ' + fmt(g.count) + (g.heroes ? ' +' + g.heroes : ''), g.L.ad);
+    else if (O.mode() === 'play') { if ((boardT -= dt) <= 0) { boardT = 0.25; drawBoard(lv + ' · ' + fmt(g.count) + (g.heroes ? ' +' + g.heroes : ''), g.L.ad); } }   // tabela en çok saniyede 4 kez yeniden çizilir
     else if (O.mode() === 'over') drawBoard(O.lastRes() && O.lastRes().win ? t('ZAFER!') + ' ' + '★'.repeat(O.lastRes().stars) : t('GERİ ÇEKİL!'), O.lastRes() && O.lastRes().win ? t('Tetiğe bas: devam') : t('Tetiğe bas: yeniden dene'));
     else drawBoard(lv, t('Menüden seç'));
   }
@@ -552,6 +620,7 @@ window.VR_KUR = function (O) {
 
   /* ---------- oturum ---------- */
   let fogNear = 70, fogFar = 200, camNear = 0.1;
+  let shadowWas = true;
   function enter(session) {
     VR.on = true; document.body.classList.add('vr-on'); const gt = document.getElementById('vrGate'); if (gt) gt.hidden = true;
     renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor');
@@ -559,7 +628,12 @@ window.VR_KUR = function (O) {
     scene.add(W); W.add(VR.ctrl0); W.add(VR.ctrl1); W.add(camera); VR.ride = false;
     fogNear = scene.fog.near; fogFar = scene.fog.far; camNear = camera.near; camera.near = 0.03; camera.updateProjectionMatrix();
     moodKey = ''; needCal = true; calT = 0;
+    // performans (VRC.Quest.Performance.1): gölge yok (minyatürde zaten görünmez), çözünürlük %80, kenarlarda sabit foveation, 72 Hz
+    shadowWas = renderer.shadowMap.enabled; renderer.shadowMap.enabled = false; if (O.sun) O.sun.castShadow = false;
+    renderer.xr.setFramebufferScaleFactor(0.8);
     renderer.xr.setSession(session);
+    try { const bl = session.renderState.baseLayer; if (bl && 'fixedFoveation' in bl) bl.fixedFoveation = 1; } catch (e) {}
+    try { if (session.updateTargetFrameRate && session.supportedFrameRates && Array.from(session.supportedFrameRates).includes(72)) session.updateTargetFrameRate(72); } catch (e) {}
     renderer.setAnimationLoop(frame);
     session.addEventListener('end', leave);
     camXv = O.G() ? O.G().x * 0.6 : 0; camZv = O.G() ? O.G().z : 0;
@@ -567,7 +641,7 @@ window.VR_KUR = function (O) {
   }
   function leave() {
     VR.on = false; document.body.classList.remove('vr-on'); grab = null; const gt = document.getElementById('vrGate'); if (gt) gt.hidden = false;
-    renderer.setAnimationLoop(null); renderer.xr.enabled = false;
+    renderer.setAnimationLoop(null); renderer.xr.enabled = false; renderer.shadowMap.enabled = shadowWas; if (O.sun) O.sun.castShadow = true; uncull();
     unclipAll(); W.remove(VR.ctrl0); W.remove(VR.ctrl1); W.remove(camera); camera.up.set(0, 1, 0); VR.ride = false; vig.visible = false; renderer.localClippingEnabled = false; scene.remove(W);
     scene.matrixAutoUpdate = true; scene.scale.setScalar(1); scene.position.set(0, 0, 0); scene.quaternion.identity(); scene.updateMatrix();
     scene.fog.near = fogNear; scene.fog.far = fogFar; camera.near = camNear; camera.updateProjectionMatrix();
@@ -577,7 +651,7 @@ window.VR_KUR = function (O) {
     requestAnimationFrame(ts => { O.setLast(ts); frame(ts); });
   }
   VR.state = () => ({ mode: O.mode(), lvl: O.G() && O.G().i, count: O.G() && O.G().count, x: O.G() && O.G().x, mood: O.mood && O.mood(), yaw: +rig.yaw.toFixed(2), head: rig.head && rig.head.toArray().map(v => +v.toFixed(2)) });
-  VR.toggleRide = toggleRide; VR.darbe = O.darbe; VR.G = O.G; VR.pClick = (x, y) => { drawPanel(); for (const b of pBtns) if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h && b.cb) { b.cb(); pDirty = true; return true; } return false; }; VR.pScr = () => pScr;
+  VR.toggleRide = toggleRide; VR.darbe = O.darbe; VR.G = O.G; VR.groups = { tableG, yawG, room }; VR.pClick = (x, y) => { drawPanel(); for (const b of pBtns) if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h && b.cb) { b.cb(); pDirty = true; return true; } return false; }; VR.pScr = () => pScr;
   VR.dbg = () => ({ ride: !!VR.ride, table: new V3().setFromMatrixPosition(mTable).toArray(), cam: camera.position.toArray(), clip: clip.map(p => [p.normal.toArray(), p.constant]), nClipped: clipped.size, pres: renderer.xr.isPresenting, lce: renderer.localClippingEnabled });
   VR.start = async function () {
     try {
