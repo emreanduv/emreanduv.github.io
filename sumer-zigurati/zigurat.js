@@ -2,6 +2,7 @@
 // Sahne temsilîdir: ölçüler yaklaşık (Ur Ziguratı tabanı ~64 × 46 m, üç kat). Gök bu gecenin gerçek Ay evresi ve gezegenleriyle kurulur (yaklaşık).
 import * as THREE from 'three';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+import { yardimKur } from './yardim.js';
 
 const $ = (s) => document.querySelector(s);
 const RENK = { ink:'#1c2a44', deep:'#101c33', lapis:'#1f4fa0', clay:'#c4683a', gold:'#e0b04a', paper:'#fbf7ef', navy:'#132545', navy2:'#162b52', muted:'#6b7280', teal:'#0f766e' };
@@ -162,6 +163,7 @@ function levhaGuncel(){
   vurgu();
 }
 function git(adim){
+  if(!V) return; // veri gelmeden (VR erken açıldıysa) tetik boşa düşsün
   const M = metin(); durum.si += adim;
   if(durum.si >= M.satirlar.length){ // sıradaki metne geç
     if(durum.kaynak === 'g'){ if(durum.i < V.gilgamis.length - 1){ durum.i++; } else { durum.kaynak = 't'; durum.i = 0; } }
@@ -224,12 +226,36 @@ const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
 renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor');
+renderer.xr.setFramebufferScaleFactor(0.9); // Quest performansı: göz başına çözünürlük %90 (gölge haritası yok)
 document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene(); scene.background = new THREE.Color('#050a18'); scene.fog = new THREE.Fog('#0b1630', 60, 420);
 const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 2000);
 const rig = new THREE.Group(); rig.add(camera); scene.add(rig);
 rig.position.set(0, 0, 2.2); camera.position.set(0, 1.6, 0);
 const tiklanir = [];
+
+// ── rehber + nasıl kullanılır + verilerimi sil (yardim.js) ──
+const SURUM = '1.0.1';
+const Y = yardimKur({ THREE, scene, camera, renderer, tiklanir, ad:'Sümer Ziguratı', anahtar:'sz', surum:SURUM, onek:/^sz[._]/, dugmeOnu:'#vr', girisKart:'#giris .kart',
+  eski:() => localStorage.getItem('sz_ad') != null, temelIpuclari:['giris', 'yuru'],
+  url:'https://emreanduv.github.io/sumer-zigurati/', paylasMetni:"Sümer Ziguratı: Ur Ziguratı'nın tepesinde bir gece. Kil tabletler önce çivi yazısıyla parlıyor, sonra Türkçeye çözülüyor. VR gözlükte, bilgisayarda ve telefonda.",
+  silMetni:'sunaktaki tablete kazınan adın ve rehberde hangi ipuçlarını gördüğün.', ilerleme:() => V ? `${durum.kaynak === 'g' ? 'Gılgamış ' + ROMA[durum.i] : 'tablet ' + (durum.i + 1)}` : '',
+  renk:{ bant:'#132545', bant2:'#162b52', vurgu:'#e0b04a', kagit:'#fff3d9', kagit2:'#f3e2bf', murekkep:'#1c2a44', soluk:'#6b4a2a', dugme:'#1f4fa0' },
+  temel:{ m:["<b>Sümer Ziguratı</b>: Ur Ziguratı'nın tepesinde, gece. Ortadaki taş levhada kil tabletlerin satırları önce çivi yazısıyla parlar, sonra Türkçeye çözülür.",
+      "<b>Başlamak için:</b> ▶ ile sonraki satıra geç, ◀ ile geri dön. Soldaki raftan Gılgamış'ın 12 tabletini, sağdaki sunaktan en sevilen metinleri seç; alttaki listeden de her tablete ulaşırsın. 🔊 gece seslerini açar, 🥽 VR gözlükle zigurata çıkarır."],
+    v:["Ur Ziguratı'nın tepesindesin. Taş levhada kil tabletlerin satırları önce çivi yazısıyla parlar, sonra Türkçeye çözülür.",
+      "Tetik: sonraki satır · kavrama: önceki satır. Raftaki, sunaktaki tabletlere ya da zemine nişan alıp tetikle. Sağ çubukla dön.",
+      "Bu pano: kumandada A, B, X ya da Y tuşu veya bel hizandaki ? düğmesi."] },
+  ipuclari:[
+    { id:'giris', b:'𒀭 Taş levha', m:'▶ ya da boşluk tuşu sonraki satıra geçer, ◀ geri alır. Levhaya dokunmak da ilerletir. ⏵ Oto satırları kendiliğinden akıtır.', v:'Tetik sonraki satıra geçer, kavrama geri alır. Levhaya ya da altındaki ◀ ⏵ ▶ düğmelerine nişan alıp da tetikleyebilirsin.' },
+    { id:'yuru', b:'🚶 Terasta dolaş', m:'Sürükleyerek etrafına bak. Zemine çift dokun ya da W A S D ile yürü; fare tekerleği yakınlaştırır.', v:'Zemine nişan alıp tetikle: oraya yürürsün. Sağ çubuğu yana itince 30° dönersin.' },
+    { id:'raf', b:'📺 Gılgamış rafı', m:'Soldaki rafta Gılgamış Destanı\'nın 12 tableti var. Birine dokun: levhada o tablet baştan açılır, bitince sıradaki gelir.', v:'Soldaki rafta Gılgamış Destanı\'nın 12 tableti var. Birine nişan alıp tetikle: levhada o tablet açılır.' },
+    { id:'sunak', b:'📜 Tablet sunağı', m:'Sağdaki sunakta en sevilen metinler (İnanna, tufan, Ninkasi, Ur-Nammu…) ve adının kazındığı tablet durur. Birine dokun, levhada okunsun.', v:'Sağdaki sunakta en sevilen metinler ve adının kazındığı tablet durur. Birine nişan alıp tetikle.' },
+    { id:'gok', b:'🌙 Bu geceki gök', m:'Yukarı bak: Ay ve gezegenler bu gecenin konumlarıyla kurulur (yaklaşık). Korkuluk panoları gök, efsaneler ve kronoloji anlatır.', v:'Başını kaldır: Ay ve gezegenler bu gecenin konumlarıyla kurulur (yaklaşık).' },
+    { id:'ses', b:'🔊 Gece sesleri', m:'Üstteki 🔇/🔊 düğmesi rüzgârı, cırcır böceklerini ve mangal ateşini açıp kapatır. Sesler cihazda üretilir, dosya indirilmez.', v:'Rüzgâr, cırcır böcekleri ve mangal ateşi cihazda üretilir; satır değişince hafif bir çınlama duyulur.' },
+    { id:'oto', b:'⏵ Oto', m:'Oto açıkken satırlar uzunluklarına göre kendiliğinden ilerler. ⏸ ile durdurursun.', v:'Oto açıkken satırlar kendiliğinden ilerler. Levhanın altındaki orta düğmeyle durdurursun.' },
+    { id:'yardim', b:'❓ Yardım hep yanında', m:'Üstteki ? düğmesi bu rehberi açar: bütün ipuçları, "Rehberi baştan göster", görüş yazma ve Verilerimi sil.', v:'Kumandadaki A, B, X ya da Y tuşu veya bel hizandaki ? düğmesi bu panoyu açar: bütün ipuçları ve Verilerimi sil.' },
+  ], sira:['giris', 'yuru', 'raf', 'sunak', 'yardim', 'gok', 'ses'] });
 const atesler = []; let tozP, levha, sunakAd, raf = [], sunak = [];
 
 function kutu(w, h, d, mat, x, y, z, ad){ const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); if(ad) m.name = ad; scene.add(m); return m; }
@@ -455,9 +481,10 @@ function cinla(guc){ if(!ses || !sesAcik) return; const t = ses.currentTime; for
 const ray = new THREE.Raycaster(), fare = new THREE.Vector2();
 function etkile(nesne, nokta, kaynak){
   if(ses && sesAcik) ses.resume();
+  if(Y.etkile(nesne, nokta)) return;
   if(!nesne){ if(kaynak === 'vr') git(1); return; }
-  if(nesne.name === 'raf') return ac('g', nesne.userData.i);
-  if(nesne.name === 'sunak') return ac('t', nesne.userData.i);
+  if(nesne.name === 'raf'){ Y.ipucu('raf'); return ac('g', nesne.userData.i); }
+  if(nesne.name === 'sunak'){ Y.ipucu('sunak'); return ac('t', nesne.userData.i); }
   if(nesne.name === 'ileri' || nesne.name === 'levha') return git(1);
   if(nesne.name === 'geri') return git(-1);
   if(nesne.name === 'oto') return otoAyarla(!durum.oto);
@@ -467,7 +494,7 @@ function yuru(n){
   const x = THREE.MathUtils.clamp(n.x, -TW / 2 + .8, TW / 2 - .8), z = THREE.MathUtils.clamp(n.z, LEVHA_Z + 1.2, TD / 2 - .8);
   const kafa = new THREE.Vector3(); camera.getWorldPosition(kafa); rig.position.x += x - kafa.x; rig.position.z += z - kafa.z;
 }
-function otoAyarla(v){ durum.oto = v; durum.sonraki = performance.now() + sure(); $('#oto').classList.toggle('on', v); $('#oto').textContent = v ? '⏸ Oto' : '⏵ Oto'; }
+function otoAyarla(v){ if(v) Y.ipucu('oto'); durum.oto = v; durum.sonraki = performance.now() + sure(); $('#oto').classList.toggle('on', v); $('#oto').textContent = v ? '⏸ Oto' : '⏵ Oto'; }
 
 let suruk = null, yaw = 0, pitch = 0.08; const eul = new THREE.Euler(0, 0, 0, 'YXZ');
 const el = renderer.domElement;
@@ -519,6 +546,7 @@ renderer.setAnimationLoop(() => {
   if(V && durum.si >= 0 && now - durum.anim < 2000) levhaCiz(now); // satırın çözülme animasyonu
   if(tozP){ tozP.rotation.y = t * 0.01; tozP.position.y = Math.sin(t * 0.2) * 0.1; }
   if(durum.oto && V && now > durum.sonraki) git(1);
+  Y.dongu();
   renderer.render(scene, camera);
 });
 function boyut(){ camera.aspect = innerWidth / innerHeight; camera.fov = camera.aspect < 1 ? 88 : 70; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); }
@@ -533,19 +561,48 @@ async function vrHazirla(){
   if(!navigator.xr){ b.textContent = '🥽 VR yok'; b.title = 'Bu tarayıcı WebXR desteklemiyor. VR gözlüğün tarayıcısıyla aç.'; return; }
   let ok = false; try { ok = await navigator.xr.isSessionSupported('immersive-vr'); } catch(e){}
   if(!ok){ b.textContent = '🥽 VR yok'; b.title = 'VR gözlük bulunamadı. Gözlüğün tarayıcısında bu sayfayı aç.'; return; }
-  b.disabled = false; b.textContent = '🥽 VR\'a gir';
-  let oturum = null;
-  b.onclick = async () => {
-    if(oturum){ oturum.end(); return; }
-    oturum = await navigator.xr.requestSession('immersive-vr', { optionalFeatures:['local-floor', 'bounded-floor', 'hand-tracking', 'layers'] });
-    renderer.xr.setFoveation(1); await renderer.xr.setSession(oturum);
-    camera.position.set(0, 0, 0); b.textContent = '🚪 Çık';
-    oturum.addEventListener('end', () => { oturum = null; b.textContent = '🥽 VR\'a gir'; camera.position.set(0, 1.6, 0); });
-  };
+  b.disabled = false; b.textContent = renderer.xr.isPresenting ? '🚪 Çık' : '🥽 VR\'a gir';
+  b.onclick = () => { const s = renderer.xr.getSession(); if(s) s.end(); else vrBaslat(); };
 }
+
+// Tek VR giriş kapısı (Nutuk Salonu düzeltmesi): düğme, giriş kartı, mağaza uygulamasının otomatik açılışı hep buradan geçer.
+// 'layers' ve 'bounded-floor' istenmez: Quest tarayıcısında bazı sürümlerde ilk karede donmaya yol açabiliyor.
+let vrIstek = null;
+function vrBaslat(){
+  if(!navigator.xr || renderer.xr.isPresenting) return Promise.resolve(false);
+  if(vrIstek) return vrIstek;
+  vrIstek = navigator.xr.requestSession('immersive-vr', { optionalFeatures:['local-floor', 'hand-tracking'] })
+    .then(async s => {
+      renderer.xr.setFoveation(1); await renderer.xr.setSession(s);
+      try { if(s.updateTargetFrameRate && s.supportedFrameRates && [...s.supportedFrameRates].includes(72)) s.updateTargetFrameRate(72); } catch(e){} // Quest: kararlı 72 Hz
+      camera.position.set(0, 0, 0); const b = $('#vr'); if(b) b.textContent = '🚪 Çık';
+      const g = $('#giris'); if(g) g.style.display = 'none';
+      sesAyarla(true);
+      s.addEventListener('end', () => {
+        camera.position.set(0, 1.6, 0); const b2 = $('#vr'); if(b2) b2.textContent = '🥽 VR\'a gir';
+        if(PWA) kapiGoster(); // mağaza uygulamasında VR'dan çıkınca boş sayfada kalınmasın
+      });
+      return true;
+    })
+    .catch(e => { console.warn('VR açılamadı', e); if(PWA) kapiGoster(); return false; })
+    .finally(() => { vrIstek = null; });
+  return vrIstek;
+}
+const PWA = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || 'getDigitalGoodsService' in window || document.referrer.startsWith('android-app://');
+// VR'a giremezsek ekranda tek, büyük bir "Ziguratın tepesine çık" düğmesi kalsın (tetik/dokunuş = kullanıcı etkileşimi)
+function adKaydet(){ const i = $('#adim'); if(!i) return; adim = i.value.trim().slice(0, 16); try { localStorage.setItem('sz_ad', adim); } catch(e){} if(V) adTabletiCiz(); }
+function kapiGoster(){
+  const g = $('#giris'); if(!g) return;
+  g.style.display = ''; const d = $('#basla');
+  d.innerHTML = '🥽 Ziguratın tepesine çık'; d.disabled = false; d.onclick = () => { adKaydet(); vrBaslat(); };
+}
+if(navigator.xr && navigator.xr.addEventListener) navigator.xr.addEventListener('sessiongranted', () => vrBaslat());
 
 // ── başlat ──
 (async () => {
+  // Mağaza uygulaması (immersive PWA): VR oturumunu hiç beklemeden, veri yüklenmeden önce iste.
+  // Simgeye dokunmak kullanıcı etkileşimi sayılır; beklersek bu hak düşüp gözlük yükleme ekranında asılı kalabiliyor.
+  if(PWA && navigator.xr) vrBaslat();
   try {
     await Promise.all([document.fonts.load("900 50px 'DM Sans'"), document.fonts.load("500 30px 'DM Sans'"), document.fonts.load("700 30px 'DM Sans'"), document.fonts.load("800 30px 'DM Sans'"),
       document.fonts.load("800 30px 'Barlow Condensed'"), document.fonts.load(`40px ${CUN}`, '𒀭')]).catch(() => {});
@@ -560,17 +617,18 @@ async function vrHazirla(){
     const onizle = () => { const a = adIn.value.trim() ? cuneAd(adIn.value.trim()) : null; $('#adOn').innerHTML = a && a.g ? `${a.g}<small>${a.h}</small>` : ''; };
     adIn.oninput = onizle; onizle();
     kur(); levhaGuncel(); vrHazirla();
-    $('#basla').innerHTML = 'Ziguratın tepesine çık';
-    $('#basla').onclick = () => { adim = adIn.value.trim().slice(0, 16); try { localStorage.setItem('sz_ad', adim); } catch(e){} adTabletiCiz(); $('#giris').remove(); sesAyarla(true); setTimeout(() => $('#ipucu') && $('#ipucu').remove(), 10000); };
-    // Quest uygulaması olarak (PWA/TWA) açıldıysa doğrudan VR'a gir: Meta mağaza kuralı, araya 2B sayfa girmesin
-    const pwaMi = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || 'getDigitalGoodsService' in window;
-    if(pwaMi && navigator.xr){
-      $('#giris').remove();
-      navigator.xr.isSessionSupported('immersive-vr').then(ok => ok && navigator.xr.requestSession('immersive-vr', { optionalFeatures:['local-floor', 'bounded-floor', 'hand-tracking', 'layers'] })
-        .then(async s => { renderer.xr.setFoveation(1); await renderer.xr.setSession(s); camera.position.set(0, 0, 0); sesAyarla(true); s.addEventListener('end', () => camera.position.set(0, 1.6, 0)); })
-        .catch(() => {}));
+    if(PWA && navigator.xr){
+      // mağaza uygulaması: kart yalnızca VR'a girilemezse görünür, düğmesi doğrudan VR'a sokar
+      if(renderer.xr.isPresenting) $('#giris').style.display = 'none'; else if(!vrIstek) kapiGoster();
+    } else {
+      $('#basla').innerHTML = 'Ziguratın tepesine çık';
+      $('#basla').onclick = () => { adKaydet(); $('#giris').remove(); sesAyarla(true); setTimeout(() => $('#ipucu') && $('#ipucu').remove(), 10000); setTimeout(() => Y.basla(), 1200); };
     }
-  } catch(e){ console.error(e); $('#yuk').innerHTML = '<span class="hata">Zigurat açılamadı. Sayfayı yenile.</span>'; }
+  } catch(e){
+    console.error(e);
+    if(PWA && navigator.xr) kapiGoster(); // veri yüklenemese de uygulama donmuş görünmesin
+    else { const y = $('#yuk'); if(y) y.innerHTML = '<span class="hata">Zigurat açılamadı. Sayfayı yenile.</span>'; }
+  }
 })();
 
 // çevrimdışı önbellek (PWA: gözlükte internetsiz açılır)
