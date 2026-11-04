@@ -2,6 +2,7 @@
 // Model temsilîdir: ölçüler yaklaşık (kubbe çapı ~31 m, tepe ~55 m). Kur'an metni içermez.
 import * as THREE from 'three';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+import { yardimKur } from './yardim.js';
 
 const $ = (s) => document.querySelector(s);
 const RENK = { panel:'#efe8d4', panel2:'#e7dfc8', ink:'#1f2328', ink2:'#5e5645', band:'#1d4d36', head:'#2f3e4c', go:'#2e7d46', gold:'#c9a227', gold2:'#e9c766', bar:'#14171a' };
@@ -103,6 +104,7 @@ const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
 renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor');
+renderer.xr.setFramebufferScaleFactor(0.9); // Quest performansı: göz başına çözünürlük %90 (gölge haritası yok)
 document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene(); scene.background = new THREE.Color('#2a2418'); scene.fog = new THREE.Fog('#3a3020', 40, 120);
 const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 200);
@@ -110,6 +112,26 @@ const rig = new THREE.Group(); rig.add(camera); scene.add(rig);
 const BAS = new THREE.Vector3(0, 0, 21); rig.position.copy(BAS); camera.position.set(0, 1.6, 0);
 const tiklanir = [];
 const isiklar = {};
+
+// ── rehber + nasıl kullanılır + verilerimi sil (yardim.js) ──
+const SURUM = '1.0.2';
+const Y = yardimKur({ THREE, scene, camera, renderer, tiklanir, ad:'Yaşam Rehberi VR', anahtar:'yrvr', surum:SURUM, onek:/^yrvr[-.]/, dugmeOnu:'#vr', girisKart:'#giris .b',
+  eski:() => localStorage.getItem('yrvr-tesbih') != null, temelIpuclari:['giris'],
+  url:'https://emreanduv.github.io/yasam-rehberi-vr/', paylasMetni:"Yaşam Rehberi VR: Ayasofya'nın kubbesi altında dur; hat levhaları, mihrap, minber ve 1500 yıllık hikâye. Sıradaki vakit ve tesbih yanında.",
+  silMetni:'tesbih sayın, seçtiğin zikir ve rehberde hangi ipuçlarını gördüğün.', ilerleme:() => `zikir ${tes.z + 1} · ${tes.n}`,
+  renk:{ bant:'#1d4d36', bant2:'#22573e', vurgu:'#c9a227', kagit:'#efe8d4', kagit2:'#e4dcc4', murekkep:'#1f2328', soluk:'#5e5645', dugme:'#2e7d46', kose:4 },
+  temel:{ m:["<b>Yaşam Rehberi VR</b> seni Ayasofya'nın kubbesi altına götürür: hat levhaları, mihrap, minber ve 1500 yıllık hikâye. Girişteki levhada sıradaki vakit, altta tesbihin.",
+      "<b>Başlamak için:</b> sürükleyerek etrafına bak, zemine çift dokunup yürü, altın noktalara dokun. VR gözlüğün varsa üstteki VR düğmesiyle içeri gir."],
+    v:["Ayasofya'nın kubbesi altındasın. Altın noktalar 1500 yıllık hikâyeyi anlatır; girişteki levhada sıradaki vakit, sol elinde tesbih.",
+      "Sağ el: zemine nişan alıp tetikle, oraya yürü; noktalara nişan alıp tetikle, kart açılsın. Sağ çubukla dön. Sol el: tetik tesbih sayar, kavrama zikri değiştirir.",
+      "Bu pano: kumandada A, B, X ya da Y tuşu veya bel hizandaki ? düğmesi."] },
+  ipuclari:[
+    { id:'giris', b:'🕌 Kubbenin altında', m:'Sürükleyerek etrafına bak; Kubbe düğmesi bakışını kubbeye kaldırır. Zemine çift dokun ya da W A S D / ok tuşlarıyla yürü.', v:'Sağ elle zemine nişan alıp tetikle: oraya yürürsün. Sağ çubuğu yana itince 30° dönersin.' },
+    { id:'hikaye', b:'✨ Altın noktalar', m:'Altın "i" noktalarına dokun: Ayasofya\'nın hikâyesinden bir kart açılır. Kapatmak için karta dokun ya da Esc.', v:'Altın "i" noktalarına sağ elle nişan alıp tetikle; kart açılır. Karta dokununca ya da sağ kavramayla kapanır.' },
+    { id:'tesbih', b:'📿 Tesbih', m:'Alttaki 📿 düğmesi ya da boşluk tuşu bir tane sayar; zikir düğmesi (Z tuşu) zikri değiştirir. Hedefe gelince sayaç baştan başlar. Sayın yalnız bu cihazda kalır.', v:'Sol elindeki tesbih: sol tetik bir tane sayar, sol kavrama zikri değiştirir. Hedefe gelince kumanda titrer.' },
+    { id:'vakit', b:'🕰️ Sıradaki vakit', m:'Girişteki levha Ayasofya (İstanbul) için bugünün vakitlerini ve sıradaki vakte kalan süreyi gösterir; hesap cihazda yapılır.', v:'Girişteki levhada bugünün vakitleri ve kalan süre var; aynısı sol elindeki küçük levhada da görünür.' },
+    { id:'yardim', b:'❓ Yardım hep yanında', m:'Üstteki ? düğmesi bu rehberi açar: bütün ipuçları, "Rehberi baştan göster", görüş yazma ve Verilerimi sil.', v:'Kumandadaki A, B, X ya da Y tuşu veya bel hizandaki ? düğmesi bu panoyu açar: bütün ipuçları ve Verilerimi sil.' },
+  ], sira:['giris', 'hikaye', 'tesbih', 'vakit', 'yardim'] });
 const M = {}; // malzemeler
 
 function mal(){
@@ -424,7 +446,7 @@ function titres(src, guclu){ try { const h = src && src.gamepad && src.gamepad.h
 function say(src){
   const hedef = ZIKIR[tes.z][1];
   if(tes.n >= hedef) tes.n = 0; tes.n++;
-  const tamam = tes.n === hedef; tik(tamam); titres(src, tamam); kaydet(); vakitCiz(); taneGuncelle();
+  const tamam = tes.n === hedef; tik(tamam); Y.ipucu('tesbih'); titres(src, tamam); kaydet(); vakitCiz(); taneGuncelle();
 }
 function zikirDegis(){ tes.z = (tes.z + 1) % ZIKIR.length; tes.n = 0; kaydet(); vakitCiz(); taneGuncelle(); }
 
@@ -452,6 +474,7 @@ function hikayeNoktalari(){
   hkMesh.renderOrder = 10; hkMesh.visible = false; hkMesh.name = 'kart'; scene.add(hkMesh); tiklanir.push(hkMesh);
 }
 function kartAc(h){
+  Y.ipucu('hikaye');
   acikKart = h;
   if(!renderer.xr.isPresenting){ eul.set(pitch, yaw, 0); camera.quaternion.setFromEuler(eul); camera.updateMatrixWorld(true); }
   kartCiz(hkX, 1280, 900, h.baslik, h.alt, (x) => {
@@ -470,6 +493,7 @@ function kartKapat(){ acikKart = null; hkMesh.visible = false; }
 // ── seçim: fare / dokunma / VR kumandası ──
 const ray = new THREE.Raycaster(), fare = new THREE.Vector2();
 function etkile(nesne, nokta, kaynak){
+  if(Y.etkile(nesne, nokta)) return;
   if(acikKart){ kartKapat(); return; }
   if(!nesne) return;
   if(nesne.name === 'nokta'){ kartAc(nesne.userData.h); return; }
@@ -541,6 +565,7 @@ renderer.setAnimationLoop(() => {
   noktalar.forEach((s, i) => { s.position.y = 1.45 + Math.sin(t * 1.6 + i) * .05; });
   if(tozP){ tozP.rotation.y = t * .008; }
   const now = performance.now(); if(now - sonVakit > 1000){ sonVakit = now; vakitCiz(); } if(now - sonIsik > 60000){ sonIsik = now; isikAyarla(); }
+  Y.dongu();
   renderer.render(scene, camera);
 });
 function boyut(){ camera.aspect = innerWidth / innerHeight; camera.fov = camera.aspect < 1 ? 88 : 70; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); }
@@ -556,14 +581,39 @@ async function vrHazirla(){
   if(!navigator.xr){ b.textContent = 'VR yok'; b.title = 'Bu tarayıcı WebXR desteklemiyor. VR gözlüğün tarayıcısıyla aç.'; return; }
   let ok = false; try { ok = await navigator.xr.isSessionSupported('immersive-vr'); } catch {}
   if(!ok){ b.textContent = 'VR yok'; b.title = 'VR gözlük bulunamadı. Gözlüğün tarayıcısında bu sayfayı aç.'; return; }
-  b.disabled = false; b.textContent = "VR'a gir"; let oturum = null;
-  b.onclick = async () => {
-    if(oturum){ oturum.end(); return; }
-    oturum = await navigator.xr.requestSession('immersive-vr', VR_OZ); renderer.xr.setFoveation(1); await renderer.xr.setSession(oturum);
-    camera.position.set(0, 0, 0); b.textContent = 'Çık';
-    oturum.addEventListener('end', () => { oturum = null; b.textContent = "VR'a gir"; camera.position.set(0, 1.6, 0); });
-  };
+  b.disabled = false; b.textContent = renderer.xr.isPresenting ? 'Çık' : "VR'a gir";
+  b.onclick = () => { const s = renderer.xr.getSession(); if(s) s.end(); else vrBaslat(); };
 }
+
+// Tek VR giriş kapısı (Nutuk Salonu düzeltmesi): düğme, giriş kartı, mağaza uygulamasının erken isteği ve sessiongranted hep buradan geçer.
+// 'layers' ve 'bounded-floor' istenmez: Quest tarayıcısında bazı sürümlerde ilk karede donmaya yol açabiliyor.
+let vrIstek = null;
+async function oturumaBaglan(s){
+  renderer.xr.setFoveation(1); await renderer.xr.setSession(s);
+  try { if(s.updateTargetFrameRate && s.supportedFrameRates && [...s.supportedFrameRates].includes(72)) s.updateTargetFrameRate(72); } catch {} // Quest: kararlı 72 Hz
+  camera.position.set(0, 0, 0); const b = $('#vr'); if(b) b.textContent = 'Çık';
+  const g = $('#giris'); if(g) g.style.display = 'none';
+  s.addEventListener('end', () => {
+    camera.position.set(0, 1.6, 0); const b2 = $('#vr'); if(b2) b2.textContent = "VR'a gir";
+    if(window.__pwa) kapiGoster(); // mağaza uygulamasında VR'dan çıkınca boş sayfada kalınmasın
+  });
+}
+function vrBaslat(){
+  if(!navigator.xr || renderer.xr.isPresenting) return Promise.resolve(false);
+  if(vrIstek) return vrIstek;
+  vrIstek = navigator.xr.requestSession('immersive-vr', VR_OZ)
+    .then(async s => { await oturumaBaglan(s); return true; })
+    .catch(e => { console.warn('VR açılamadı', e); if(window.__pwa) kapiGoster(); return false; })
+    .finally(() => { vrIstek = null; });
+  return vrIstek;
+}
+// VR'a giremezsek ekranda tek, büyük bir "VR'a gir" düğmesi kalsın (tetik/dokunuş = kullanıcı etkileşimi)
+function kapiGoster(){
+  const g = $('#giris'); if(!g) return;
+  g.style.display = ''; const d = $('#basla');
+  d.innerHTML = "🥽 VR'a gir"; d.disabled = false; d.onclick = () => vrBaslat();
+}
+if(navigator.xr && navigator.xr.addEventListener) navigator.xr.addEventListener('sessiongranted', () => vrBaslat());
 
 // ── başlat ──
 (async () => {
@@ -571,19 +621,20 @@ async function vrHazirla(){
     await Promise.all(["900 50px 'DM Sans'", "500 30px 'DM Sans'", "700 30px 'DM Sans'", "800 30px 'DM Sans'", "800 30px 'Barlow Condensed'", "700 60px Amiri"].map(f => document.fonts.load(f))).catch(() => {});
     // erken istenen VR oturumu (Quest uygulaması) varsa ona bağlan
     const erken = window.__erkenXR ? await window.__erkenXR : null;
-    if(erken){ renderer.xr.setFoveation(1); await renderer.xr.setSession(erken); camera.position.set(0, 0, 0); erken.addEventListener('end', () => camera.position.set(0, 1.6, 0)); }
+    if(erken) await oturumaBaglan(erken);
     kur(); vakitCiz(); vrHazirla();
     $('#say').onclick = () => say(null); $('#zikir').onclick = zikirDegis;
     $('#kubbe').onclick = () => { if(!renderer.xr.isPresenting){ pitch = 1.2; } };
-    $('#basla').innerHTML = 'İçeri gir'; $('#basla').onclick = () => { $('#giris').remove(); setTimeout(() => $('#ipucu') && $('#ipucu').remove(), 10000); };
-    // Quest uygulamasıyken oturum açılamadıysa: giriş düğmesi doğrudan VR'a soksun
-    if(window.__pwa && !erken && navigator.xr){
-      $('#basla').innerHTML = "🥽 VR'a gir";
-      $('#basla').onclick = async () => { try { const s = await navigator.xr.requestSession('immersive-vr', VR_OZ); renderer.xr.setFoveation(1); await renderer.xr.setSession(s); camera.position.set(0, 0, 0); $('#giris').remove(); s.addEventListener('end', () => camera.position.set(0, 1.6, 0)); } catch(e){ $('#yuk') && ($('#yuk').textContent = 'VR açılamadı'); } };
-    } else if(erken) $('#giris').remove();
+    if(window.__pwa && navigator.xr){
+      // mağaza uygulaması: kart yalnızca VR'a girilemezse görünür, düğmesi doğrudan VR'a sokar
+      if(renderer.xr.isPresenting) $('#giris').style.display = 'none'; else if(!vrIstek) kapiGoster();
+    } else {
+      $('#basla').innerHTML = 'İçeri gir'; $('#basla').onclick = () => { $('#giris').remove(); setTimeout(() => $('#ipucu') && $('#ipucu').remove(), 10000); setTimeout(() => Y.basla(), 1200); };
+    }
   } catch(e){ console.error(e); window.__hataGoster ? __hataGoster((e && e.message) || e) : ($('#yuk').innerHTML = '<span class="hata">Açılamadı. Sayfayı yenile.</span>'); }
 })();
 
 // Hisar gibi: service worker yok (eskisi kaldıysa kaldır, önbelleği temizle)
-if('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(r => r.forEach(x => x.unregister())).catch(() => {});
-if(window.caches) caches.keys().then(k => k.forEach(x => caches.delete(x))).catch(() => {});
+if('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(r => r.filter(x => /\/yasam-rehberi-vr\//.test(x.scope)).forEach(x => x.unregister())).catch(() => {}); // yalnız kendi kaydı
+// yalnız bu uygulamanın eski önbellekleri (yrvr-*): aynı sitedeki Nutuk Salonu, Sümer Ziguratı vb. internetsiz önbelleklerine dokunulmaz
+if(window.caches) caches.keys().then(k => k.filter(x => /^yrvr-/.test(x)).forEach(x => caches.delete(x))).catch(() => {});
