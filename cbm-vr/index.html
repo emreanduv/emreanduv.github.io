@@ -17,17 +17,20 @@
   #bilgi{position:fixed;left:16px;bottom:76px;max-width:520px;font-size:13px;line-height:1.5;background:#0d1314cc;border:1px solid #2b3a3c;border-radius:10px;padding:10px 14px;z-index:5}
   #bilgi kbd{background:#2b3a3c;border-radius:4px;padding:1px 6px;font-family:inherit}
   #VRButton{font-weight:700}
+  #kapi{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#101718ee}#kapi[hidden]{display:none}#kapi div{display:grid;gap:18px;text-align:center}#kapi b{font-size:34px}#kapi button{font:800 30px system-ui,sans-serif;padding:22px 40px;border-radius:16px;border:0;background:var(--green);color:#fff;cursor:pointer}#kapi small{opacity:.75}
 </style>
 <script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
 </head>
 <body>
 <div id="ust"><b>Champion <em>Battle</em> VR</b><span class="mod"><button id="menuB">☰ Menü</button><button id="hiz">⏩ ×1</button></span><span class="imza">Bir Mr. Anduv! yapımıdır.</span></div>
 <div id="bilgi"></div>
+<div id="kapi" hidden><div><b>Champion Battle VR</b><button>🥽 Maça gir · Enter VR</button><small>Bir Mr. Anduv! yapımıdır.</small></div></div>
 <script type="module">
 import * as THREE from 'three';
 import { VRButton } from './lib/VRButton.js';
 import { OrbitControls } from './lib/OrbitControls.js';
 import { Ses } from './ses.js';
+import { futbolcu, poz, topDokusu } from './gercekci.js';
 
 /* ---------- ölçek: 1 KM metresi = 1/60 m (saha 1,75 × 1,13 m bilardo masası boyunda) ---------- */
 const PW = 68, PL = 105, OLC = 1 / 60, MASA_Y = 0.8, OYUNCU_BUYUT = 2.2;
@@ -39,12 +42,30 @@ renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.setSize(innerWid
 renderer.xr.enabled = true; renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 document.body.appendChild(VRButton.createButton(renderer));
-/* Quest uygulaması olarak açıldıysa (PWA) doğrudan VR'a gir — Meta mağaza kuralı: araya 2B sayfa girmesin */
-const pwaMi = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || 'getDigitalGoodsService' in window;
-if (pwaMi && navigator.xr) {
-  navigator.xr.isSessionSupported('immersive-vr').then(ok => ok && navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking', 'layers'] })
-    .then(s => renderer.xr.setSession(s)).catch(() => {}));                // izin verilmezse ENTER VR düğmesi kalır
+/* Quest performansı (Meta VRC.Quest.Performance.1, Malazgirt ile aynı): %90 çözünürlük, sabit foveation, 72 Hz, küçük gölge haritası */
+renderer.xr.setFramebufferScaleFactor(0.9); renderer.xr.setFoveation(1);
+/* Tek VR giriş kapısı (Nutuk Salonu'ndaki Meta incelemesi düzeltmesi): mağaza uygulaması açılır açılmaz VR'a girer; giremezse ekranda tek büyük "Maça gir" düğmesi kalır.
+   'layers' ve 'bounded-floor' istenmez: Quest tarayıcısının bazı sürümlerinde ilk karede donmaya yol açabiliyor. */
+const pwaMi = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || 'getDigitalGoodsService' in window || document.referrer.startsWith('android-app://');
+let vrIstek = null;
+function vrBaslat() {
+  if (!navigator.xr || renderer.xr.isPresenting) return Promise.resolve(false);
+  if (vrIstek) return vrIstek;
+  vrIstek = navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor', 'hand-tracking'] })
+    .then(async s => {
+      await renderer.xr.setSession(s); kapiGizle();
+      try { if (s.updateTargetFrameRate && s.supportedFrameRates?.includes(72)) s.updateTargetFrameRate(72); } catch { /* */ }
+      s.addEventListener('end', () => { if (pwaMi) kapiGoster(); });   // mağaza uygulamasında VR'dan çıkınca boş sayfada kalınmasın
+      return true;
+    })
+    .catch(e => { console.warn('VR açılamadı', e); if (pwaMi) kapiGoster(); return false; })
+    .finally(() => { vrIstek = null; });
+  return vrIstek;
 }
+function kapiGoster() { const k = document.getElementById('kapi'); if (k) { k.hidden = false; k.querySelector('button').onclick = () => vrBaslat(); } }
+function kapiGizle() { const k = document.getElementById('kapi'); if (k) k.hidden = true; }
+if (navigator.xr?.addEventListener) navigator.xr.addEventListener('sessiongranted', () => vrBaslat());
+if (pwaMi && navigator.xr) vrBaslat();
 const sahne = new THREE.Scene(); sahne.background = new THREE.Color('#141c1d'); sahne.fog = new THREE.Fog('#141c1d', 6, 18);
 const kamera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.02, 60);
 kamera.position.set(0, 1.75, 1.35);
@@ -53,7 +74,7 @@ addEventListener('resize', () => { kamera.aspect = innerWidth / innerHeight; kam
 
 sahne.add(new THREE.HemisphereLight('#fff7e6', '#2a3332', 0.9));
 const isik = new THREE.DirectionalLight('#ffffff', 1.4); isik.position.set(1.5, 4, 1); isik.castShadow = true;
-isik.shadow.mapSize.set(2048, 2048); Object.assign(isik.shadow.camera, { left: -1.4, right: 1.4, top: 1.4, bottom: -1.4, near: 1, far: 8 }); sahne.add(isik);
+isik.shadow.mapSize.set(1024, 1024); Object.assign(isik.shadow.camera, { left: -1.4, right: 1.4, top: 1.4, bottom: -1.4, near: 1, far: 8 }); sahne.add(isik);
 
 /* ---------- oda ve masa ---------- */
 const zemin = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: '#23302f', roughness: 1 }));
@@ -65,9 +86,17 @@ for (const [x, z] of [[-1.02, -0.7], [1.02, -0.7], [-1.02, 0.7], [1.02, 0.7]]) {
 
 /* ---------- maket stadyum: çim, çizgiler, kaleler, tribün ve Mr. Anduv! panoları (masa grubunda; sol kavramayla döner) ---------- */
 const saha = new THREE.Group(); saha.position.y = MASA_Y + 0.002; masa.add(saha);
-function cimDokusu() {
-  const c = document.createElement('canvas'), S = 10; c.width = (PL + 8) * S; c.height = (PW + 8) * S; const g = c.getContext('2d');
-  for (let i = 0; i < 18; i++) { g.fillStyle = i % 2 ? '#3f7f2d' : '#468a32'; g.fillRect(i * c.width / 18, 0, c.width / 18 + 1, c.height); }
+function cimDokusu(gercekci = false) {
+  const c = document.createElement('canvas'), S = gercekci ? 14 : 10; c.width = (PL + 8) * S; c.height = (PW + 8) * S; const g = c.getContext('2d');
+  if (!gercekci) for (let i = 0; i < 18; i++) { g.fillStyle = i % 2 ? '#3f7f2d' : '#468a32'; g.fillRect(i * c.width / 18, 0, c.width / 18 + 1, c.height); }
+  else {                                                         /* Kaptan Mecit'in gerçekçi çimi: iki yönlü biçme izi ve ince çim dokusu */
+    g.fillStyle = '#2c6a2a'; g.fillRect(0, 0, c.width, c.height);
+    const SW = (PL + 8) / 20; for (let i = 0; i < 20; i++) { g.fillStyle = i % 2 ? '#3f8f39' : '#4c9e43'; g.fillRect(i * SW * S, 0, SW * S + 1, c.height); }
+    g.globalAlpha = 0.16; const SW2 = (PW + 8) / 9; for (let i = 0; i < 9; i += 2) { g.fillStyle = '#ffffff'; g.fillRect(0, i * SW2 * S, c.width, SW2 * S); } g.globalAlpha = 1;
+    const im = g.getImageData(0, 0, c.width, c.height), d = im.data;
+    for (let i = 0; i < d.length; i += 4) { const n = (Math.random() - 0.5) * 22; d[i] += n * 0.5; d[i + 1] += n; d[i + 2] += n * 0.4; }
+    g.putImageData(im, 0, 0);
+  }
   const X = y => (y + 4) * S, Y = x => (x + 4) * S; g.strokeStyle = '#f6f6ee'; g.lineWidth = 0.14 * S;
   g.strokeRect(X(0), Y(0), PL * S, PW * S); g.beginPath(); g.moveTo(X(PL / 2), Y(0)); g.lineTo(X(PL / 2), Y(PW)); g.stroke();
   g.beginPath(); g.arc(X(PL / 2), Y(PW / 2), 9.15 * S, 0, 7); g.stroke();
@@ -78,7 +107,8 @@ function cimDokusu() {
   }
   const t = new THREE.CanvasTexture(c); t.anisotropy = 8; t.colorSpace = THREE.SRGBColorSpace; return t;
 }
-const cim = new THREE.Mesh(new THREE.PlaneGeometry((PL + 8) * OLC, (PW + 8) * OLC), new THREE.MeshStandardMaterial({ map: cimDokusu(), roughness: 0.95 }));
+const CIM = { retro: null, gercekci: null };
+const cim = new THREE.Mesh(new THREE.PlaneGeometry((PL + 8) * OLC, (PW + 8) * OLC), new THREE.MeshStandardMaterial({ roughness: 0.95 }));
 cim.rotation.x = -Math.PI / 2; cim.receiveShadow = true; saha.add(cim);
 const beyaz = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4 });
 for (const s of [-1, 1]) {
@@ -142,6 +172,24 @@ function figur(p, kit) {
   g.add(govde, sort, bacak, kafa, sac, burun);
   return g;
 }
+/* ---------- ✨ Gerçekçi görünüm (Kaptan Mecit VR'dan): iskeletli 3B futbolcular, hareketler, biçilmiş çim, desenli top ---------- */
+let GORUNUM = 'gercekci'; try { GORUNUM = localStorage.getItem('cbmvr.gorunum') || 'gercekci'; } catch { /* */ }
+const TENLER = ['#f1c9a5', '#e0ac7e', '#c68a5a', '#8d5a3b', '#f5d6b8'];
+const seritRenk = (c1, c2) => { const a = new THREE.Color(c1), b = new THREE.Color(c2); return Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b) > 0.5 ? c2 : '#ffffff'; };
+function gercekFigur(p, kit, i) {
+  const forma = p.gk ? (p.team === 0 ? '#f3d35a' : '#3ec46d') : kit.c1;
+  const F = futbolcu({ forma, serit: p.gk ? '#1d1d1d' : seritRenk(kit.c1, kit.c2), sort: p.gk ? '#1d1d1d' : kit.c2, tozluk: p.gk ? '#1d1d1d' : kit.c1, ten: p.skin || TENLER[i % 5], sac: p.hair || '#2a1a10', eldiven: p.gk ? '#f4f4f4' : null },
+    p.no || (i % 11) + 1);
+  F.grup.scale.setScalar(OLC * OYUNCU_BUYUT * (0.96 + (i * 37 % 9) / 100)); F.px = { role: p.gk ? 'G' : 'O' }; F.cd = 0; return F;
+}
+let topRetroMat = null, topGercekMat = null;
+function gorunumUygula() {
+  const g = GORUNUM === 'gercekci';
+  CIM[GORUNUM] ||= cimDokusu(g); cim.material.map = CIM[GORUNUM]; cim.material.needsUpdate = true;
+  topRetroMat ||= top.material; topGercekMat ||= new THREE.MeshStandardMaterial({ map: topDokusu(), roughness: 0.45 });
+  top.material = g ? topGercekMat : topRetroMat;
+  for (const f of figurler.values()) saha.remove(f.grup || f); figurler.clear();
+}
 const halka = new THREE.Mesh(new THREE.TorusGeometry(0.75 * OLC * OYUNCU_BUYUT, 0.08 * OLC * OYUNCU_BUYUT, 8, 32), new THREE.MeshBasicMaterial({ color: '#ffe14a' }));
 halka.rotation.x = Math.PI / 2; saha.add(halka);
 const ok = new THREE.Mesh(new THREE.ConeGeometry(0.25 * OLC * OYUNCU_BUYUT, 0.5 * OLC * OYUNCU_BUYUT, 10), new THREE.MeshBasicMaterial({ color: '#ffe14a' }));
@@ -150,6 +198,7 @@ const top = new THREE.Mesh(new THREE.SphereGeometry(0.009, 16, 12), new THREE.Me
 top.castShadow = true; saha.add(top);
 const topGolge = new THREE.Mesh(new THREE.CircleGeometry(0.008, 16), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.35 }));
 topGolge.rotation.x = -Math.PI / 2; saha.add(topGolge);
+gorunumUygula();
 
 /* ---------- dil (TR / EN): ilk açılışta cihaz diline göre, menüden değişir ---------- */
 const sakla = (k, v) => { try { localStorage.setItem(k, v); } catch { /* depolama yok */ } };
@@ -157,7 +206,7 @@ const oku = k => { try { return localStorage.getItem(k); } catch { return null; 
 let DIL = oku('cbmvr.dil') || (/^tr/i.test(navigator.language || '') ? 'tr' : 'en');
 const t = (tr, en) => DIL === 'en' ? en : tr;
 /* menü durumu (aşağıda kullanılır; burada tanımlı ki çerçeve erken yüklenirse hata olmasın) */
-let MENU = true, BASLADI = false, SAYFA = oku('cbmvr.ogretici') ? null : 0, LIGLER_IZ = null, sonDurum = '';
+let SILONAY = false, MENU = true, BASLADI = false, SAYFA = oku('cbmvr.ogretici') ? null : 0, LIGLER_IZ = null, sonDurum = '';
 const SEC = (() => { try { const v = JSON.parse(oku('cbmvr.secim')); if (v?.izle && v?.oyna) return v; } catch { /* */ } return { mod: 'izle', izle: { lig: 0, ev: 0, dep: 1 }, oyna: { lig: 0, ev: 0, dep: 1 } }; })();
 /* ---------- 🔓 Tam Sürüm (Meta Horizon Store uygulama içi satın alma, tek seferlik): Türkiye ligi ücretsiz, diğer 5 lig Tam Sürüm'de.
    Mağaza dışında (tarayıcıdan açılan web sürümü) her şey açık — telefon sürümlerindeki kuralın aynısı. ---------- */
@@ -207,7 +256,7 @@ function girisOku() {
 }
 
 /* ---------- 👁 Maçı izle ve yönet (Champion maç motoru) ---------- */
-function figurTemizle() { for (const f of figurler.values()) saha.remove(f); figurler.clear(); tabelaSon = ''; sonSkor = '0-0'; sonDurum = ''; }
+function figurTemizle() { for (const f of figurler.values()) saha.remove(f.grup || f); figurler.clear(); tabelaSon = ''; sonSkor = '0-0'; sonDurum = ''; }
 async function izleYeniMac(sec = null) {
   izleYukle ||= import('./izle.js');
   const mod = await izleYukle; IZM = mod;
@@ -312,6 +361,7 @@ function menuCiz() {
     g.font = '32px system-ui, sans-serif'; satirSar(g, govde, 34, 236, MW - 68, 44);
     if (SAYFA > 0) dug(34, 660, 300, 96, t('◀ Geri', '◀ Back'), '', 'sayfa', SAYFA - 1);
     dug(MW - 434, 660, 400, 96, SAYFA < P.length - 1 ? t('İleri ▶', 'Next ▶') : t('Anladım ✓', 'Got it ✓'), 'ana', 'sayfa', SAYFA + 1);
+    if (SAYFA === P.length - 1) dug(346, 672, 236, 72, SILONAY ? t('Emin misin? Sil', 'Sure? Delete') : t('🗑 Verilerimi sil', '🗑 Delete my data'), '', 'verisil', SILONAY ? 'evet' : '');
     menuT.needsUpdate = true; return;
   }
   g.fillText('Champion Battle VR', 34, 46); g.font = '24px system-ui, sans-serif'; g.fillStyle = '#cfe0dc'; g.fillText(t('Bir Mr. Anduv! yapımıdır.', 'A Mr. Anduv! production.'), 36, 88);
@@ -321,18 +371,20 @@ function menuCiz() {
   if (!lig) { g.fillStyle = '#5b6466'; g.font = 'bold 34px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(t('Yükleniyor…', 'Loading…'), MW / 2, 420); }
   else {
     const sira = (y, etiket, yazi, act, renk) => { et(y - 20, etiket); dug(34, y, 110, 76, '◀', '', act, -1); dug(156, y, 712, 76, yazi, '', act + 'Bilgi', 0, renk); dug(880, y, 110, 76, '▶', '', act, 1); };
-    sira(270, t('Lig', 'League'), (kilitli(lig) ? '🔒 ' : '') + ligAd(lig), 'lig');
-    sira(400, t('Senin takımın (ev sahibi)', 'Your team (home)'), ev.ad, 'ev', ev.c1);
-    sira(530, t('Rakip (deplasman)', 'Opponent (away)'), dep.ad, 'dep', dep.c1);
+    sira(250, t('Lig', 'League'), (kilitli(lig) ? '🔒 ' : '') + ligAd(lig), 'lig');
+    sira(360, t('Senin takımın (ev sahibi)', 'Your team (home)'), ev.ad, 'ev', ev.c1);
+    sira(470, t('Rakip (deplasman)', 'Opponent (away)'), dep.ad, 'dep', dep.c1);
   }
-  if (kilitli(lig)) dug(34, 640, 400, 104, ALINIYOR ? '…' : `🔓 ${t('Tam Sürümü al', 'Get Full Version')}\n${TAM_FIYAT ? TAM_FIYAT + t(' · tek seferlik', ' · one-time') : t('tek seferlik', 'one-time')}`, 'ana', 'tamal');
-  else dug(34, 640, 400, 104, BASLADI ? t('▶ Yeni maç', '▶ New match') : t('▶ Başla', '▶ Start'), 'ana', 'basla');
-  dug(446, 640, 248, 104, t('❓ Yardım', '❓ Help'), '', 'yardim');
-  dug(706, 640, 136, 104, Ses.acik ? '🔊' : '🔇', Ses.acik ? 'on' : '', 'ses');
-  dug(854, 640, 136, 104, DIL === 'tr' ? 'EN' : 'TR', '', 'dil');
+  et(574, t('Görünüm', 'Look'));
+  [['gercekci', t('✨ Gerçekçi (3B futbolcular)', '✨ Realistic (3D players)')], ['retro', t('🕹 Retro maket', '🕹 Retro model')]].forEach(([v, y], i) => dug(34 + i * 488, 590, 468, 62, y, GORUNUM === v ? 'on' : '', 'gorunum', v));
+  if (kilitli(lig)) dug(34, 672, 400, 96, ALINIYOR ? '…' : `🔓 ${t('Tam Sürümü al', 'Get Full Version')}\n${TAM_FIYAT ? TAM_FIYAT + t(' · tek seferlik', ' · one-time') : t('tek seferlik', 'one-time')}`, 'ana', 'tamal');
+  else dug(34, 672, 400, 96, BASLADI ? t('▶ Yeni maç', '▶ New match') : t('▶ Başla', '▶ Start'), 'ana', 'basla');
+  dug(446, 672, 248, 96, t('❓ Yardım', '❓ Help'), '', 'yardim');
+  dug(706, 672, 136, 96, Ses.acik ? '🔊' : '🔇', Ses.acik ? 'on' : '', 'ses');
+  dug(854, 672, 136, 96, DIL === 'tr' ? 'EN' : 'TR', '', 'dil');
   g.fillStyle = '#7a8284'; g.font = '22px system-ui, sans-serif'; g.textAlign = 'center';
   g.fillText(kilitli(lig) ? t('Türkiye ligi ücretsiz · diğer 5 lig tek seferlik Tam Sürüm ile açılır', 'Turkey league is free · the other 5 leagues unlock with a one-time Full Version')
-    : t('Sol Y: menü · sol kavrama: sahayı çevir', 'Left Y: menu · left grip: turn the pitch'), MW / 2, 772);
+    : t('Sol Y: menü · sol kavrama: sahayı çevir', 'Left Y: menu · left grip: turn the pitch'), MW / 2, 786);
   menuT.needsUpdate = true;
 }
 function kaydet() { sakla('cbmvr.secim', JSON.stringify(SEC)); }
@@ -342,6 +394,7 @@ function menuBas(uv) {
   const x = uv.x * MW, y = (1 - uv.y) * MH, b = MBTN.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h); if (!b) return;
   Ses.tik();
   const { S, L, lig } = secim();
+  if (b.act !== 'verisil') SILONAY = false;
   if (b.act === 'sayfa') { SAYFA = b.v < SAYFALAR().length ? b.v : null; if (SAYFA == null) sakla('cbmvr.ogretici', '1'); }
   else if (b.act === 'kapat') menuAcKapa();
   else if (b.act === 'lig' && L.length) { S.lig = (S.lig + b.v + L.length) % L.length; S.ev = 0; S.dep = 1; }
@@ -352,6 +405,8 @@ function menuBas(uv) {
   else if (b.act === 'tamal') return tamAl();
   else if (b.act === 'yardim') SAYFA = 0;
   else if (b.act === 'ses') Ses.ac(!Ses.acik);
+  else if (b.act === 'gorunum') { GORUNUM = b.v; sakla('cbmvr.gorunum', GORUNUM); gorunumUygula(); }
+  else if (b.act === 'verisil') { if (b.v === 'evet') { try { for (const k of Object.keys(localStorage)) if (/^cbmvr\./.test(k) && k !== 'cbmvr.tam') localStorage.removeItem(k); } catch { /* */ } location.reload(); return; } SILONAY = true; }
   else if (b.act === 'dil') { DIL = DIL === 'tr' ? 'en' : 'tr'; sakla('cbmvr.dil', DIL); ustYaz(); panelCiz(); tabelaSon = ''; }
   kaydet(); menuCiz();
 }
@@ -433,23 +488,41 @@ function izGorunum(I, dt) {
   const M = I.M;
   return { anahtar: 'iz', kit: [I.ev, I.dep], ad: [I.ev.kisa, I.dep.kisa], skor: M.skor,
     oyuncular: M.players.map((p, i) => { const v = Math.hypot(p.vx || 0, p.vy || 0); if (v > 0.3) { p._dx = p.vy / v; p._dy = p.vx / v; }
-      return { o: p, team: p.team, gk: p.gk, x: p.y, y: p.x, dx: p._dx ?? 0, dy: p._dy ?? (p.team ? -1 : 1), v, anim: (p._an = (p._an || 0) + v * dt), skin: p.skin, hair: SAC[i % SAC.length], gizli: p.atildi != null }; }),
+      return { o: p, no: (p.i ?? i % 11) + 1, team: p.team, gk: p.gk, x: p.y, y: p.x, dx: p._dx ?? 0, dy: p._dy ?? (p.team ? -1 : 1), v, anim: (p._an = (p._an || 0) + v * dt), skin: p.skin, hair: SAC[i % SAC.length], gizli: p.atildi != null }; }),
     top: { x: M.ball.y, y: M.ball.x, z: M.ball.z }, ctrl: null, dk: M.saatYazi() + (HIZ > 1 ? `  ·  ×${HIZ}` : ''),
     durum: M.bitti ? t('MAÇ SONU', 'FULL TIME') : M.devreArasi ? t('DEVRE ARASI', 'HALF TIME') : '' };
 }
+function vurusIsle(G, b) {                                       // topa en yakın oyuncu vuruş hareketini yapar
+  let en = null, d = 4; for (const p of G.oyuncular) { const x = Math.hypot(p.x - b.x, p.y - b.y); if (x < d && !p.gizli) { d = x; en = p; } }
+  const f = en && figurler.get(en.o); if (f?.px) f.cd = 0.35;
+}
+let sonGolTakim = -1;
 const topDunya = new THREE.Vector3(); let oncekiTop = null, oncekiHiz = 0, vurusBek = 0, heyecanT = 0;
 function ciz(G, dt, sdt = dt) {
-  for (const p of G.oyuncular) {
+  const gercek = GORUNUM === 'gercekci', simdi = performance.now(), golT = golYazi > 0 ? sonGolTakim : -1;
+  const b0 = G.top, Mv = { ball: { x: b0.y, y: b0.x, kicker: null } };      // gerçekçi pozlar Kaptan Mecit eksenleriyle çalışır (sahnede x ↔ y yer değiştirir)
+  G.oyuncular.forEach((p, i) => {
     let f = figurler.get(p.o);
     const kit = G.kit[p.team];
     if (!f || f.userData.c1 !== kit.c1 || f.userData.gk !== p.gk) {
-      if (f) saha.remove(f);
-      f = figur({ role: p.gk ? 'G' : 'O', skin: p.skin, hair: p.hair }, kit); f.userData = { c1: kit.c1, gk: p.gk }; figurler.set(p.o, f); saha.add(f);
+      if (f) saha.remove(f.grup || f);
+      if (gercek) { f = gercekFigur(p, kit, i); f.userData = { c1: kit.c1, gk: p.gk }; saha.add(f.grup); }
+      else { f = figur({ role: p.gk ? 'G' : 'O', skin: p.skin, hair: p.hair }, kit); f.userData = { c1: kit.c1, gk: p.gk }; saha.add(f); }
+      figurler.set(p.o, f);
+    }
+    if (gercek) {
+      f.grup.visible = !p.gizli; if (p.gizli) return;
+      f.grup.position.set(kmX(p.x, p.y), 0, kmZ(p.x, p.y));
+      f.cd = Math.max(0, f.cd - sdt);
+      const q = f.px; q.x = p.y; q.y = p.x; q.dx = p.dy; q.dy = p.dx; q.vx = p.v; q.vy = 0; q.anim = p.anim * 0.55; q.team = p.team; q.slide = 0; q.stun = 0; q.cd = f.cd;
+      if (f.cd > 0.1) Mv.ball.kicker = q;
+      poz(f, q, Mv, simdi, golT); Mv.ball.kicker = null;
+      return;
     }
     f.visible = !p.gizli;
     f.position.set(kmX(p.x, p.y), Math.abs(Math.sin(p.anim * 1.6)) * Math.min(1, p.v / 6) * 0.004, kmZ(p.x, p.y));
     if (p.dx || p.dy) f.rotation.y = Math.atan2(-p.dx, p.dy) - Math.PI / 2;
-  }
+  });
   const c = G.ctrl;
   halka.visible = ok.visible = !!c;
   if (c) { const x = kmX(c.x, c.y), z = kmZ(c.x, c.y); halka.position.set(x, 0.002, z); ok.position.set(x, 2.4 * OLC * OYUNCU_BUYUT + Math.sin(performance.now() / 200) * 0.004, z); }
@@ -458,12 +531,12 @@ function ciz(G, dt, sdt = dt) {
   top.getWorldPosition(topDunya);
   vurusBek = Math.max(0, vurusBek - dt);
   if (sdt > 0) {
-    if (oncekiTop) { const v = Math.hypot(b.x - oncekiTop.x, b.y - oncekiTop.y) / sdt; if (v - oncekiHiz > 5 && v > 7 && v < 60 && !vurusBek) { Ses.vurus(topDunya.x, topDunya.y, topDunya.z, v / 28); vurusBek = 0.22; } oncekiHiz = v; }
+    if (oncekiTop) { const v = Math.hypot(b.x - oncekiTop.x, b.y - oncekiTop.y) / sdt; if (v - oncekiHiz > 5 && v > 7 && v < 60 && !vurusBek) { Ses.vurus(topDunya.x, topDunya.y, topDunya.z, v / 28); vurusBek = 0.22; vurusIsle(G, oncekiTop); } oncekiHiz = v; }
     oncekiTop = { x: b.x, y: b.y };
   }
   heyecanT -= dt; if (heyecanT <= 0) { heyecanT = 0.3; Ses.heyecan(1 - Math.min(b.y, PL - b.y) / 38); }
   if ((G.durum || '') !== sonDurum) { if (G.anahtar === 'iz' && sonDurum !== '' || G.anahtar === 'iz' && G.durum) Ses.duduk(!!G.durum); sonDurum = G.durum || ''; }
-  const skor = `${G.skor[0]}-${G.skor[1]}`; if (skor !== sonSkor) { if (sonSkor !== '0-0' || skor !== '0-0') { golYazi = 2.5; Ses.gol(topDunya.x, topDunya.y, topDunya.z); } sonSkor = skor; }
+  const skor = `${G.skor[0]}-${G.skor[1]}`; if (skor !== sonSkor) { if (sonSkor !== '0-0' || skor !== '0-0') { const [a0, b0s] = sonSkor.split('-').map(Number); sonGolTakim = G.skor[0] > a0 ? 0 : G.skor[1] > b0s ? 1 : -1; golYazi = 2.5; Ses.gol(topDunya.x, topDunya.y, topDunya.z); } sonSkor = skor; }
   golYazi = Math.max(0, golYazi - dt); sonOlayT = Math.max(0, sonOlayT - dt);
   const vurgu = golYazi > 0 ? t('GOOOL!', 'GOAL!') : G.durum || (G.anahtar === 'iz' && sonOlayT > 0 ? sonOlay : '');
   tabelaCiz({ kit: G.kit, ad: G.ad, skor: G.skor, alt: vurgu || G.dk, vurgu: !!vurgu });
