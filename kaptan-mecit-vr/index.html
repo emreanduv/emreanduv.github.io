@@ -22,6 +22,7 @@
   #bilgi kbd{background:#2b3a3c;border-radius:4px;padding:1px 6px;font-family:inherit}
   #km{position:fixed;width:2px;height:2px;left:-10px;top:-10px;border:0;opacity:0;pointer-events:none}
   @media (max-width:640px){#bilgi{display:none}}
+  #kapi{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#0d1318ee}#kapi[hidden]{display:none}#kapi div{display:grid;gap:18px;text-align:center}#kapi b{font-size:34px}#kapi button{font:800 30px system-ui,sans-serif;padding:22px 40px;border-radius:16px;border:0;background:var(--orange);color:#fff;cursor:pointer}#kapi small{opacity:.75}
 </style>
 <script type="importmap">{"imports":{"three":"./lib/three.module.js"}}</script>
 </head>
@@ -30,6 +31,7 @@
 <div id="bilgi"><b>Gözlükte:</b> <b>VR'a gir</b>'e bas. Sol çubuk koş (baktığın yöne göre) · sağ tetik / A <b>pas · oyuncu seç</b> · B / sağ kavrama <b>şut · kay</b> · sağ çubuk sola/sağa: <b>yer değiştir</b> · sol Y: <b>menü</b>.<br>
   <b>Bilgisayarda:</b> <kbd>WASD</kbd>/<kbd>↑↓←→</kbd> koş · <kbd>X</kbd> pas · <kbd>Z</kbd> şut · <kbd>Q</kbd>/<kbd>E</kbd> yer değiştir · <kbd>M</kbd> menü · fareyle sürükle: etrafına bak.</div>
 <div id="gir"><button id="vrB" hidden>🥽 VR'a gir</button><button id="arB" class="ikinci" hidden>🏠 Odamda oyna (karma gerçeklik)</button></div>
+<div id="kapi" hidden><div><b>Kaptan Mecit VR</b><button>🥽 VR'a gir</button><small>Bir Mr. Anduv! yapımıdır.</small></div></div>
 <iframe id="km" title="Kaptan Mecit motoru" src="kaptanmecit.html?vr=1"></iframe>
 <script type="module">
 import * as THREE from 'three';
@@ -54,6 +56,8 @@ renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.setSize(innerWid
 renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local-floor');
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+/* Quest performansı (Meta VRC.Quest.Performance.1, Malazgirt VR ile aynı): %85 çözünürlük, sabit foveation, 72 Hz (oturum açılınca), küçük gölge haritası */
+renderer.xr.setFramebufferScaleFactor(0.85); renderer.xr.setFoveation(1);
 document.body.appendChild(renderer.domElement);
 const sahne = new THREE.Scene();
 const kamera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 900);
@@ -63,7 +67,7 @@ addEventListener('resize', () => { kamera.aspect = innerWidth / innerHeight; kam
 
 sahne.add(new THREE.HemisphereLight('#e8eeff', '#2a3528', 1.05));
 const projektor = new THREE.DirectionalLight('#fffaf0', 1.15); projektor.position.set(-30, 80, 20); sahne.add(projektor); sahne.add(projektor.target);
-projektor.shadow.mapSize.set(2048, 2048); projektor.shadow.bias = -0.0006; projektor.shadow.normalBias = 0.02;
+projektor.shadow.mapSize.set(1024, 1024); projektor.shadow.bias = -0.0006; projektor.shadow.normalBias = 0.02;
 const ters = new THREE.DirectionalLight('#dfe8ff', 0.45); ters.position.set(40, 60, -30); sahne.add(ters);
 
 /* gökyüzü: gece; ufukta şehir ışığı */
@@ -506,7 +510,7 @@ const menuT = new THREE.CanvasTexture(menuC); menuT.colorSpace = THREE.SRGBColor
 const menu = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.88), new THREE.MeshBasicMaterial({ map: menuT, transparent: true, depthTest: false })); menu.renderOrder = 998;
 arac.add(menu);
 function menuYerlestir() { const ayakta = MOD === 'maket' || KOLTUKLAR[KI].ad === 'Saha kenarı'; menu.position.set(0, ayakta ? 1.35 : 1.05, -1.05); menu.rotation.x = -0.18; }
-let MENU = true, MBTN = [], SAYFA = null;
+let MENU = true, MBTN = [], SAYFA = null, SILONAY = false;
 try { if (!localStorage.getItem('kmvr.ogretici')) { SAYFA = 0; localStorage.setItem('kmvr.ogretici', '1'); } } catch { /* */ }
 const SEC = { lig: 0, ev: 0, dep: 1, zor: 0, sure: 4, dz: 'oto' };
 try { Object.assign(SEC, JSON.parse(localStorage.getItem('kmvr.sec') || '{}')); } catch { /* */ }
@@ -515,6 +519,7 @@ const YARDIM = [
   ['Mide bulandırmayan VR', 'Kamera hiçbir zaman kendiliğinden hareket etmez. Tribündeki koltuğunda oturursun, maçı kafanı çevirerek izlersin. Yer değiştirmek istersen sağ çubuğu sola ya da sağa it: kısa bir kararma ile diğer koltuğa geçersin.\nRahat oyun için otururken oyna.'],
   ['Kumanda', 'Sol çubuk: oyuncunu koştur (baktığın yöne göre: ileri it = baktığın yön).\nSağ tetik ya da A: pas · top rakipteyken oyuncu seç.\nB ya da sağ kavrama: şut · top rakipteyken kayarak müdahale.\nSol Y: menü. Tekrar sırasında B: tekrarı geç.'],
   ['Koltuklar', 'Maket: stadyum maketi kaidede, sen ayaktasın; etrafında yürüyebilirsin. Quest 3/Pro\'da "Odamda oyna" ile maket kendi odanda durur.\nSaha kenarı: çim seviyesinde, en yakın.\nTV: ana tribün. Dinamik: kale arkası (devre arası kalelerle değişir).\nTele: köşe tribünü. Stadyum: çatı köprüsü.'],
+  ['Verilerin', 'Kaptan Mecit VR hiçbir veri toplamaz, hiçbir yere göndermez. Ses ayarın, görünüm, son seçtiğin lig, takımlar, zorluk, süre ve bu öğreticinin görüldüğü yalnız bu gözlükte durur.\nAşağıdaki düğme bunların hepsini gözlükten siler. Uygulamayı kaldırınca da silinir.\nGizlilik politikası: emreanduv.github.io/kaptan-mecit-vr/gizlilik.html'],
 ];
 function menuCiz() {
   menu.visible = MENU; if (!MENU) return;
@@ -538,6 +543,7 @@ function menuCiz() {
     g.font = '31px system-ui, sans-serif'; satirSar(g, govde, 34, 232, MW - 68, 44);
     if (SAYFA > 0) dug(34, 780, 300, 92, '◀ Geri', '', 'sayfa', SAYFA - 1);
     dug(MW - 434, 780, 400, 92, SAYFA < YARDIM.length - 1 ? 'İleri ▶' : 'Anladım ✓', 'ana', 'sayfa', SAYFA + 1);
+    if (SAYFA === YARDIM.length - 1) dug(34, 640, 520, 92, SILONAY ? 'Emin misin? Evet, sil' : '🗑 Verilerimi sil', SILONAY ? 'ana' : '', 'verisil', SILONAY ? 'evet' : '');
     menuT.needsUpdate = true; return;
   }
   g.fillText('Kaptan Mecit VR', 34, 46); g.font = '24px system-ui, sans-serif'; g.fillStyle = '#cfe0dc'; g.fillText('Bir Mr. Anduv! yapımıdır.', 36, 88);
@@ -565,6 +571,7 @@ function menuCiz() {
 function menuBas(uv) {
   const x = uv.x * MW, y = (1 - uv.y) * MH, b = MBTN.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h); if (!b) return;
   Ses.baslat(); Ses.tik();
+  if (b.act !== 'verisil') SILONAY = false;
   const T = () => LGS()[LG()[SEC.lig]].t.length;
   switch (b.act) {
     case 'lig': SEC.lig = (SEC.lig + b.v + 6) % 6; SEC.ev = 0; SEC.dep = 1; break;
@@ -580,6 +587,9 @@ function menuBas(uv) {
     case 'yardim': SAYFA = 0; break;
     case 'sayfa': SAYFA = b.v >= YARDIM.length ? null : b.v; break;
     case 'ses': Ses.ac(!Ses.acik); break;
+    case 'verisil':                                                /* Verilerimi sil (Meta veri kullanımı kontrolü): yalnız bu uygulamanın kayıtları; satın alma yok */
+      if (b.v === 'evet') { try { for (const k of Object.keys(localStorage)) if (/^kmvr\./.test(k) || k === 'retrolig.v1') localStorage.removeItem(k); } catch { /* */ } location.reload(); return; }
+      SILONAY = true; break;
   }
   menuCiz();
 }
@@ -641,21 +651,36 @@ addEventListener('pointerup', e => { if (suruk && !suruk.m && MENU) { fareV.set(
 /* ---------- VR / karma gerçeklik oturumları ---------- */
 let AR = false;
 const vrB = document.getElementById('vrB'), arB = document.getElementById('arB');
+/* Tek VR giriş kapısı (Nutuk Salonu'ndaki Meta incelemesi düzeltmesi, Champion Battle VR ile aynı): mağaza uygulaması açılır açılmaz VR'a girer;
+   giremezse ya da oturum biterse ekranda tek büyük "VR'a gir" düğmesi kalır. 'layers' ve 'bounded-floor' istenmez (Quest tarayıcısında ilk karede donma). */
+const pwaMi = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || 'getDigitalGoodsService' in window || document.referrer.startsWith('android-app://');
 const oturumAc = async mod => {
   Ses.baslat();
-  const s = await navigator.xr.requestSession(mod, { requiredFeatures: ['local-floor'], optionalFeatures: ['hand-tracking', 'layers'] });
+  const s = await navigator.xr.requestSession(mod, { optionalFeatures: ['local-floor', 'hand-tracking'] });
   AR = mod === 'immersive-ar'; if (AR) { KI = 0; } koltukUygula();
-  renderer.xr.setFoveation(1); await renderer.xr.setSession(s);
-  s.addEventListener('end', () => { AR = false; koltukUygula(); });
+  renderer.xr.setReferenceSpaceType(s.enabledFeatures && !s.enabledFeatures.includes('local-floor') ? 'local' : 'local-floor');
+  await renderer.xr.setSession(s); kapiGizle();
+  try { if (s.updateTargetFrameRate && s.supportedFrameRates && [...s.supportedFrameRates].includes(72)) s.updateTargetFrameRate(72); } catch { /* */ }
+  s.addEventListener('end', () => { AR = false; koltukUygula(); if (pwaMi) kapiGoster(); });   // mağaza uygulamasında VR'dan çıkınca boş sayfada kalınmasın
 };
+let vrIstek = null;
+function vrBaslat() {
+  if (!navigator.xr || renderer.xr.isPresenting) return Promise.resolve(false);
+  if (vrIstek) return vrIstek;
+  vrIstek = oturumAc('immersive-vr').then(() => true)
+    .catch(e => { console.warn('VR açılamadı', e); if (pwaMi) kapiGoster(); return false; })
+    .finally(() => { vrIstek = null; });
+  return vrIstek;
+}
+function kapiGoster() { const k = document.getElementById('kapi'); if (k) { k.hidden = false; k.querySelector('button').onclick = () => vrBaslat(); } }
+function kapiGizle() { const k = document.getElementById('kapi'); if (k) k.hidden = true; }
 if (navigator.xr) {
   navigator.xr.isSessionSupported('immersive-vr').then(ok => { vrB.hidden = !ok; });
   navigator.xr.isSessionSupported('immersive-ar').then(ok => { arB.hidden = !ok; });
-  /* Quest uygulaması olarak açıldıysa doğrudan VR'a gir (araya 2B sayfa girmesin) */
-  const pwa = matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
-  if (pwa) navigator.xr.isSessionSupported('immersive-vr').then(ok => ok && oturumAc('immersive-vr').catch(() => {}));
-}
-vrB.onclick = () => oturumAc('immersive-vr').catch(e => alert('VR açılamadı: ' + e.message));
+  if (navigator.xr.addEventListener) navigator.xr.addEventListener('sessiongranted', () => vrBaslat());
+  if (pwaMi) vrBaslat();
+} else if (pwaMi) kapiGoster();
+vrB.onclick = () => vrBaslat().then(ok => { if (!ok && !pwaMi) alert('VR açılamadı.'); });
 arB.onclick = () => oturumAc('immersive-ar').catch(e => alert('Karma gerçeklik açılamadı: ' + e.message));
 
 /* ---------- kare döngüsü ---------- */
