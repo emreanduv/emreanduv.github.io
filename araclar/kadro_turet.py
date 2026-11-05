@@ -529,7 +529,13 @@ def gecmis_coz(cikti):
         b = bilgi.get(q) or {}
         if not b.get("sehir"):
             return None
-        renk = [RENK[r] for r in b.get("renk", []) if r in RENK][:2]
+        tr_renk = {v[0].lower(): v for v in RENK.values()}
+        renk = []
+        for r in b.get("renk", []):
+            v = RENK.get(r) or tr_renk.get(r)
+            if v and v not in renk:
+                renk.append(v)
+        renk = renk[:2]
         dis.append({"sehir": b["sehir"], "renkAd": [r[0] for r in renk], "renk": [r[1] for r in renk], "ulke": ulke.get(q, "")})
         dis_i[q] = len(dis) - 1
         return dis_i[q]
