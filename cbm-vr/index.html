@@ -536,7 +536,7 @@ function ciz(G, dt, sdt = dt) {
   }
   heyecanT -= dt; if (heyecanT <= 0) { heyecanT = 0.3; Ses.heyecan(1 - Math.min(b.y, PL - b.y) / 38); }
   if ((G.durum || '') !== sonDurum) { if (G.anahtar === 'iz' && sonDurum !== '' || G.anahtar === 'iz' && G.durum) Ses.duduk(!!G.durum); sonDurum = G.durum || ''; }
-  const skor = `${G.skor[0]}-${G.skor[1]}`; if (skor !== sonSkor) { if (sonSkor !== '0-0' || skor !== '0-0') { const [a0, b0s] = sonSkor.split('-').map(Number); sonGolTakim = G.skor[0] > a0 ? 0 : G.skor[1] > b0s ? 1 : -1; golYazi = 2.5; Ses.gol(topDunya.x, topDunya.y, topDunya.z); } sonSkor = skor; }
+  const skor = `${G.skor[0]}-${G.skor[1]}`; if (skor !== sonSkor) { if (sonSkor !== '0-0' || skor !== '0-0') { const [a0, b0s] = sonSkor.split('-').map(Number); sonGolTakim = G.skor[0] > a0 ? 0 : G.skor[1] > b0s ? 1 : -1; golYazi = 2.5; Ses.gol(topDunya.x, topDunya.y, topDunya.z, Math.max(0, sonGolTakim)); } sonSkor = skor; }
   golYazi = Math.max(0, golYazi - dt); sonOlayT = Math.max(0, sonOlayT - dt);
   const vurgu = golYazi > 0 ? t('GOOOL!', 'GOAL!') : G.durum || (G.anahtar === 'iz' && sonOlayT > 0 ? sonOlay : '');
   tabelaCiz({ kit: G.kit, ad: G.ad, skor: G.skor, alt: vurgu || G.dk, vurgu: !!vurgu });

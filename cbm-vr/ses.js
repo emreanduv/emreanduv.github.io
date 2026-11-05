@@ -1,6 +1,24 @@
 /* Champion Battle VR — 3B ses (tamamen yordamsal, dosya yok): tribün uğultusu, heyecan, düdük, top vuruşu, gol sevinci.
    Dinleyici her karede kameraya (gözlüğe) eşitlenir; sesler masadaki yerlerinden gelir. */
+import { KLIP } from './tribunKlip.js';      // Kaptan Mecit 3'ün kendi sentezlediği kalabalık klipleri (kayıt yok, telif yok)
 let ctx = null, ana = null, tribun = null, tribunKazanc = null, acik = true, gurultu = null;
+const buf = {}; let mirilti = null, tezT = 14;
+function klipCoz() {
+  for (const [ad, b64] of Object.entries(KLIP)) {
+    try { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      const bitti = b => { buf[ad] = b; if (ad === 'ugultu') mirildan(); }; const p = ctx.decodeAudioData(u.buffer, bitti, () => {}); if (p?.then) p.then(bitti).catch(() => {}); } catch { /* */ }
+  }
+}
+function mirildan() {                                       // tribün: kalabalık mırıltısı döngüsü (gürültü yatağının yerine)
+  if (mirilti || !buf.ugultu) return;
+  const s = ctx.createBufferSource(); s.buffer = buf.ugultu; s.loop = true; s.loopStart = 0.06; s.loopEnd = buf.ugultu.duration - 0.06;
+  s.connect(tribunKazanc); s.start(0, 0.06); mirilti = s; if (gurultuKaynak) { try { gurultuKaynak.stop(); } catch { /* */ } gurultuKaynak = null; }
+}
+let gurultuKaynak = null;
+function klipCal(ad, x, y, z, v = 1, perde = 1, gecikme = 0) {
+  if (!ctx || !acik || !buf[ad]) return false; const p = konum(x, y, z), g = ctx.createGain(), s = ctx.createBufferSource();
+  s.buffer = buf[ad]; s.playbackRate.value = perde; g.gain.value = v; s.connect(g); g.connect(p); s.start(ctx.currentTime + gecikme, 0.03); return true;
+}
 const yeni = () => {
   ctx = new (window.AudioContext || window.webkitAudioContext)();
   ana = ctx.createGain(); ana.gain.value = acik ? 0.9 : 0; ana.connect(ctx.destination);
@@ -11,7 +29,8 @@ const yeni = () => {
   const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 700; bp.Q.value = 0.6;
   tribunKazanc = ctx.createGain(); tribunKazanc.gain.value = 0.12;
   tribun = konum(0, 1.05, -1.6);
-  src.connect(bp); bp.connect(tribunKazanc); tribunKazanc.connect(tribun); src.start();
+  src.connect(bp); bp.connect(tribunKazanc); tribunKazanc.connect(tribun); src.start(); gurultuKaynak = src;
+  klipCoz();
 };
 function konum(x, y, z) {
   const p = ctx.createPanner(); p.panningModel = 'HRTF'; p.distanceModel = 'inverse'; p.refDistance = 0.6; p.rolloffFactor = 0.8;
@@ -32,7 +51,15 @@ export const Ses = {
     else { L.setPosition(px, py, pz); L.setOrientation(fx, fy, fz, ux, uy, uz); }
   },
   /* heyecan 0–1: top bir kaleye yaklaştıkça tribün yükselir */
-  heyecan(h) { if (tribunKazanc) tribunKazanc.gain.setTargetAtTime(0.1 + 0.22 * Math.max(0, Math.min(1, h)), ctx.currentTime, 0.4); },
+  heyecan(h) {
+    if (!tribunKazanc) return; h = Math.max(0, Math.min(1, h));
+    tribunKazanc.gain.setTargetAtTime((mirilti ? 0.35 + 0.6 * h : 0.1 + 0.22 * h), ctx.currentTime, 0.4);
+    tezT -= 0.3 * (1 + 2.5 * h);                               // (0,3 sn'de bir çağrılır) kendiliğinden tezahürat ya da alkış, hücumda sıklaşır
+    if (tezT <= 0) { tezT = 16 + Math.random() * 14; this.taraftar(Math.random() < 0.7 ? 0 : 1, h > 0.5 && Math.random() < 0.5 ? 'alkis' : 'tezahurat'); }
+  },
+  /* taraf: 0 ev sahibi (masanın arkasındaki ana tribün), 1 deplasman (sol köşe) */
+  taraftar(t, tur, gecikme = 0) { if (tur === 'tezahurat') tur = Math.random() < 0.55 ? 'tezahurat1' : 'tezahurat2'; klipCal(tur, t ? -1.0 : 0.3, 1.0, t ? -1.5 : -1.7, t ? 0.45 : 0.6, t ? 0.94 : 1, gecikme); },
+  ooo(x, y, z) { klipCal('ooo', x, y + 0.2, z, 0.6); },
   duduk(uzun = false, x = 0, y = 1, z = -0.9) {
     if (!ctx || !acik) return; const t = ctx.currentTime, p = konum(x, y, z), g = ctx.createGain(); g.connect(p);
     const sure = uzun ? 0.9 : 0.35, o = ctx.createOscillator(), lfo = ctx.createOscillator(), lg = ctx.createGain();
@@ -51,7 +78,8 @@ export const Ses = {
     o.type = 'sine'; o.frequency.setValueAtTime(880, t); o.frequency.exponentialRampToValueAtTime(1320, t + 0.04); o.connect(g); g.connect(ana);
     g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.07); o.start(t); o.stop(t + 0.08);
   },
-  gol(x, y, z) {
+  gol(x, y, z, takim = 0) {
+    if (klipCal('gol', x, y + 0.3, z, 1)) { this.duduk(false, x, y, z); this.taraftar(takim, 'tezahurat', 2.4); tezT = Math.max(tezT, 20); return; }
     if (!ctx || !acik || !gurultu) return; const t = ctx.currentTime, p = konum(x, y + 0.3, z), g = ctx.createGain(), s = ctx.createBufferSource(), f = ctx.createBiquadFilter();
     s.buffer = gurultu; s.loop = true; f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 0.5; s.connect(f); f.connect(g); g.connect(p);
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.9, t + 0.25); g.gain.setTargetAtTime(0, t + 1.6, 0.6); s.start(t); s.stop(t + 4.5);
