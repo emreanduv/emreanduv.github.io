@@ -183,7 +183,7 @@ def kariyer_coz(metin):
             if i > 2:
                 break
             continue
-        if re.search(r"U-?\d{2}|under-?\d{2}|youth|olympic|B team|amateur", tk, re.I):
+        if re.search(r"U-?\d{2}|under-?\d{2}|youth|olympic|B team|amateur|A2 national|\bB national", tk, re.I):
             continue
         mi = [_sayi(satir(f"national_?caps{i}")) or 0, _sayi(satir(f"national_?goals{i}")) or 0]
     return {"g": g, "mi": mi} if g else None
