@@ -526,14 +526,14 @@ addEventListener('resize',()=>{if(M)resize()});
 /* ---------- Saha görüntüsü (bir kez çizilir) ---------- */
 const MRG=30;
 const ADS=[['MR. ANDUV!','#141414','#f3d35a'],['INSTAGRAM / MR. ANDUV!','#c13584','#ffffff'],['TIKTOK / MR. ANDUV!','#010101','#25f4ee'],['YOUTUBE / MR. ANDUV!','#c4302b','#ffffff'],
- ['X / MR. ANDUV!','#0f1419','#ffffff'],['TWITCH / MR. ANDUV!','#6441a5','#ffffff'],['KICK / MR. ANDUV!','#0b0e0f','#53fc18'],['FACEBOOK / MR. ANDUV!','#1877f2','#ffffff'],
+ ['X / MR. ANDUV!','#0f1419','#ffffff'],['TWITCH / MR. ANDUV!','#6441a5','#ffffff'],['KICK / MR. ANDUV!','#0b0e0f','#53fc18'],
  ['LINKEDIN / MR. ANDUV!','#0a66c2','#ffffff'],['SPOTIFY / MR. ANDUV!','#1db954','#0b0b0b'],['APPLE MUSIC / MR. ANDUV!','#fa2d48','#ffffff'],['AMAZON MUSIC / MR. ANDUV!','#0b2a35','#25d1da'],
  ['YOUTUBE MUSIC / MR. ANDUV!','#ff0000','#ffffff'],['KURT YOLU','#1d2b38','#ffffff'],['KIRMIZI YALI','#b71c1c','#ffffff'],['CHAMPION BATTLE MANAGER','#2e9e44','#ffffff'],
  ['KAPTAN MECİT','#c8102e','#ffffff'],['MALAZGİRT AKINCILARI','#7a1f3d','#f2c230'],['HİSAR: KARA GECE','#1a1a2e','#e9b949'],['LEGEND HEADS','#ee7b30','#ffffff'],
  ['TOPÇULAR','#5b3a1e','#f2c230'],['EMREANDUV.GITHUB.IO','#1d2b38','#f3d35a'],['FUTBOL AKIŞI','#1f3b3c','#86d36e'],['BORSA AKIŞI','#0d1b3e','#f3d35a'],
  ['FIRSAT AKIŞI','#ed713c','#ffffff'],['BİLGİ AKIŞI','#2a4f8a','#ffffff']];
 /* panolar: yalnız Mr. Anduv! markası, oyunları, uygulamaları ve sosyal medya hesapları (başka marka ya da kurum adı yok); Mr. Anduv! ve sosyal medya/müzik hesapları her maçta bolca döner */
-const ADS_MUST=['MR. ANDUV!','INSTAGRAM / MR. ANDUV!','TIKTOK / MR. ANDUV!','YOUTUBE / MR. ANDUV!','X / MR. ANDUV!','TWITCH / MR. ANDUV!','KICK / MR. ANDUV!','FACEBOOK / MR. ANDUV!','LINKEDIN / MR. ANDUV!','SPOTIFY / MR. ANDUV!','APPLE MUSIC / MR. ANDUV!','AMAZON MUSIC / MR. ANDUV!','YOUTUBE MUSIC / MR. ANDUV!'];
+const ADS_MUST=['MR. ANDUV!','INSTAGRAM / MR. ANDUV!','TIKTOK / MR. ANDUV!','YOUTUBE / MR. ANDUV!','X / MR. ANDUV!','TWITCH / MR. ANDUV!','KICK / MR. ANDUV!','LINKEDIN / MR. ANDUV!','SPOTIFY / MR. ANDUV!','APPLE MUSIC / MR. ANDUV!','AMAZON MUSIC / MR. ANDUV!','YOUTUBE MUSIC / MR. ANDUV!'];
 function adPool(){const sh=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
   const must=sh(ADS.filter(a=>ADS_MUST.includes(a[0]))),rest=sh(ADS.filter(a=>!ADS_MUST.includes(a[0])));
   const out=[];let r=0;must.forEach(m=>{out.push(m);if(rest[r])out.push(rest[r++])});while(r<rest.length)out.push(rest[r++]);return out}
