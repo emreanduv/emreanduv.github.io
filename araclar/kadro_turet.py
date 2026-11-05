@@ -176,13 +176,16 @@ def kariyer_coz(metin):
         kira = 1 if ("→" in klp or "loan" in klp.lower()) else 0
         g.append([yb, yson, link.group(1).strip(), _sayi(_bk_alan(metin, f"caps{i}")), _sayi(_bk_alan(metin, f"goals{i}")), kira])
     mi = None
+    satir = lambda ad: (re.search(r"^\s*\|\s*" + ad + r"\s*=\s*([^\n]*)", metin, re.M) or [None, ""])[1]
     for i in range(1, 15):
-        tk = _bk_alan(metin, f"nationalteam{i}")
+        tk = satir(f"national_?team{i}")
         if not tk:
-            break
-        if re.search(r"U-?\d{2}|under-\d{2}|olympic|B team", tk, re.I):
+            if i > 2:
+                break
             continue
-        mi = [_sayi(_bk_alan(metin, f"nationalcaps{i}")) or 0, _sayi(_bk_alan(metin, f"nationalgoals{i}")) or 0]
+        if re.search(r"U-?\d{2}|under-?\d{2}|youth|olympic|B team|amateur", tk, re.I):
+            continue
+        mi = [_sayi(satir(f"national_?caps{i}")) or 0, _sayi(satir(f"national_?goals{i}")) or 0]
     return {"g": g, "mi": mi} if g else None
 
 
@@ -206,7 +209,7 @@ def bilgi_kutusu_mevki(basliklar):
             except (KeyError, IndexError, TypeError):
                 continue
             kr = kariyer_coz(metin)
-            if "nationalteam" in metin:
+            if re.search(r"national_?team", metin):
                 TANI["milli_alan"] += 1
                 if len(TANI["ornek"]) < 6:
                     TANI["ornek"] += [l.strip()[:90] for l in metin.split("\n") if "national" in l][:4]
