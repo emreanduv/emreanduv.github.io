@@ -144,6 +144,7 @@ def mevkiler_coz(deger):
     return kodlar
 
 
+TANI = {"milli_alan": 0, "milli_cozulen": 0, "ornek": []}
 GECMIS = {}   # Vikipedi başlığı → {"g": [[yılBaş, yılSon, kulüpBaşlığı, maç, gol, kiralık], ...], "mi": [maç, gol]} (yalnız olgular)
 
 
@@ -205,6 +206,12 @@ def bilgi_kutusu_mevki(basliklar):
             except (KeyError, IndexError, TypeError):
                 continue
             kr = kariyer_coz(metin)
+            if "nationalteam" in metin:
+                TANI["milli_alan"] += 1
+                if len(TANI["ornek"]) < 6:
+                    TANI["ornek"] += [l.strip()[:90] for l in metin.split("\n") if "national" in l][:4]
+            if kr and kr.get("mi"):
+                TANI["milli_cozulen"] += 1
             if kr:
                 t0 = sayfa["title"]; ad0 = [t0] + geri.get(t0, [])
                 for g0 in list(ad0):
@@ -553,6 +560,10 @@ def gecmis_coz(cikti):
                     o["mi"] = ham["mi"]
             k.pop("_wk", None); k.pop("_q", None)
     cikti["disKulup"] = dis
+    try:
+        json.dump(TANI, open(os.path.join(KOK, "cbm", "v1", "tani.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    except Exception:
+        pass
     print(f"::notice::Geçmiş: {say[1]} oyuncu, {say[0]} satır, {len(dis)} dış kulüp")
 
 
