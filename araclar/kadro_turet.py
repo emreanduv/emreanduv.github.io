@@ -144,8 +144,50 @@ def mevkiler_coz(deger):
     return kodlar
 
 
+GECMIS = {}   # Vikipedi başlığı → {"g": [[yılBaş, yılSon, kulüpBaşlığı, maç, gol, kiralık], ...], "mi": [maç, gol]} (yalnız olgular)
+
+
+def _sayi(v):
+    m = re.search(r"\d+", re.sub(r"\{\{[^}]*\}\}", "", v or ""))
+    return int(m.group()) if m else None
+
+
+def _bk_alan(metin, ad):
+    m = re.search(r"\|\s*" + ad + r"\s*=\s*([^\n|]*(?:\[\[[^\]]*\]\][^\n|]*)*)", metin)
+    return (m.group(1) if m else "").strip()
+
+
+def kariyer_coz(metin):
+    """Bilgi kutusundaki kulüp kariyeri (years/clubs/caps/goals 1..n) ve A milli takım maç/gol sayısı."""
+    g = []
+    for i in range(1, 40):
+        yil, klp = _bk_alan(metin, f"years{i}"), _bk_alan(metin, f"clubs{i}")
+        if not klp:
+            if i > 1:
+                break
+            continue
+        link = re.search(r"\[\[([^\]|#]+)", klp)
+        if not link:
+            continue
+        ys = re.findall(r"(\d{4})", yil)
+        yb = int(ys[0]) if ys else None
+        yson = int(ys[1]) if len(ys) > 1 else (None if re.search(r"[–-]\s*$", yil.strip()) else yb)
+        kira = 1 if ("→" in klp or "loan" in klp.lower()) else 0
+        g.append([yb, yson, link.group(1).strip(), _sayi(_bk_alan(metin, f"caps{i}")), _sayi(_bk_alan(metin, f"goals{i}")), kira])
+    mi = None
+    for i in range(1, 15):
+        tk = _bk_alan(metin, f"nationalteam{i}")
+        if not tk:
+            break
+        if re.search(r"U-?\d{2}|under-\d{2}|olympic|B team", tk, re.I):
+            continue
+        mi = [_sayi(_bk_alan(metin, f"nationalcaps{i}")) or 0, _sayi(_bk_alan(metin, f"nationalgoals{i}")) or 0]
+    return {"g": g, "mi": mi} if g else None
+
+
 def bilgi_kutusu_mevki(basliklar):
-    """İngilizce Vikipedi oyuncu maddelerinin bilgi kutusundan mevkiler (yalnız olgu: hangi mevkilerde oynadığı)."""
+    """İngilizce Vikipedi oyuncu maddelerinin bilgi kutusundan mevkiler (yalnız olgu: hangi mevkilerde oynadığı).
+    Aynı istekte kulüp kariyeri de okunur ve GECMIS'e yazılır."""
     out = {}
     basliklar = sorted({b for b in basliklar if b})
     for i in range(0, len(basliklar), 20):
@@ -162,6 +204,13 @@ def bilgi_kutusu_mevki(basliklar):
                 metin = sayfa["revisions"][0]["slots"]["main"]["content"]
             except (KeyError, IndexError, TypeError):
                 continue
+            kr = kariyer_coz(metin)
+            if kr:
+                t0 = sayfa["title"]; ad0 = [t0] + geri.get(t0, [])
+                for g0 in list(ad0):
+                    ad0 += geri.get(g0, [])
+                for a in ad0:
+                    GECMIS[a] = kr
             m = re.search(r"\|\s*position\s*=\s*([^\n]*(?:\n(?!\s*\|)[^\n]*)*)", metin)
             if not m:
                 continue
@@ -441,6 +490,72 @@ def tablo_sira(maclar):
     return [k for k, _ in sorted(P.items(), key=lambda x: (-x[1][0], -x[1][1], -x[1][2], x[0]))]
 
 
+def gecmis_coz(cikti):
+    """Oyuncu geçmişindeki kulüpler: oyundaki kulüplerse kendi kimliği ("lig-id"), değilse türetilmiş dış kulüp (şehir + renk, ülke).
+    Gerçek kulüp adı çıktıya YAZILMAZ."""
+    oyun_q, oyun_t = {}, {}
+    for kod, l in cikti["ligler"].items():
+        for k in l["kulupler"]:
+            if k.get("_q"): oyun_q[k["_q"]] = f"{kod}-{k['id']}"
+            if k.get("_wk"): oyun_t[k["_wk"]] = f"{kod}-{k['id']}"
+    basliklar = sorted({r[2] for l in cikti["ligler"].values() for k in l["kulupler"] for o in k["oyuncular"] for r in (o.get("_g") or {}).get("g", [])})
+    tq = qid_baslik([b for b in basliklar if b not in oyun_t], "enwiki") if basliklar else {}
+    dis_q = sorted({q for q in tq.values() if q and q not in oyun_q})
+    bilgi = {}
+    for i in range(0, len(dis_q), 150):
+        try:
+            bilgi.update(kulup_bilgi(dis_q[i:i + 150]))
+        except Exception as e:
+            print(f"::warning::dış kulüp bilgisi: {e}")
+    ulke = {}
+    for i in range(0, len(dis_q), 150):
+        vals = " ".join("wd:" + q for q in dis_q[i:i + 150])
+        try:
+            for x in sparql(f"""SELECT ?c ?iso WHERE {{ VALUES ?c {{ {vals} }} ?c wdt:P17 ?u . ?u wdt:P297 ?iso }}"""):
+                ulke.setdefault(x["c"]["value"].rsplit("/", 1)[1], x["iso"]["value"])
+        except Exception as e:
+            print(f"::warning::dış kulüp ülkesi: {e}")
+    dis, dis_i = [], {}
+    def dis_ref(q):
+        if q in dis_i:
+            return dis_i[q]
+        b = bilgi.get(q) or {}
+        if not b.get("sehir"):
+            return None
+        renk = [RENK[r] for r in b.get("renk", []) if r in RENK][:2]
+        dis.append({"sehir": b["sehir"], "renkAd": [r[0] for r in renk], "renk": [r[1] for r in renk], "ulke": ulke.get(q, "")})
+        dis_i[q] = len(dis) - 1
+        return dis_i[q]
+    say = [0, 0]
+    for l in cikti["ligler"].values():
+        for k in l["kulupler"]:
+            for o in k["oyuncular"]:
+                ham = o.pop("_g", None)
+                if not ham:
+                    continue
+                g = []
+                for yb, ys, b, mac, gol, kira in ham["g"]:
+                    ref = oyun_t.get(b)
+                    if ref is None:
+                        q = tq.get(b)
+                        ref = oyun_q.get(q) if q else None
+                        if ref is None and q:
+                            ref = dis_ref(q)
+                    if ref is None or yb is None:
+                        continue
+                    say[0] += 1
+                    r = [yb, ys if ys is not None else 0, ref, mac if mac is not None else -1, gol if gol is not None else -1]
+                    if kira: r.append(1)
+                    g.append(r)
+                if g:
+                    o["g"] = g; say[1] += 1
+                if ham.get("mi") and ham["mi"][0]:
+                    o["mi"] = ham["mi"]
+            k.pop("_wk", None); k.pop("_q", None)
+    cikti["disKulup"] = dis
+    print(f"::notice::Geçmiş: {say[1]} oyuncu, {say[0]} satır, {len(dis)} dış kulüp")
+
+
 def main():
     eski = {}
     try:
@@ -565,10 +680,14 @@ def main():
                 if kesin:
                     ty["kesin"] = 1
                 ty["k"] = anahtar(ty)
+                if GECMIS.get(o.get("baslik") or ""):
+                    ty["_g"] = GECMIS[o["baslik"]]                     # sonra kulüpler türetilmiş adlara çevrilir
                 kulup["oyuncular"].append(ty)
+            kulup["_wk"] = wk.get(q); kulup["_q"] = q
             kul.append(kulup)
             print(f"{kod} {t}: {len(kulup['oyuncular'])} oyuncu")
         cikti["ligler"][kod] = {"ad": ladi, "ulke": ulkeAd, "kulupler": kul}
+    gecmis_coz(cikti)
     # ünlülük → 0..1 (log ölçek, tüm veri içinde)
     hepsi = [o["un"] for l in cikti["ligler"].values() for k in l["kulupler"] for o in k["oyuncular"]]
     m = max(hepsi or [1])
