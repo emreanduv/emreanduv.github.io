@@ -19,6 +19,7 @@ const NL = M.NL, NSF = M.SEFERLER.length;
 
 /* ================= KAYIT ================= */
 const SKEY = 'malazgirt-akincilari-v1';
+const SURUM = '1.6.0';
 const D = window.DIL, t = D.t, HOST = D.HOST;
 const FREE_LIMIT = 100;   // mobilde yeni oyuncu için ücretsiz bölüm sayısı (ilk iki sefer); gerisi Tam Sürüm
 // 1.5'ten önce oynayanlar bulundukları yerden bir sonraki eşiğe kadar ücretsiz devam eder (ör. 244. bölümdeki oyuncu 250'ye kadar)
@@ -37,6 +38,13 @@ for (let i = S.stars.length - 1; i >= 0; i--) if (S.stars[i]) { if (S.unlocked <
 if (DEMO) S.freeLim = FREE_LIMIT;
 else if (!S.freeLim) { S.freeLim = FREE_STEPS.find(m => m >= S.unlocked) || NL; setTimeout(persist, 0); }
 const freeLim = () => S.freeLim || FREE_LIMIT;
+// Akıncı Rehberi: hangi ipuçları gösterildi. Güncellemeyle gelen eski oyuncuya ilk bölümlerin temel ipuçları gösterilmez.
+if (!S.tips || typeof S.tips !== 'object') {
+  S.tips = {};
+  if (S.unlocked > 5) ['move', 'gate', 'block', 'squad', 'final', 'ped_weapon', 'boss', 'ped_hero'].forEach(k => S.tips[k] = 1);
+  if (S.unlocked > 10) S.tips.barricade = 1;
+}
+if (!S.rate || typeof S.rate !== 'object') S.rate = { done: 0, n: 0 };
 function persist() { const j = JSON.stringify(S); try { localStorage.setItem(SKEY, j); } catch (e) {} if (HOST && HOST.save) try { HOST.save(j); } catch (e) {} }
 if (MAC) { const sf = M.seferOf(MAC.lv), i = MAC.lv, nom = i < 50 ? i * 0.2 : Math.min(M.upCap(sf), i < 500 ? 10 + (i - 50) * 0.09 : 50.5 + (i - 500) * 0.03);
   const u = MAC.ud === null ? MAC.up : Math.max(0, Math.min(M.upCap(sf), Math.round(nom + MAC.ud))); MAC.up = u;
@@ -833,7 +841,7 @@ const starHtml = (n, total = 3) => { let s = ''; for (let k = 0; k < total; k++)
 let G = null, mode = 'menu', paused = false, hintT = 0, camX = 0, camZ = 0, lastRes = null, firstWin = false;
 function startGame(i) {
   G = M.newGame(i, S.up); buildLevelView(G); camX = 0; camZ = 0;
-  mode = 'play'; paused = false; hintT = i === 0 ? 3.2 : 0;
+  mode = 'play'; paused = false; hintT = i === 0 && !S.tips.move ? 99 : 0; dragSum = 0; coachHide();
   show(null); $('hLvl').textContent = t('Bölüm {n}', { n: i + 1 }); updateWeapon();
   drumOn = true; drumT = 0.3; unlockAudio();
   if (MAC) { $('hLvl').textContent = MAC.bk + ' – ' + MAC.rk; banner(MAC.bk + ' ordusu', MAC.rk + ' kalesine'); } else banner(G.L.ad, M.REGIONS[G.L.reg].ad);
@@ -842,12 +850,12 @@ function previewLevel(i) { G = M.newGame(i, S.up); buildLevelView(G); camX = 0; 
 function updateWeapon() { const w = M.WEAPONS[G.wTier]; $('weapon').innerHTML = w.ad + '<small>×' + D.dec(w.m) + '</small>'; arrowMat.color.set(w.c); }
 
 /* girdi: parmağını kaydır */
-let drag = false, lx = 0, keyDir = 0;
+let drag = false, lx = 0, keyDir = 0, dragSum = 0;
 let tapT = 0, tapX = 0;
 window.addEventListener('pointerdown', e => { unlockAudio(); if (mode !== 'play' || paused) return; drag = true; lx = e.clientX; tapT = performance.now(); tapX = e.clientX; });
 // Sipahi Gözü'nde kısa dokunuş (kaydırmadan) = darbe
 window.addEventListener('pointerup', e => { if (sipahiGozu() && performance.now() - tapT < 220 && Math.abs(e.clientX - tapX) < 10 && e.target.tagName !== 'BUTTON') darbe(); });
-window.addEventListener('pointermove', e => { if (!drag || !G) return; const dx = e.clientX - lx; lx = e.clientX; G.tx += dx / Math.min(window.innerWidth, 520) * 13; });
+window.addEventListener('pointermove', e => { if (!drag || !G) return; const dx = e.clientX - lx; lx = e.clientX; dragSum += Math.abs(dx); G.tx += dx / Math.min(window.innerWidth, 520) * 13; });
 ['pointerup', 'pointercancel'].forEach(t => window.addEventListener(t, () => drag = false));
 window.addEventListener('keydown', e => { if (e.key === 'ArrowLeft' || e.key === 'a') keyDir = -1; if (e.key === 'ArrowRight' || e.key === 'd') keyDir = 1; if (e.key === 'Escape') { if (mode === 'play' && !paused) pause(true); else if (curScr && curScr !== 'menu') padBack(); } if (e.key === 'F11' && HOST) { e.preventDefault(); S.fs = S.fs ? 0 : 1; persist(); applyFullscreen(); } });
 window.addEventListener('keyup', e => { if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(e.key)) keyDir = 0; });
@@ -911,6 +919,7 @@ function finish(win) {
     $('wGain').textContent = gain;
     $('wNext').textContent = t(i === NL - 1 ? 'SEFER HARİTASI' : last ? 'YENİ SEFER' : 'DEVAM');
     show('win'); fanfare(); for (let k = 0; k < stars; k++) setTimeout(() => SFX.star(k), 300 + k * 250);
+    if (firstWin) maybeAskRate(i);
   } else {
     let tip;
     if (G.wTier === 0 && G.L.objs.some(o => o.t === 'pedestal')) tip = t('Kaideleri okla sıfırla: daha güçlü bir yay, ordunun gücünü katlar.');
@@ -923,7 +932,7 @@ function finish(win) {
 }
 
 /* ================= EKRANLAR ================= */
-const SCR = { menu: 'scrMenu', levels: 'scrLevels', camp: 'scrCamp', brief: 'scrBrief', pause: 'scrPause', win: 'scrWin', lose: 'scrLose', set: 'scrSet', full: 'scrFull' };
+const SCR = { help: 'scrHelp', menu: 'scrMenu', levels: 'scrLevels', camp: 'scrCamp', brief: 'scrBrief', pause: 'scrPause', win: 'scrWin', lose: 'scrLose', set: 'scrSet', full: 'scrFull' };
 let curScr = 'menu';
 function show(n) {
   for (const k in SCR) $(SCR[k]).hidden = k !== n;
@@ -1010,7 +1019,7 @@ function openBrief(i) {
   $('brCamp').hidden = !canUpgrade();
   previewLevel(i); show('brief');
 }
-function pause(on) { if (mode !== 'play') return; paused = on; drag = false; show(on ? 'pause' : null); drumOn = !on; }
+function pause(on) { if (mode !== 'play') return; paused = on; drag = false; if (on) coachHide(); show(on ? 'pause' : null); drumOn = !on; }
 
 document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { SFX.click(); const g = b.dataset.go; if (g === 'menu') { previewLevel(nextLevel()); } show(g); }));
 $('bPlay').addEventListener('click', () => { unlockAudio(); SFX.click(); openBrief(nextLevel()); });
@@ -1169,7 +1178,7 @@ function moveFocus(dir) {
 }
 function padBack() {
   if (mode === 'play' && !paused) { pause(true); return; }
-  const back = { levels: () => $('scrLevels').querySelector('.back').click(), camp: () => $('cBack').click(), brief: () => $('scrBrief').querySelector('.back').click(), pause: () => $('pResume').click(), set: () => $('setOk').click(), full: () => $('fLater').click(), win: () => $('wMenu').click(), lose: () => $('lMenu').click() }[curScr];
+  const back = { levels: () => $('scrLevels').querySelector('.back').click(), camp: () => $('cBack').click(), brief: () => $('scrBrief').querySelector('.back').click(), pause: () => $('pResume').click(), set: () => $('setOk').click(), help: () => $('helpBack').click(), full: () => $('fLater').click(), win: () => $('wMenu').click(), lose: () => $('lMenu').click() }[curScr];
   if (back) back();
 }
 function pollPad(dt) {
@@ -1180,7 +1189,7 @@ function pollPad(dt) {
   const stick = { l: ax < -0.6 || b(14), r: ax > 0.6 || b(15), u: ay < -0.6 || b(12), d: ay > 0.6 || b(13) };
   if (!padActive && (Math.abs(ax) > 0.5 || p.buttons.some(x => x.pressed))) { padActive = true; }
   if (mode === 'play' && !paused && G) {
-    const v = Math.abs(ax) > 0.15 ? ax : b(14) ? -1 : b(15) ? 1 : 0; G.tx += v * 14 * dt;
+    const v = Math.abs(ax) > 0.15 ? ax : b(14) ? -1 : b(15) ? 1 : 0; G.tx += v * 14 * dt; dragSum += Math.abs(v) * 400 * dt;
     if (edge(9) || edge(1)) pause(true);
     if (edge(3)) setView(S.view === 'sipahi' ? 'kus' : 'sipahi');   // Y / △: görüş
     if (edge(0) && sipahiGozu()) darbe();   // A / ✕: sipahi darbesi
@@ -1287,8 +1296,9 @@ function frame(now) {
     if (darbeT > 0) darbeT -= dt; darbeK = Math.max(0, darbeK - dt * 5);
     if (mode === 'play' && !paused) {
       G.tx += keyDir * 12 * dt;
-      M.step(G, dt); handleEvents(); drumLoop(dt);
-      if (hintT > 0) { hintT -= dt; } $('hint').hidden = !(hintT > 0);
+      M.step(G, dt * coachSlow()); handleEvents(); coachTick(dt); drumLoop(dt);
+      if (hintT > 50 && (dragSum > 140 || keyDir)) { hintT = 0; S.tips.move = 1; persist(); popup(t('Harika!'), G.x, 3, G.z, 'gold'); }   // ilk bölüm: kaydırmayı öğrenene kadar ipucu kalır
+      if (hintT > 0 && hintT < 50) { hintT -= dt; } $('hint').hidden = !(hintT > 0);
       if (G.state === 'win' && mode === 'play') finish(true);
       else if (G.state === 'lose' && mode === 'play') { mode = 'dying'; setTimeout(() => finish(false), 700); }
     } else $('hint').hidden = true;
@@ -1372,5 +1382,118 @@ function boot() {
 }
 // yazı tipi yüklenince başla (tuval etiketleri doğru yazı tipiyle çizilsin)
 const ready = document.fonts && document.fonts.load ? Promise.race([Promise.all([document.fonts.load('800 64px "Baloo 2"'), document.fonts.load('600 16px "Baloo 2"')]), new Promise(r => setTimeout(r, 1500))]) : Promise.resolve();
+
+
+/* ================= AKINCI REHBERİ, PUAN, PAYLAŞ, GÖRÜŞ (1.6) =================
+   Test kullanıcılarının önerileri: yeni oyuncuya adım adım rehber, her an açılabilen "Nasıl Oynanır",
+   uygulama içi puan verme, oyunu ve zaferi paylaşma, oyun içinden görüş bildirme. */
+const TIPS = [
+  ['move', '👆', 'Ordunu yönet', 'Parmağını sağa sola kaydır (klavyede ← → ya da A / D). Akıncıların kendiliğinden ilerler ve durmadan ok atar.'],
+  ['gate', '🚪', 'Kapıyı seç', 'Her kapının iki yüzü var: + ve × ordunu büyütür, − ve ÷ eritir. Büyüten tarafa geç.'],
+  ['block', '🧱', 'Mavi blok', 'Okla kır, üstündeki sayı kadar akıncı katılır. Çarpma: birkaç akıncı kaybedersin.'],
+  ['squad', '⚔️', 'Düşman birliği', 'Okların onu uzaktan eritir; çarpışınca iki taraf da asker kaybeder. Önce ordunu büyüt.'],
+  ['final', '🚩', 'Kale önündeki ordu', 'Bölümün sonu. Kalabalık bir orduyla var, kale düşsün.'],
+  ['ped_weapon', '🏹', 'Yay kaidesi', 'Üstündeki sayıyı okla sıfırla: daha güçlü bir yay kazanırsın, ordunun gücü katlanır.'],
+  ['ped_hero', '🌟', 'Altın Alp kaidesi', 'Sıfırla, Altın Alp ordunun önüne geçsin. Altın Alp güçlü bir kahramandır.'],
+  ['ped_troops', '🐎', 'Akıncı kaidesi', 'Sıfırla, yeni akıncılar ordunu büyütsün.'],
+  ['boss', '🛡️', 'Dev!', 'Can çubuğu bitene kadar ok yağdır. Ordun ve yayın ne kadar güçlüyse dev o kadar çabuk düşer.'],
+  ['barricade', '🪵', 'Barikat', 'Okla kır ya da yanından geç. Üstüne sürersen akıncı kaybedersin.'],
+  ['kervan', '💰', 'Ganimet kervanı', 'Okla vur, akçe kazan. Çarparsan ganimet dağılır. Akçeyle Ordugâh\'ta kalıcı geliştirme alırsın.'],
+  ['tas', '🪨', 'Mancınık taşı', 'Kırmızı halkaya taş düşecek: halkanın dışına çekil.'],
+  ['gecit', '⛰️', 'Dar geçit', 'Sığmayan akıncılar sıkışıp kaybolur. Ortadan geç; tabelada kaç kişi sığdığı yazar.'],
+  ['hendek', '🌉', 'Hendek', 'Yalnızca köprünün üstünden kayıpsız geçilir.'],
+  ['sur', '🏰', 'Sur duvarı', 'Yolu kapatıyor: oklarla yık, sonra geç.'],
+  ['gulle', '💣', 'Top güllesi!', 'Kırmızı şerit güllenin yolu: şeritten çekil.'],
+  ['sipahi', '🗡️', 'Sipahi Gözü', 'Atın sırtındasın: kısa dokunarak (Boşluk / A) önündeki düşmana kılıç vur. 🐎 / 🦅 düğmesiyle görüşü değiştir.'],
+  ['camp', '⛺', 'Ordugâh', 'Bölümlerden kazandığın akçeyle başlangıç ordusunu, ok gücünü, atış hızını ve zırhı kalıcı olarak geliştir.'],
+  ['stars', '⭐', 'Yıldızlar', 'Bölümü ne kadar büyük bir orduyla bitirirsen o kadar yıldız. Eski bölümleri yeniden oynayıp yıldız ve akçe topla.'],
+];
+const TIP = Object.fromEntries(TIPS.map(r => [r[0], r]));
+let coachT = 0, slowT = 0;
+const coachSlow = () => (slowT > 0 ? 0.35 : 1);
+function tipKey(o) {
+  if (o.t === 'squad') return o.final ? 'final' : 'squad';
+  if (o.t === 'pedestal') return 'ped_' + (o.kind || 'weapon');
+  return TIP[o.t] ? o.t : null;
+}
+function coach(k) {
+  const r = TIP[k]; if (!r) return;
+  S.tips[k] = 1; persist();
+  $('coachIc').textContent = r[1]; $('coachH').textContent = t(r[2]); $('coachT').textContent = t(r[3]);
+  $('coach').hidden = false; coachT = 4.6; slowT = k === 'final' || k === 'sipahi' ? 0 : 1.5;   // bir an ağır çekim: oyuncu okuyup karar verebilsin
+}
+function coachHide() { coachT = 0; slowT = 0; $('coach').hidden = true; }
+function coachTick(dt) {
+  if (slowT > 0) slowT -= dt;
+  if (coachT > 0) { coachT -= dt; if (coachT <= 0) coachHide(); return; }
+  if (!G || MAC || (window.VR && VR.on) || hintT > 50) return;
+  if (sipahiGozu() && !S.tips.sipahi) return coach('sipahi');
+  const ahead = z => G.z - z > -1 && G.z - z < 24;
+  if (!S.tips.gate) for (const g of G.gates) if (!g.passed && ahead(g.z)) return coach('gate');
+  for (const o of G.objs) { if (!o.alive) continue; const k = tipKey(o); if (k && !S.tips[k] && ahead(o.z + (o.d || 0) / 2)) return coach(k); }
+}
+$('coach').addEventListener('pointerdown', e => { e.stopPropagation(); coachHide(); });
+
+let helpFrom = 'menu';
+function openHelp(from) {
+  helpFrom = from;
+  $('helpList').innerHTML = TIPS.map(r => '<div class="tip' + (S.tips[r[0]] ? '' : ' new') + '"><b aria-hidden="true">' + r[1] + '</b><div><strong>' + t(r[2]) + '</strong><span>' + t(r[3]) + '</span></div></div>').join('');
+  show('help'); $('scrHelp').scrollTop = 0;
+}
+function closeHelp() { SFX.click(); show(helpFrom); }
+$('bHelp').addEventListener('click', () => { SFX.click(); openHelp('menu'); });
+$('pHelp').addEventListener('click', () => { SFX.click(); openHelp('pause'); });
+$('setHelp').addEventListener('click', () => { SFX.click(); openHelp('set'); });
+$('helpBack').addEventListener('click', closeHelp);
+$('helpOk').addEventListener('click', closeHelp);
+$('helpReset').addEventListener('click', () => { SFX.click(); S.tips = {}; persist(); openHelp(helpFrom); toast(t('Rehber, sıradaki bölümlerde baştan gösterilecek.')); });
+
+let toastTm = 0;
+function toast(msg) { $('toast').textContent = msg; $('toast').hidden = false; clearTimeout(toastTm); toastTm = setTimeout(() => { $('toast').hidden = true; }, 2600); }
+
+// mağaza bağlantısı: paylaşırken ve puan sayfası için
+const STORE_URL = D.platform === 'ios' ? 'https://apps.apple.com/app/id6822718671' : 'https://play.google.com/store/apps/details?id=com.anduv.malazgirt';
+const CANRATE = D.platform === 'android' || D.platform === 'ios';
+function openUrl(u) { if (u.startsWith('mailto:')) { location.href = u; return; } try { window.open(u, '_blank'); } catch (e) { location.href = u; } }
+async function shareGame(text) {
+  text = text || t('Malazgirt Akıncıları: akıncılarını büyüt, doğru kapıyı seç! Malazgirt\'ten Fetih Yolu\'na 1453 bölüm, ilk 100 bölüm ücretsiz.');
+  const P = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share;
+  try {
+    if (P && P.share) { await P.share({ title: 'Malazgirt Akıncıları', text, url: STORE_URL, dialogTitle: t('Arkadaşına öner') }); return; }
+    if (navigator.share) { await navigator.share({ title: 'Malazgirt Akıncıları', text, url: STORE_URL }); return; }
+  } catch (e) { if (/cancel|abort/i.test((e && (e.message || e.name)) || '')) return; }
+  try { await navigator.clipboard.writeText(text + ' ' + STORE_URL); toast(t('Bağlantı kopyalandı, istediğin yere yapıştır.')); } catch (e) { toast(STORE_URL); }
+}
+$('bShare').addEventListener('click', () => { SFX.click(); shareGame(); });
+$('setShare').addEventListener('click', () => { SFX.click(); shareGame(); });
+$('wShare').addEventListener('click', () => { SFX.click(); if (!lastRes) return shareGame();
+  shareGame(t('Malazgirt Akıncıları\'nda {n}. bölümü {s} yıldızla geçtim! Sen de akına katıl:', { n: lastRes.i + 1, s: lastRes.stars })); });
+
+function feedback() {
+  const sub = 'Malazgirt Akıncıları – ' + t('Görüş ve öneri') + ' (' + SURUM + ', ' + D.platform + ')';
+  const body = t('Merhaba, oyunla ilgili görüşüm:') + '\n\n\n— ' + t('Bölüm') + ' ' + Math.min(NL, S.unlocked) + ' · ' + SURUM + ' · ' + D.platform;
+  openUrl('mailto:emreanduvart@gmail.com?subject=' + encodeURIComponent(sub) + '&body=' + encodeURIComponent(body));
+}
+$('setFeed').addEventListener('click', () => { SFX.click(); feedback(); });
+
+// puan: 7., 25. ve 60. bölümler ilk kez geçilince, en çok iki kez sorulur; yenilgide asla sorulmaz
+const RATE_AT = [6, 24, 59];
+function maybeAskRate(i) {
+  if (!CANRATE || S.rate.done || S.rate.n >= 2 || !RATE_AT.includes(i)) return;
+  setTimeout(() => { if (curScr === 'win') { $('rateBox').hidden = false; $('rateYes').focus(); } }, 1800);
+}
+async function rateNow() {
+  S.rate.done = 1; persist();
+  const R = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.InAppReview;
+  try { if (R && R.requestReview) { await R.requestReview(); return; } } catch (e) {}
+  openUrl(STORE_URL);
+}
+function rateClose() { $('rateBox').hidden = true; }
+$('rateYes').addEventListener('click', () => { SFX.click(); rateClose(); rateNow(); });
+$('rateNo').addEventListener('click', () => { SFX.click(); rateClose(); S.rate.n++; persist(); feedback(); });
+$('rateLater').addEventListener('click', () => { SFX.click(); rateClose(); S.rate.n++; persist(); });
+$('setRate').addEventListener('click', () => { SFX.click(); rateNow(); });
+$('setRateRow').hidden = !CANRATE;
+
 ready.then(boot, boot);
 })();

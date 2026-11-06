@@ -101,6 +101,30 @@ button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .setrow .alt{font-size:15px;padding:8px 12px 5px}
 #creditEn{display:block;font-size:12px;opacity:.8}
 :focus-visible{outline:3px solid #f0b232;outline-offset:3px}
+/* Akıncı Rehberi: ilk karşılaşmada kısa ipucu kartı */
+#coach{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 118px);transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:12px;width:min(92vw,460px);box-sizing:border-box;
+  background:var(--paper);color:var(--ink);border-radius:18px;padding:10px 14px;box-shadow:0 5px 0 var(--paper-d),0 10px 24px rgba(0,0,0,.35);border:3px solid var(--gold);animation:coachIn .35s ease-out}
+#coach[hidden]{display:none}
+#coach b{font-size:34px;line-height:1;flex:none}
+#coach strong{display:block;font-size:17px;color:var(--lapis-d,#12305a)}
+#coach span{display:block;font-size:15px;font-weight:600;line-height:1.3}
+@keyframes coachIn{from{opacity:0;transform:translate(-50%,-14px)}to{opacity:1;transform:translate(-50%,0)}}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);transform:translateX(-50%);z-index:9;background:rgba(10,22,42,.92);color:#fff;border-radius:14px;padding:10px 16px;font-weight:700;font-size:15px;max-width:88vw;text-align:center}
+#toast[hidden]{display:none}
+.tips{width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px}
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--paper);color:var(--ink);border-radius:16px;padding:12px 14px;box-shadow:0 4px 0 var(--paper-d)}
+.tip b{font-size:30px;line-height:1;flex:none}
+.tip strong{display:block;font-size:17px}
+.tip span{display:block;font-size:15px;font-weight:600;line-height:1.35}
+.tip.new{border:3px solid var(--gold)}
+#rateBox{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;background:rgba(8,18,36,.72);padding:16px;box-sizing:border-box}
+#rateBox[hidden]{display:none}
+#rateBox .card{background:var(--paper);color:var(--ink);border-radius:22px;padding:20px 18px;max-width:420px;width:100%;text-align:center;box-shadow:0 6px 0 var(--paper-d)}
+#rateBox h3{margin:0 0 6px;font-size:24px}
+#rateBox p{margin:0 0 14px;font-weight:600}
+#rateBox .stack{gap:8px}
+.mini{font-size:15px!important;padding:8px 14px 5px!important}
+body.vr-on #coach{display:none!important}
 body.temiz #hud,body.temiz #weapon,body.temiz #bubble,body.temiz #sndBtn,body.temiz #setBtn,body.temiz #pops,body.temiz #hint,body.temiz #banner{display:none!important}
 
 /* Bölüm haritası */
@@ -202,6 +226,8 @@ body.vr-on #hud,body.vr-on #weapon,body.vr-on #bubble,body.vr-on #pops,body.vr-o
 <div id="bubble" hidden></div>
 <div id="hint" hidden data-t>← Kaydır →</div>
 <div id="pops"></div>
+<div id="coach" hidden role="status" aria-live="polite"><b id="coachIc"></b><div><strong id="coachH"></strong><span id="coachT"></span></div></div>
+<div id="toast" hidden role="status" aria-live="polite"></div>
 
 <button id="sndBtn" aria-label="Sesi kapat"></button>
 <button id="setBtn" data-ta="Ayarlar" aria-label="Ayarlar"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z"/></svg></button>
@@ -218,6 +244,7 @@ body.vr-on #hud,body.vr-on #weapon,body.vr-on #bubble,body.vr-on #pops,body.vr-o
     <div class="meta"><div class="pill"><b class="akce"></b><span id="mCoins">0</span> <span data-t>akçe</span></div><div class="pill" id="mStars">0 / 150 yıldız</div></div>
     <button class="big" id="bPlay" data-t>SEFERE ÇIK<small id="bPlaySub">Bölüm 1 · Halep Kapısı</small></button>
     <div class="row"><button class="alt" id="bLevels" data-t>Bölümler</button><button class="alt dark" id="bCamp" data-t>Ordugâh</button></div>
+    <div class="row"><button class="alt dark mini" id="bHelp" data-t>Nasıl Oynanır</button><button class="alt dark mini" id="bShare" data-t>Arkadaşına öner</button></div>
     <button class="fullchip" id="bFull" hidden><span aria-hidden="true">★ </span><span data-t>Tam Sürüm</span></button>
     <p class="credit">Bir Mr. Anduv! yapımıdır.<span id="creditEn"></span></p>
   </div>
@@ -260,6 +287,7 @@ body.vr-on #hud,body.vr-on #weapon,body.vr-on #bubble,body.vr-on #pops,body.vr-o
     <div class="stack">
       <button class="big" id="pResume" data-t>DEVAM</button>
       <div class="row"><button class="alt" id="pRestart" data-t>Yeniden</button><button class="alt dark" id="pMenu" data-t>Menü</button></div>
+      <button class="alt dark mini" id="pHelp" data-t>Nasıl Oynanır</button>
     </div>
   </div>
 </section>
@@ -275,6 +303,7 @@ body.vr-on #hud,body.vr-on #weapon,body.vr-on #bubble,body.vr-on #pops,body.vr-o
     <div class="stack">
       <button class="big" id="wNext">DEVAM</button>
       <div class="row"><button class="alt" id="wRetry" data-t>Tekrar</button><button class="alt dark" id="wMenu" data-t>Menü</button></div>
+      <button class="alt dark mini" id="wShare" data-t>Zaferi paylaş</button>
     </div>
   </div>
 </section>
@@ -302,12 +331,33 @@ body.vr-on #hud,body.vr-on #weapon,body.vr-on #bubble,body.vr-on #pops,body.vr-o
     <div class="setrow"><span data-t>Görüş</span><div class="seg" id="setView"><button data-v="kus" data-t>Kuşbakışı</button><button data-v="sipahi" data-t>Sipahi Gözü</button></div></div>
     <div class="setrow"><span data-t>Grafik kalitesi</span><div class="seg" id="setQ"><button data-v="dusuk" data-t>Düşük</button><button data-v="orta" data-t>Orta</button><button data-v="yuksek" data-t>Yüksek</button></div></div>
     <div class="setrow" id="setFsRow"><span data-t>Tam ekran</span><div class="seg" id="setFs"><button data-v="1" data-t>Açık</button><button data-v="0" data-t>Kapalı</button></div></div>
+    <div class="setrow"><span data-t>Yardım</span><button class="alt" id="setHelp" data-t>Nasıl Oynanır</button></div>
+    <div class="setrow" id="setRateRow"><span data-t>Oyunu değerlendir</span><button class="alt" id="setRate" data-t>★ Puan ver</button></div>
+    <div class="setrow"><span data-t>Arkadaşına öner</span><button class="alt" id="setShare" data-t>Paylaş</button></div>
+    <div class="setrow"><span data-t>Görüş ve öneri</span><button class="alt" id="setFeed" data-t>Bize yaz</button></div>
     <div class="setrow"><span data-t>Oyun verileri</span><button class="alt dark" id="setErase" data-t>Verilerimi sil</button></div>
     <div class="setrow" id="setFullRow" hidden><span data-t>Tam Sürüm</span><button class="alt" id="setBuy" data-t>Satın al</button><button class="alt" id="setRestore" data-t>Satın alımları geri yükle</button></div>
   </div>
   <div class="stack"><button class="big" id="setOk" data-t>Tamam</button><button class="alt dark" id="setQuit" hidden data-t>Oyundan çık</button></div>
   <p class="credit">Bir Mr. Anduv! yapımıdır.</p>
 </section>
+
+<!-- Nasıl oynanır (Akıncı Rehberi) -->
+<section id="scrHelp" class="screen solid" hidden>
+  <div class="topbar"><button class="back" id="helpBack" data-ta="Geri" aria-label="Geri">‹</button><h2 data-t>Nasıl Oynanır</h2></div>
+  <div class="tips" id="helpList"></div>
+  <div class="stack"><button class="big" id="helpOk" data-t>Tamam</button><button class="alt dark mini" id="helpReset" data-t>Rehberi baştan göster</button></div>
+  <p class="credit">Bir Mr. Anduv! yapımıdır.</p>
+</section>
+
+<div id="rateBox" hidden role="dialog" aria-modal="true" aria-labelledby="rateH">
+  <div class="card">
+    <h3 id="rateH" data-t>Akın nasıl gidiyor?</h3>
+    <p data-t>Malazgirt Akıncıları'nı beğendiysen birkaç saniyeni ayırıp puan verir misin? Bu, oyunu daha çok kişinin bulmasını sağlar.</p>
+    <div class="stack"><button class="big" id="rateYes" data-t>★ Puan ver</button>
+      <div class="row"><button class="alt" id="rateNo" data-t>Önerim var</button><button class="alt dark" id="rateLater" data-t>Sonra</button></div></div>
+  </div>
+</div>
 
 <!-- Tam sürüm -->
 <section id="scrFull" class="screen veil" hidden>
