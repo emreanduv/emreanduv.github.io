@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><title>Aktar</title>
+<body style="font:16px system-ui;padding:20px">Görseller aktarılıyor…
+<script>
+/* Mağaza görsellerini (geçici daldan) bu sekmeyi açan sayfaya iletir: ?k=<commit>&d=a.png,b.png */
+(async () => {
+  const q = new URLSearchParams(location.search), k = q.get('k'), d = (q.get('d') || '').split(',').filter(Boolean);
+  const out = [];
+  for (const n of d) { const r = await fetch(`https://raw.githubusercontent.com/emreanduv/kaptan-mecit/${k}/${n}`); out.push({ ad: n, blob: await r.blob() }); }
+  if (window.opener) window.opener.postMessage({ aktar: out }, '*');
+  document.body.textContent = `${out.length} dosya aktarıldı. Bu sekmeyi kapatabilirsin.`;
+})();
+</script>
