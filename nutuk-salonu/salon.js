@@ -78,7 +78,7 @@ function perdeCiz(){
     for(const l of sar(x, `${M.simge} ${M.baslik}`, GEN).slice(0, 3)){ x.fillText(l, L, y); y += 112; }
     x.fillStyle = '#3c4a5e'; x.font = "500 54px 'DM Sans'"; y += 20;
     for(const l of sar(x, M.ne, GEN).slice(0, 4)){ x.fillText(l, L, y); y += 70; }
-    x.fillStyle = RENK.teal; x.font = "800 44px 'DM Sans'"; x.fillText(`${S.length} satır · başlamak için ▶`, L, Hc - 150);
+    x.fillStyle = RENK.teal; x.font = "800 44px 'DM Sans'"; x.fillText(`${S.length} satır · başlamak için ▶︎`, L, Hc - 150);
   } else if(s.o){ // özgün söz + bugünün Türkçesi
     x.fillStyle = '#5a6476'; x.font = "800 40px 'DM Sans'"; x.fillText(M.baslik, L, 240);
     x.fillStyle = RENK.red; x.font = "900 180px Georgia,serif"; x.fillText('“', L - 20, 420);
@@ -95,7 +95,7 @@ function perdeCiz(){
   x.fillStyle = '#0000001a'; yuvarlak(x, L, Hc - 92, 900, 22, 11); x.fill();
   const gr = x.createLinearGradient(L, 0, L + 900, 0); gr.addColorStop(0, RENK.red); gr.addColorStop(1, RENK.gold); x.fillStyle = gr; yuvarlak(x, L, Hc - 92, Math.max(22, 900 * once / toplam), 22, 11); x.fill();
   x.fillStyle = RENK.muted; x.font = "800 36px 'DM Sans'"; x.fillText(durum.si < 0 ? 'başlık' : `satır ${durum.si + 1}/${S.length}`, L + 930, Hc - 72);
-  x.textAlign = 'right'; x.fillText('▶ tetik · ◀ kavrama', Wc - 70, Hc - 72); x.textAlign = 'left';
+  x.textAlign = 'right'; x.fillText('▶︎ tetik · ◀︎ kavrama', Wc - 70, Hc - 72); x.textAlign = 'left';
   perdeT.needsUpdate = true;
   $('#bolum').value = String(durum.mi);
   $('#alt').textContent = `${M.bolum}. bölüm · ${M.baslik}`;
@@ -146,17 +146,17 @@ const Y = yardimKur({ THREE, scene, camera, renderer, tiklanir, ad:'Nutuk Salonu
   silMetni:'rehberde hangi ipuçlarını gördüğün (salon başka hiçbir şey kaydetmez).', ilerleme:() => V ? `bölüm ${durum.mi + 1}/${V.metinler.length}` : '',
   renk:{ bant:'#132545', bant2:'#162b52', vurgu:'#e0b04a', kagit:'#fbf7ef', kagit2:'#f1eadc', murekkep:'#1c2a44', dugme:'#c8102e' },
   temel:{ m:["<b>Nutuk Salonu</b>, 1927'deki Meclis salonudur. Bir sırada oturuyorsun; kürsünün üstündeki perdede Nutuk'un özgün satırları belirir, altında bugünün Türkçesi. Önündeki masada Kurtuluş Yolu haritası var.",
-      "<b>Başlamak için:</b> ▶ ile sonraki satıra geç, ◀ ile geri dön. Alttaki listeden bölüm seç ya da haritadaki altın iğnelere dokun. VR gözlüğün varsa üstteki 🥽 düğmesiyle salona gir."],
+      "<b>Başlamak için:</b> ▶︎ ile sonraki satıra geç, ◀︎ ile geri dön. Alttaki listeden bölüm seç ya da haritadaki altın iğnelere dokun. VR gözlüğün varsa üstteki 🥽 düğmesiyle salona gir."],
     v:["Nutuk Salonu, 1927'deki Meclis salonu. Kürsünün üstündeki perdede Nutuk'un özgün satırları, altında bugünün Türkçesi; önündeki masada Kurtuluş Yolu.",
       "Tetik: sonraki satır · kavrama: önceki satır. Perdeye, düğmelere, iğnelere ya da zemine nişan alıp tetikle. Sağ çubukla dön.",
       "Bu pano: kumandada A, B, X ya da Y tuşu veya bel hizandaki ? düğmesi."] },
   ipuclari:[
-    { id:'giris', b:'📜 Kürsüdeki perde', m:'▶ ya da boşluk tuşu sonraki satıra geçer, ◀ geri alır. Perdeye dokunmak da ilerletir. ⏵ Oto satırları okuma hızında kendiliğinden akıtır.', v:'Tetik sonraki satıra geçer, kavrama geri alır. Perdenin altındaki ◀ ⏵ ▶ düğmelerine nişan alıp da tetikleyebilirsin; ⏵ satırları kendiliğinden akıtır.' },
+    { id:'giris', b:'📜 Kürsüdeki perde', m:'▶︎ ya da boşluk tuşu sonraki satıra geçer, ◀︎ geri alır. Perdeye dokunmak da ilerletir. ⏵︎ Oto satırları okuma hızında kendiliğinden akıtır.', v:'Tetik sonraki satıra geçer, kavrama geri alır. Perdenin altındaki ◀︎ ⏵︎ ▶︎ düğmelerine nişan alıp da tetikleyebilirsin; ⏵︎ satırları kendiliğinden akıtır.' },
     { id:'yuru', b:'🚶 Salonda dolaş', m:'Sürükleyerek etrafına bak. Zemine çift dokun ya da W A S D tuşlarıyla yürü; fare tekerleği yakınlaştırır.', v:'Zemine nişan alıp tetikle: oraya yürürsün. Sağ çubuğu yana itince 30° dönersin.' },
     { id:'harita', b:'🗺️ Kurtuluş Yolu masası', m:'Önündeki masada Anadolu var. Altın iğneler Kurtuluş Yolu\'nun durakları: birine dokununca o durağın bölümü kürsüde açılır, kırmızı iz yolu gösterir.', v:'Önündeki masada Anadolu var. Altın iğnelerden birine nişan alıp tetikle: o durağın bölümü kürsüde açılır.' },
     { id:'bolum', b:'📚 Bölümler', m:'Alttaki listeden istediğin bölüme atla. Bir bölüm bitince sıradaki kendiliğinden başlar; perdenin altındaki çubuk ne kadar ilerlediğini gösterir.', v:'Bir bölüm bitince sıradaki kendiliğinden başlar; perdenin altındaki çubuk ne kadar ilerlediğini gösterir.' },
     { id:'panolar', b:'⏳ Duvar panoları', m:'Sol duvarda kronoloji, sağ duvarda "Biliyor muydun?" panosu birkaç saniyede bir yenilenir.' },
-    { id:'oto', b:'⏵ Oto', m:'Oto açıkken satırlar uzunluklarına göre kendiliğinden ilerler. ⏸ ile durdurursun.', v:'Oto açıkken satırlar uzunluklarına göre kendiliğinden ilerler. Ortadaki düğmeyle durdurursun.' },
+    { id:'oto', b:'⏵︎ Oto', m:'Oto açıkken satırlar uzunluklarına göre kendiliğinden ilerler. ⏸︎ ile durdurursun.', v:'Oto açıkken satırlar uzunluklarına göre kendiliğinden ilerler. Ortadaki düğmeyle durdurursun.' },
     { id:'yardim', b:'❓ Yardım hep yanında', m:'Üstteki ? düğmesi bu rehberi açar: bütün ipuçları, "Rehberi baştan göster", görüş yazma ve Verilerimi sil.', v:'Kumandadaki A, B, X ya da Y tuşu veya bel hizandaki ? düğmesi bu panoyu açar: bütün ipuçları ve Verilerimi sil.' },
   ], sira:['giris', 'yuru', 'harita', 'yardim', 'bolum', 'panolar'], temelIpuclari:['giris', 'yuru'] });
 
@@ -236,7 +236,7 @@ function kur(){
   // perdenin altında üç düğme
   const dug = (simge, ad, x) => { const [c, cx] = tuval(256, 256); yuvarlak(cx, 8, 8, 240, 240, 40); cx.fillStyle = '#f1eadc'; cx.fill(); cx.strokeStyle = '#c8102e'; cx.lineWidth = 10; cx.stroke(); cx.fillStyle = RENK.ink; cx.font = "900 120px 'DM Sans'"; cx.textAlign = 'center'; cx.fillText(simge, 128, 168);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map:doku(c), transparent:true, toneMapped:false })); m.position.set(x, 2.02, ZON + 0.62); m.name = ad; scene.add(m); tiklanir.push(m); return m; };
-  dug('◀', 'geri', -0.6); dug('▶', 'ileri', 0.6); otoDug = dug('⏵', 'oto', 0);
+  dug('◀︎', 'geri', -0.6); dug('▶︎', 'ileri', 0.6); otoDug = dug('⏵︎', 'oto', 0);
 
   // sıralar (instanced)
   const sMat = new THREE.MeshStandardMaterial({ map:doku(tahta(256, 256, [96, 58, 30]), [3, 1]), roughness:.65 });
@@ -330,7 +330,7 @@ function yuru(n){
   const kafa = new THREE.Vector3(); camera.getWorldPosition(kafa);
   rig.position.x += x - kafa.x; rig.position.z += z - kafa.z;
 }
-function otoAyarla(v){ if(v) Y.ipucu('oto'); durum.oto = v; durum.sonraki = performance.now() + sure(); $('#oto').classList.toggle('on', v); $('#oto').textContent = v ? '⏸ Oto' : '⏵ Oto'; }
+function otoAyarla(v){ if(v) Y.ipucu('oto'); durum.oto = v; durum.sonraki = performance.now() + sure(); $('#oto').classList.toggle('on', v); $('#oto').textContent = v ? '⏸︎ Oto' : '⏵︎ Oto'; }
 
 // masaüstü/telefon: sürükleyerek bak, çift tıkla yürü
 let suruk = null, yaw = 0, pitch = 0.16; const eul = new THREE.Euler(0, 0, 0, 'YXZ');

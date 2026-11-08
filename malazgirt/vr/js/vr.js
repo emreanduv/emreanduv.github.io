@@ -500,8 +500,8 @@ window.VR_KUR = function (O) {
       const SF = M.SEFERLER[lvSef], a0 = M.SEF0[lvSef], n = SF.n, per = 40, pages = Math.ceil(n / per);
       if (lvPage < 0) lvPage = Math.max(0, Math.min(pages - 1, Math.floor((nextLevel() - a0) / per)));
       head('', 'ana');
-      btn(150, 30, 80, 70, '◀', '', () => { lvSef--; lvPage = 0; pDirty = true; SFX.click(); }, { dis: lvSef <= 0, fs: 40 });
-      btn(PW - 330, 30, 80, 70, '▶', '', () => { lvSef++; lvPage = 0; pDirty = true; SFX.click(); }, { dis: lvSef >= M.SEFERLER.length - 1 || M.SEF0[lvSef + 1] + 1 > s.unlocked, fs: 40 });
+      btn(150, 30, 80, 70, '◀︎', '', () => { lvSef--; lvPage = 0; pDirty = true; SFX.click(); }, { dis: lvSef <= 0, fs: 40 });
+      btn(PW - 330, 30, 80, 70, '▶︎', '', () => { lvSef++; lvPage = 0; pDirty = true; SFX.click(); }, { dis: lvSef >= M.SEFERLER.length - 1 || M.SEF0[lvSef + 1] + 1 > s.unlocked, fs: 40 });
       px.textAlign = 'center'; px.fillStyle = '#fff'; px.font = '800 36px "Baloo 2", sans-serif'; px.fillText(t('{n}. Sefer: {a}', { n: lvSef + 1, a: SF.ad }), PW / 2 - 70, 64);
       px.fillStyle = '#ffe9a8'; px.font = '600 24px "Baloo 2", sans-serif'; px.fillText(SF.yil + ' · ' + SF.alt, PW / 2 - 70, 96);
       const k0 = lvPage * per;
@@ -510,9 +510,9 @@ window.VR_KUR = function (O) {
         btn(cx2, cy2, 104, 98, lock ? '🔒' : String(i + 1), lock ? '' : '★'.repeat(st) + '☆'.repeat(3 - st), () => play(i), { dis: lock, sel: i === nextLevel(), fs: 34, fs2: 22 });
       }
       if (pages > 1) {
-        btn(300, 690, 140, 60, '◀', '', () => { lvPage--; pDirty = true; SFX.click(); }, { dis: lvPage <= 0, fs: 34 });
+        btn(300, 690, 140, 60, '◀︎', '', () => { lvPage--; pDirty = true; SFX.click(); }, { dis: lvPage <= 0, fs: 34 });
         px.fillStyle = '#fff'; px.font = '700 28px "Baloo 2", sans-serif'; px.textAlign = 'center'; px.fillText((lvPage + 1) + ' / ' + pages, PW / 2, 730);
-        btn(PW - 440, 690, 140, 60, '▶', '', () => { lvPage++; pDirty = true; SFX.click(); }, { dis: lvPage >= pages - 1, fs: 34 });
+        btn(PW - 440, 690, 140, 60, '▶︎', '', () => { lvPage++; pDirty = true; SFX.click(); }, { dis: lvPage >= pages - 1, fs: 34 });
       }
     } else if (pScr === 'ordu') {
       head(t('Ordugâh'), 'ana'); const cap = O.upCapNow();

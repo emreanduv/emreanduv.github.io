@@ -304,7 +304,7 @@ function panelCiz() {
   [['savunma', t('🛡 Savunma', '🛡 Defensive')], ['dengeli', t('⚖ Dengeli', '⚖ Balanced')], ['hucum', t('⚔ Hücum', '⚔ Attacking')]].forEach(([v, y], i) => dug(30 + i * 322, 140, 306, 72, y, T.zihniyet === v, 'zihniyet', v));
   et(248, t(`Diziliş · şu an ${M.dz[0]}`, `Formation · now ${M.dz[0]}`));
   const L = IZM.VR_DIZILIS, i = Math.max(0, L.indexOf(M.dz[0]));
-  dug(30, 270, 120, 72, '◀', false, 'dz', L[(i - 1 + L.length) % L.length]); dug(160, 270, 704, 72, t(`${L[(i + 1) % L.length]}'e geç`, `Switch to ${L[(i + 1) % L.length]}`), false, 'dz', L[(i + 1) % L.length]); dug(874, 270, 120, 72, '▶', false, 'dz', L[(i + 2) % L.length]);
+  dug(30, 270, 120, 72, '◀︎', false, 'dz', L[(i - 1 + L.length) % L.length]); dug(160, 270, 704, 72, t(`${L[(i + 1) % L.length]}'e geç`, `Switch to ${L[(i + 1) % L.length]}`), false, 'dz', L[(i + 1) % L.length]); dug(874, 270, 120, 72, '▶︎', false, 'dz', L[(i + 2) % L.length]);
   et(378, t(`Değişiklik · kalan ${M.kalanHak(0)} hak, ${M.kalanAra(0)} ara`, `Substitutions · ${M.kalanHak(0)} left, ${M.kalanAra(0)} windows`));
   dug(30, 400, 470, 72, t('🔁 En yorgunu çıkar', '🔁 Replace most tired'), false, 'deg');
   dug(512, 400, 482, 72, t(`🤖 Asistan: ${M.asistan[0] ? 'açık' : 'kapalı'}`, `🤖 Assistant: ${M.asistan[0] ? 'on' : 'off'}`), M.asistan[0], 'asistan');
@@ -359,8 +359,8 @@ function menuCiz() {
     g.fillText(`${t('Nasıl oynanır', 'How to play')} · ${SAYFA + 1}/${P.length}`, 34, 58);
     g.fillStyle = '#1d2526'; g.font = 'bold 44px system-ui, sans-serif'; g.fillText(bas, 34, 168);
     g.font = '32px system-ui, sans-serif'; satirSar(g, govde, 34, 236, MW - 68, 44);
-    if (SAYFA > 0) dug(34, 660, 300, 96, t('◀ Geri', '◀ Back'), '', 'sayfa', SAYFA - 1);
-    dug(MW - 434, 660, 400, 96, SAYFA < P.length - 1 ? t('İleri ▶', 'Next ▶') : t('Anladım ✓', 'Got it ✓'), 'ana', 'sayfa', SAYFA + 1);
+    if (SAYFA > 0) dug(34, 660, 300, 96, t('◀︎ Geri', '◀︎ Back'), '', 'sayfa', SAYFA - 1);
+    dug(MW - 434, 660, 400, 96, SAYFA < P.length - 1 ? t('İleri ▶︎', 'Next ▶︎') : t('Anladım ✓', 'Got it ✓'), 'ana', 'sayfa', SAYFA + 1);
     if (SAYFA === P.length - 1) dug(346, 672, 236, 72, SILONAY ? t('Emin misin? Sil', 'Sure? Delete') : t('🗑 Verilerimi sil', '🗑 Delete my data'), '', 'verisil', SILONAY ? 'evet' : '');
     menuT.needsUpdate = true; return;
   }
@@ -370,7 +370,7 @@ function menuCiz() {
   const { lig, ev, dep } = secim();
   if (!lig) { g.fillStyle = '#5b6466'; g.font = 'bold 34px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(t('Yükleniyor…', 'Loading…'), MW / 2, 420); }
   else {
-    const sira = (y, etiket, yazi, act, renk) => { et(y - 20, etiket); dug(34, y, 110, 76, '◀', '', act, -1); dug(156, y, 712, 76, yazi, '', act + 'Bilgi', 0, renk); dug(880, y, 110, 76, '▶', '', act, 1); };
+    const sira = (y, etiket, yazi, act, renk) => { et(y - 20, etiket); dug(34, y, 110, 76, '◀︎', '', act, -1); dug(156, y, 712, 76, yazi, '', act + 'Bilgi', 0, renk); dug(880, y, 110, 76, '▶︎', '', act, 1); };
     sira(250, t('Lig', 'League'), (kilitli(lig) ? '🔒 ' : '') + ligAd(lig), 'lig');
     sira(360, t('Senin takımın (ev sahibi)', 'Your team (home)'), ev.ad, 'ev', ev.c1);
     sira(470, t('Rakip (deplasman)', 'Opponent (away)'), dep.ad, 'dep', dep.c1);
@@ -378,7 +378,7 @@ function menuCiz() {
   et(574, t('Görünüm', 'Look'));
   [['gercekci', t('✨ Gerçekçi (3B futbolcular)', '✨ Realistic (3D players)')], ['retro', t('🕹 Retro maket', '🕹 Retro model')]].forEach(([v, y], i) => dug(34 + i * 488, 590, 468, 62, y, GORUNUM === v ? 'on' : '', 'gorunum', v));
   if (kilitli(lig)) dug(34, 672, 400, 96, ALINIYOR ? '…' : `🔓 ${t('Tam Sürümü al', 'Get Full Version')}\n${TAM_FIYAT ? TAM_FIYAT + t(' · tek seferlik', ' · one-time') : t('tek seferlik', 'one-time')}`, 'ana', 'tamal');
-  else dug(34, 672, 400, 96, BASLADI ? t('▶ Yeni maç', '▶ New match') : t('▶ Başla', '▶ Start'), 'ana', 'basla');
+  else dug(34, 672, 400, 96, BASLADI ? t('▶︎ Yeni maç', '▶︎ New match') : t('▶︎ Başla', '▶︎ Start'), 'ana', 'basla');
   dug(446, 672, 248, 96, t('❓ Yardım', '❓ Help'), '', 'yardim');
   dug(706, 672, 136, 96, Ses.acik ? '🔊' : '🔇', Ses.acik ? 'on' : '', 'ses');
   dug(854, 672, 136, 96, DIL === 'tr' ? 'EN' : 'TR', '', 'dil');

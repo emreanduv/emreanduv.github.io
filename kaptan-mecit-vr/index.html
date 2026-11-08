@@ -541,8 +541,8 @@ function menuCiz() {
     const [bas, govde] = YARDIM[SAYFA]; g.fillText(`Nasıl oynanır · ${SAYFA + 1}/${YARDIM.length}`, 34, 58);
     g.fillStyle = '#1d2526'; g.font = 'bold 42px system-ui, sans-serif'; g.fillText(bas, 34, 166);
     g.font = '31px system-ui, sans-serif'; satirSar(g, govde, 34, 232, MW - 68, 44);
-    if (SAYFA > 0) dug(34, 780, 300, 92, '◀ Geri', '', 'sayfa', SAYFA - 1);
-    dug(MW - 434, 780, 400, 92, SAYFA < YARDIM.length - 1 ? 'İleri ▶' : 'Anladım ✓', 'ana', 'sayfa', SAYFA + 1);
+    if (SAYFA > 0) dug(34, 780, 300, 92, '◀︎ Geri', '', 'sayfa', SAYFA - 1);
+    dug(MW - 434, 780, 400, 92, SAYFA < YARDIM.length - 1 ? 'İleri ▶︎' : 'Anladım ✓', 'ana', 'sayfa', SAYFA + 1);
     if (SAYFA === YARDIM.length - 1) dug(34, 640, 520, 92, SILONAY ? 'Emin misin? Evet, sil' : '🗑 Verilerimi sil', SILONAY ? 'ana' : '', 'verisil', SILONAY ? 'evet' : '');
     menuT.needsUpdate = true; return;
   }
@@ -551,7 +551,7 @@ function menuCiz() {
   if (macVar) dug(MW - 260, 24, 226, 66, '✕ Maça dön', '', 'kapat');
   if (!hazir) { g.fillStyle = '#5b6466'; g.font = 'bold 34px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText('Yükleniyor…', MW / 2, 400); menuT.needsUpdate = true; return; }
   const lg = LG()[SEC.lig], L = LGS()[lg], T = L.t, ev = T[SEC.ev % T.length], dep = T[SEC.dep % T.length];
-  const sira = (y, etiket, yazi, act, renk) => { et(y - 16, etiket); dug(34, y, 100, 64, '◀', '', act, -1); dug(146, y, 732, 64, yazi, '', act + 'B', 0, renk); dug(890, y, 100, 64, '▶', '', act, 1); };
+  const sira = (y, etiket, yazi, act, renk) => { et(y - 16, etiket); dug(34, y, 100, 64, '◀︎', '', act, -1); dug(146, y, 732, 64, yazi, '', act + 'B', 0, renk); dug(890, y, 100, 64, '▶︎', '', act, 1); };
   sira(140, 'Lig', `${L.kurgu} · ${L.ad}`, 'lig');
   sira(232, 'Senin takımın', ev[1], 'ev', [ev[3], ev[4]]);
   sira(324, 'Rakip', dep[1], 'dep', [dep[3], dep[4]]);
@@ -563,7 +563,7 @@ function menuCiz() {
   KOLTUKLAR.forEach((k, i) => dug(34 + i * 161, 608, 152, 60, k.ad, KI === i ? 'on' : '', 'koltuk', i));
   et(688, 'Görünüm');
   [['gercekci', '✨ Gerçekçi (3B futbolcular, gölge)'], ['retro', '🕹 Retro']].forEach(([v, y], i) => dug(34 + i * 560, 704, i ? 396 : 548, 60, y, GORUNUM === v ? 'on' : '', 'gorunum', v));
-  dug(34, 780, 420, 96, macVar ? '▶ Yeni maç' : '▶ Maça başla', 'ana', 'basla');
+  dug(34, 780, 420, 96, macVar ? '▶︎ Yeni maç' : '▶︎ Maça başla', 'ana', 'basla');
   dug(466, 780, 250, 96, '❓ Yardım', '', 'yardim');
   dug(728, 780, 262, 96, Ses.acik ? '🔊 Ses açık' : '🔇 Ses kapalı', Ses.acik ? 'on' : '', 'ses');
   menuT.needsUpdate = true;

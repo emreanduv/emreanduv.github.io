@@ -123,7 +123,7 @@ function levhaCiz(now = performance.now()){
     for(const l of sar(x, g ? `Bölüm ${M.no}: ${M.baslik}` : M.baslik, GEN).slice(0, 3)){ x.fillText(l, L, y); y += 118; }
     x.fillStyle = '#4a3a22'; x.font = "500 62px 'DM Sans'"; y += 20;
     for(const l of sar(x, g ? (M.gelecek || '').replace(/^Gelecek hafta:\s*/, 'Sıradaki: ') : M.ne, GEN).slice(0, 3)){ x.fillText(l, L, y); y += 72; }
-    x.fillStyle = RENK.lapis; x.font = "800 48px 'DM Sans'"; x.fillText(`${S.length} satır · başlamak için ▶ (tetik)`, L, Hc - 170);
+    x.fillStyle = RENK.lapis; x.font = "800 48px 'DM Sans'"; x.fillText(`${S.length} satır · başlamak için ▶︎ (tetik)`, L, Hc - 170);
   } else {
     // satırlar: geçmiştekiler soluk, son satır parlak; son satır çivi yazısından Türkçeye "çözülür"
     const bas = Math.max(0, durum.si - 4), goster = S.slice(bas, durum.si + 1);
@@ -153,7 +153,7 @@ function levhaCiz(now = performance.now()){
   const once = durum.si + 1, toplam = S.length;
   const gr = x.createLinearGradient(L, 0, L + 900, 0); gr.addColorStop(0, RENK.lapis); gr.addColorStop(1, RENK.gold); x.fillStyle = gr; yuvarlak(x, L, Hc - 112, Math.max(24, 900 * once / toplam), 24, 12); x.fill();
   x.fillStyle = '#6b3d1c'; x.font = "800 38px 'DM Sans'"; x.fillText(durum.si < 0 ? 'başlık' : `satır ${durum.si + 1}/${toplam}`, L + 930, Hc - 90);
-  x.textAlign = 'right'; x.fillText('▶ tetik · ◀ kavrama', Wc - 90, Hc - 90); x.textAlign = 'left';
+  x.textAlign = 'right'; x.fillText('▶︎ tetik · ◀︎ kavrama', Wc - 90, Hc - 90); x.textAlign = 'left';
   levT.needsUpdate = true;
 }
 function levhaGuncel(){
@@ -242,18 +242,18 @@ const Y = yardimKur({ THREE, scene, camera, renderer, tiklanir, ad:'Sümer Zigur
   silMetni:'sunaktaki tablete kazınan adın ve rehberde hangi ipuçlarını gördüğün.', ilerleme:() => V ? `${durum.kaynak === 'g' ? 'Gılgamış ' + ROMA[durum.i] : 'tablet ' + (durum.i + 1)}` : '',
   renk:{ bant:'#132545', bant2:'#162b52', vurgu:'#e0b04a', kagit:'#fff3d9', kagit2:'#f3e2bf', murekkep:'#1c2a44', soluk:'#6b4a2a', dugme:'#1f4fa0' },
   temel:{ m:["<b>Sümer Ziguratı</b>: Ur Ziguratı'nın tepesinde, gece. Ortadaki taş levhada kil tabletlerin satırları önce çivi yazısıyla parlar, sonra Türkçeye çözülür.",
-      "<b>Başlamak için:</b> ▶ ile sonraki satıra geç, ◀ ile geri dön. Soldaki raftan Gılgamış'ın 12 tabletini, sağdaki sunaktan en sevilen metinleri seç; alttaki listeden de her tablete ulaşırsın. 🔊 gece seslerini açar, 🥽 VR gözlükle zigurata çıkarır."],
+      "<b>Başlamak için:</b> ▶︎ ile sonraki satıra geç, ◀︎ ile geri dön. Soldaki raftan Gılgamış'ın 12 tabletini, sağdaki sunaktan en sevilen metinleri seç; alttaki listeden de her tablete ulaşırsın. 🔊 gece seslerini açar, 🥽 VR gözlükle zigurata çıkarır."],
     v:["Ur Ziguratı'nın tepesindesin. Taş levhada kil tabletlerin satırları önce çivi yazısıyla parlar, sonra Türkçeye çözülür.",
       "Tetik: sonraki satır · kavrama: önceki satır. Raftaki, sunaktaki tabletlere ya da zemine nişan alıp tetikle. Sağ çubukla dön.",
       "Bu pano: kumandada A, B, X ya da Y tuşu veya bel hizandaki ? düğmesi."] },
   ipuclari:[
-    { id:'giris', b:'𒀭 Taş levha', m:'▶ ya da boşluk tuşu sonraki satıra geçer, ◀ geri alır. Levhaya dokunmak da ilerletir. ⏵ Oto satırları kendiliğinden akıtır.', v:'Tetik sonraki satıra geçer, kavrama geri alır. Levhaya ya da altındaki ◀ ⏵ ▶ düğmelerine nişan alıp da tetikleyebilirsin.' },
+    { id:'giris', b:'𒀭 Taş levha', m:'▶︎ ya da boşluk tuşu sonraki satıra geçer, ◀︎ geri alır. Levhaya dokunmak da ilerletir. ⏵︎ Oto satırları kendiliğinden akıtır.', v:'Tetik sonraki satıra geçer, kavrama geri alır. Levhaya ya da altındaki ◀︎ ⏵︎ ▶︎ düğmelerine nişan alıp da tetikleyebilirsin.' },
     { id:'yuru', b:'🚶 Terasta dolaş', m:'Sürükleyerek etrafına bak. Zemine çift dokun ya da W A S D ile yürü; fare tekerleği yakınlaştırır.', v:'Zemine nişan alıp tetikle: oraya yürürsün. Sağ çubuğu yana itince 30° dönersin.' },
     { id:'raf', b:'📺 Gılgamış rafı', m:'Soldaki rafta Gılgamış Destanı\'nın 12 tableti var. Birine dokun: levhada o tablet baştan açılır, bitince sıradaki gelir.', v:'Soldaki rafta Gılgamış Destanı\'nın 12 tableti var. Birine nişan alıp tetikle: levhada o tablet açılır.' },
     { id:'sunak', b:'📜 Tablet sunağı', m:'Sağdaki sunakta en sevilen metinler (İnanna, tufan, Ninkasi, Ur-Nammu…) ve adının kazındığı tablet durur. Birine dokun, levhada okunsun.', v:'Sağdaki sunakta en sevilen metinler ve adının kazındığı tablet durur. Birine nişan alıp tetikle.' },
     { id:'gok', b:'🌙 Bu geceki gök', m:'Yukarı bak: Ay ve gezegenler bu gecenin konumlarıyla kurulur (yaklaşık). Korkuluk panoları gök, efsaneler ve kronoloji anlatır.', v:'Başını kaldır: Ay ve gezegenler bu gecenin konumlarıyla kurulur (yaklaşık).' },
     { id:'ses', b:'🔊 Gece sesleri', m:'Üstteki 🔇/🔊 düğmesi rüzgârı, cırcır böceklerini ve mangal ateşini açıp kapatır. Sesler cihazda üretilir, dosya indirilmez.', v:'Rüzgâr, cırcır böcekleri ve mangal ateşi cihazda üretilir; satır değişince hafif bir çınlama duyulur.' },
-    { id:'oto', b:'⏵ Oto', m:'Oto açıkken satırlar uzunluklarına göre kendiliğinden ilerler. ⏸ ile durdurursun.', v:'Oto açıkken satırlar kendiliğinden ilerler. Levhanın altındaki orta düğmeyle durdurursun.' },
+    { id:'oto', b:'⏵︎ Oto', m:'Oto açıkken satırlar uzunluklarına göre kendiliğinden ilerler. ⏸︎ ile durdurursun.', v:'Oto açıkken satırlar kendiliğinden ilerler. Levhanın altındaki orta düğmeyle durdurursun.' },
     { id:'yardim', b:'❓ Yardım hep yanında', m:'Üstteki ? düğmesi bu rehberi açar: bütün ipuçları, "Rehberi baştan göster", görüş yazma ve Verilerimi sil.', v:'Kumandadaki A, B, X ya da Y tuşu veya bel hizandaki ? düğmesi bu panoyu açar: bütün ipuçları ve Verilerimi sil.' },
   ], sira:['giris', 'yuru', 'raf', 'sunak', 'yardim', 'gok', 'ses'] });
 const atesler = []; let tozP, levha, sunakAd, raf = [], sunak = [];
@@ -312,7 +312,7 @@ function kur(){
   levha = new THREE.Mesh(new THREE.PlaneGeometry(4.96, 3.72), new THREE.MeshBasicMaterial({ map:levT, transparent:true, toneMapped:false })); levha.position.set(0, 2.9, .09); levha.name = 'levha'; lev.add(levha); tiklanir.push(levha);
   const dug = (simge, ad, x) => { const [c, cx] = tuval(256, 256); yuvarlak(cx, 8, 8, 240, 240, 40); cx.fillStyle = '#f1eadc'; cx.fill(); cx.strokeStyle = RENK.lapis; cx.lineWidth = 10; cx.stroke(); cx.fillStyle = RENK.ink; cx.font = "900 120px 'DM Sans'"; cx.textAlign = 'center'; cx.fillText(simge, 128, 168);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(.36, .36), new THREE.MeshBasicMaterial({ map:doku(c), transparent:true, toneMapped:false })); m.position.set(x, .58, .62); m.rotation.x = -.5; m.name = ad; lev.add(m); tiklanir.push(m); return m; };
-  dug('◀', 'geri', -.55); dug('▶', 'ileri', .55); otoDug = dug('⏵', 'oto', 0);
+  dug('◀︎', 'geri', -.55); dug('▶︎', 'ileri', .55); otoDug = dug('⏵︎', 'oto', 0);
   const isik = new THREE.SpotLight('#ffe7b8', 26, 12, .5, .6, 1.4); isik.position.set(0, 7, LEVHA_Z + 4); isik.target = levha; scene.add(isik);
 
   // mangallar
@@ -494,7 +494,7 @@ function yuru(n){
   const x = THREE.MathUtils.clamp(n.x, -TW / 2 + .8, TW / 2 - .8), z = THREE.MathUtils.clamp(n.z, LEVHA_Z + 1.2, TD / 2 - .8);
   const kafa = new THREE.Vector3(); camera.getWorldPosition(kafa); rig.position.x += x - kafa.x; rig.position.z += z - kafa.z;
 }
-function otoAyarla(v){ if(v) Y.ipucu('oto'); durum.oto = v; durum.sonraki = performance.now() + sure(); $('#oto').classList.toggle('on', v); $('#oto').textContent = v ? '⏸ Oto' : '⏵ Oto'; }
+function otoAyarla(v){ if(v) Y.ipucu('oto'); durum.oto = v; durum.sonraki = performance.now() + sure(); $('#oto').classList.toggle('on', v); $('#oto').textContent = v ? '⏸︎ Oto' : '⏵︎ Oto'; }
 
 let suruk = null, yaw = 0, pitch = 0.08; const eul = new THREE.Euler(0, 0, 0, 'YXZ');
 const el = renderer.domElement;

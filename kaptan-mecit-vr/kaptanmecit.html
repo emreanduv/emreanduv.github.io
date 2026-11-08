@@ -179,7 +179,7 @@ tr.z1 td:first-child{box-shadow:inset 4px 0 var(--gold)} tr.z4 td:first-child{bo
   <div class="btns"><div class="bt pas" id="bPas"><span>PAS<small class="kb">X</small></span></div><div class="bt sut" id="bSut"><span>ŞUT<small class="kb">Z</small></span></div></div>
   <div class="kbhint" id="kbhint">OK TUŞLARI KOŞ · X PAS · Z ŞUT · P DURAKLAT</div>
   <div class="banner" id="banner" hidden></div>
-  <button class="tekrarR" id="tekrarR" hidden aria-label="Tekrarı geç">R<small>TEKRAR · GEÇ ▶</small></button>
+  <button class="tekrarR" id="tekrarR" hidden aria-label="Tekrarı geç">R<small>TEKRAR · GEÇ ▶︎</small></button>
   <div class="pmenu" id="pmenu" hidden></div>
 </div>
 <script>
@@ -659,7 +659,7 @@ const ctrlHtml=()=>`<ul>
 function showIntro(){const pm=$('#pmenu');pm.hidden=false;pm.innerHTML=`<div class="box intro"><h3>${M.mac?esc(M.T[0].t.name)+' – '+esc(M.T[1].t.name):'KONTROLLER'}</h3>${ctrlHtml()}${M.mac?`<div class="chips" style="justify-content:center">${['Kolay','Orta','Zor'].map((l,i)=>`<button class="chip ${M.diff===i?'on':''}" data-g="diff" data-v="${i}">${l}</button>`).join('')}</div>`:''}${dzChips()}${camChips()}<button class="big" data-g="go">BAŞLA</button></div>`}
 /* diziliş seçimi (maç öncesi): Otomatik = asistan kadroya en uygun dizilişi seçer */
 function dzChips(){if(M.mac||M.demo)return '';const v=S.set.dz&&DIZILIS[S.set.dz]?S.set.dz:'oto',ad=v==='oto'?`OTOMATİK · ${M.T[0].t.dzAd||''}`:v;
-  return `<div class="chips dz" style="justify-content:center;align-items:center"><button class="chip" data-g="dz" data-v="-1">◀</button><button class="chip on" data-g="dz" data-v="0" style="min-width:170px">📋 ${esc(ad)}</button><button class="chip" data-g="dz" data-v="1">▶</button></div>${dzSema(M.T[0].t.dz,M.T[0].kit.c1)}`}
+  return `<div class="chips dz" style="justify-content:center;align-items:center"><button class="chip" data-g="dz" data-v="-1">◀︎</button><button class="chip on" data-g="dz" data-v="0" style="min-width:170px">📋 ${esc(ad)}</button><button class="chip" data-g="dz" data-v="1">▶︎</button></div>${dzSema(M.T[0].t.dz,M.T[0].kit.c1)}`}
 /* diziliş şeması: hücum yukarı */
 function dzSema(dz,c){if(!dz)return '';return `<svg viewBox="0 0 68 60" width="120" height="106" style="display:block;margin:4px auto 6px" aria-hidden="true"><rect x="1" y="1" width="66" height="58" rx="3" fill="#3e8d38" stroke="#f2f2ea" stroke-width=".8"/><line x1="1" y1="4" x2="67" y2="4" stroke="#f2f2ea" stroke-width=".6"/><rect x="22" y="50" width="24" height="9" fill="none" stroke="#f2f2ea" stroke-width=".6"/>${dz.map(([fx,fy])=>`<circle cx="${(1-fx)*60+4}" cy="${58-fy*110}" r="2.6" fill="${c}" stroke="#fff" stroke-width=".7"/>`).join('')}</svg>`}
 function togglePause(){if(!M||M.state==='over')return;M.paused=!M.paused;const pm=$('#pmenu');
