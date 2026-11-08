@@ -220,7 +220,17 @@ def qid_ad(ad, ulkeQ, dil="en"):
         d = http("https://www.wikidata.org/w/api.php?" + urllib.parse.urlencode({"action": "wbsearchentities", "search": arama, "language": lg, "uselang": lg, "type": "item", "limit": 10, "format": "json"}))
         ids += [x["id"] for x in (d or {}).get("search", []) if x["id"] not in ids]
     q = None
-    if ids:
+    for tur in range(2):
+        if tur == 1:                                                 # bulunamadı: tam metin arama, yalnız bu ülkenin futbol kulüpleri
+            if q: break
+            ids = []
+            for arama in dict.fromkeys([yalin, re.sub(r"\s+\S{1,3}$", "", yalin), yalin.split(" de ")[0]]):
+                d = http("https://www.wikidata.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "list": "search", "srlimit": 10, "format": "json",
+                         "srsearch": f"{arama} haswbstatement:P31=Q476028 haswbstatement:P17={ulkeQ}"}))
+                ids += [x["title"] for x in ((d or {}).get("query") or {}).get("search", []) if x["title"].startswith("Q") and x["title"] not in ids]
+                if ids: break
+            if not ids: break
+        if not ids: continue
         vals = " ".join("wd:" + i for i in ids)
         ulkeler = " ".join("wd:" + u for u in [ulkeQ] + ULKE_EK.get(ulkeQ, []))
         r = sparql(f"""SELECT ?c ?n (GROUP_CONCAT(DISTINCT ?l; separator="|") AS ?ls) WHERE {{ VALUES ?c {{ {vals} }} ?c wdt:P31/wdt:P279* wd:Q476028 . ?c wikibase:sitelinks ?n .
