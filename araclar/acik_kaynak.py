@@ -42,6 +42,14 @@ LIGLER = {
     "za": {"wiki": "South African Premiership", "ad": "Kap Ligi", "ulke": "Güney Afrika", "ulkeQ": "Q258", "hafta": 30, "tz": "Africa/Johannesburg", "kaynak": "wd", "dil": "en", "gercek": False},
     "dz": {"wiki": "Algerian Ligue Professionnelle 1", "ad": "Sahra Ligi", "ulke": "Cezayir", "ulkeQ": "Q262", "hafta": 30, "tz": "Africa/Algiers", "kaynak": "wd", "dil": "fr", "gercek": False},
     "tn": {"wiki": "Tunisian Ligue Professionnelle 1", "ad": "Kartaca Ligi", "ulke": "Tunus", "ulkeQ": "Q948", "hafta": 30, "tz": "Africa/Tunis", "kaynak": "wd", "dil": "fr", "gercek": False},
+    # 3. aşama: Avrupa'nın ikinci halkası ve Avustralya
+    "nl": {"wiki": "Eredivisie", "ad": "Lale Ligi", "ulke": "Hollanda", "ulkeQ": "Q55", "hafta": 34, "tz": "Europe/Amsterdam", "kaynak": "wd", "dil": "nl", "gercek": False},
+    "pt": {"wiki": "Primeira Liga", "ad": "Lusitanya Ligi", "ulke": "Portekiz", "ulkeQ": "Q45", "hafta": 34, "tz": "Europe/Lisbon", "kaynak": "wd", "dil": "pt", "gercek": False},
+    "be": {"wiki": "Belgian Pro League", "ad": "Brabant Ligi", "ulke": "Belçika", "ulkeQ": "Q31", "hafta": 30, "tz": "Europe/Brussels", "kaynak": "wd", "dil": "nl", "gercek": False},
+    "sc": {"wiki": "Scottish Premiership", "ad": "Kaledonya Ligi", "ulke": "İskoçya", "ulkeQ": "Q22", "hafta": 38, "tz": "Europe/London", "kaynak": "wd", "dil": "en", "gercek": False},
+    "at": {"wiki": "Austrian Football Bundesliga", "ad": "Alp Ligi", "ulke": "Avusturya", "ulkeQ": "Q40", "hafta": 32, "tz": "Europe/Vienna", "kaynak": "wd", "dil": "de", "gercek": False},
+    "gr": {"wiki": "Super League Greece", "ad": "Olimpos Ligi", "ulke": "Yunanistan", "ulkeQ": "Q41", "hafta": 26, "tz": "Europe/Athens", "kaynak": "wd", "dil": "el", "gercek": False},
+    "au": {"wiki": "A-League Men", "ad": "Güney Haç Ligi", "ulke": "Avustralya", "ulkeQ": "Q408", "hafta": 26, "tz": "Australia/Sydney", "kaynak": "wd", "dil": "en", "gercek": False},
 }
 _stat = {"istek": 0}
 

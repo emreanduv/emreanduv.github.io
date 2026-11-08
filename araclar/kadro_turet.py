@@ -40,6 +40,14 @@ LIG = {  # kod: (oyundaki ad, ülke, wikidata ülke)
     "za": ("Kap Ligi", "Güney Afrika", "Q258"),
     "dz": ("Sahra Ligi", "Cezayir", "Q262"),
     "tn": ("Kartaca Ligi", "Tunus", "Q948"),
+    # 3. aşama
+    "nl": ("Lale Ligi", "Hollanda", "Q55"),
+    "pt": ("Lusitanya Ligi", "Portekiz", "Q45"),
+    "be": ("Brabant Ligi", "Belçika", "Q31"),
+    "sc": ("Kaledonya Ligi", "İskoçya", "Q22"),
+    "at": ("Alp Ligi", "Avusturya", "Q40"),
+    "gr": ("Olimpos Ligi", "Yunanistan", "Q41"),
+    "au": ("Güney Haç Ligi", "Avustralya", "Q408"),
 }
 DENEME = bool(os.environ.get("LIGLER"))
 if DENEME:
