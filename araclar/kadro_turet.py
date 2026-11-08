@@ -106,12 +106,12 @@ def kulup_bilgi(qids):
     vals = " ".join("wd:" + q for q in qids)
     r = sparql(f"""SELECT ?c ?sehirLabel ?stadLabel ?kap ?renkLabel WHERE {{ VALUES ?c {{ {vals} }}
       OPTIONAL {{ ?c wdt:P159 ?sehir }} OPTIONAL {{ ?c wdt:P115 ?stad . OPTIONAL {{ ?stad wdt:P1083 ?kap }} }} OPTIONAL {{ ?c wdt:P6364 ?renk }}
-      SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en". }} }}""")
+      SERVICE wikibase:label {{ bd:serviceParam wikibase:language "tr,en,fr,es,pt,it,de,mul". }} }}""")
     out = {}
     for x in r:
         q = x["c"]["value"].rsplit("/", 1)[1]
         o = out.setdefault(q, {"sehir": None, "kap": 0, "renk": []})
-        if x.get("sehirLabel") and not o["sehir"]:
+        if x.get("sehirLabel") and not o["sehir"] and not re.fullmatch(r"Q\d+", x["sehirLabel"]["value"]):  # etiketsiz yer: Q-kimliği yazılmasın
             o["sehir"] = x["sehirLabel"]["value"]
         if x.get("kap"):
             try:
