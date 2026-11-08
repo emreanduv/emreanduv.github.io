@@ -484,7 +484,7 @@ def km_qid():
     """Kaptan Mecit kulüplerinin Wikidata kimlikleri (önbellekli): QID → KM kodu"""
     o, out = onbellek(), {}
     for kod, (ladi, ulkeAd, ulkeQ) in LIG.items():
-        for ad, km in KM[kod].items():
+        for ad, km in KM.get(kod, {}).items():
             k = f"km:{kod}:{ad}"
             if k not in o:
                 q = kulup_bul(ad, ulkeQ)
