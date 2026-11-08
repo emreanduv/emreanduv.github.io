@@ -113,6 +113,13 @@ def kulup_bul(ad, ulke):
     return r[0]["c"]["value"].rsplit("/", 1)[1] if r else None
 
 
+def sehir_sade(s):
+    """Wikidata yer etiketinden açıklama eklerini at: 'Bardo (şehir)' → 'Bardo', 'Polokwane Local Municipality' → 'Polokwane'."""
+    s = re.sub(r"\s*\([^)]*\)\s*$", "", s or "").strip()
+    s = re.sub(r"\s+(belediyesi|Belediyesi|ili|İli|Local Municipality|Metropolitan Municipality|Municipality|District|Prefecture)$", "", s).strip()
+    return s or None
+
+
 def kulup_bilgi(qids):
     vals = " ".join("wd:" + q for q in qids)
     r = sparql(f"""SELECT ?c ?sehirLabel ?stadLabel ?kap ?renkLabel WHERE {{ VALUES ?c {{ {vals} }}
@@ -123,7 +130,7 @@ def kulup_bilgi(qids):
         q = x["c"]["value"].rsplit("/", 1)[1]
         o = out.setdefault(q, {"sehir": None, "kap": 0, "renk": []})
         if x.get("sehirLabel") and not o["sehir"] and not re.fullmatch(r"Q\d+", x["sehirLabel"]["value"]):  # etiketsiz yer: Q-kimliği yazılmasın
-            o["sehir"] = x["sehirLabel"]["value"]
+            o["sehir"] = sehir_sade(x["sehirLabel"]["value"])
         if x.get("kap"):
             try:
                 o["kap"] = max(o["kap"], int(float(x["kap"]["value"])))
