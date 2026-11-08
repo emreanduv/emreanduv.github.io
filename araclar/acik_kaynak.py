@@ -31,6 +31,17 @@ LIGLER = {
     "co": {"wiki": "Categoría Primera A", "ad": "And Ligi", "ulke": "Kolombiya", "ulkeQ": "Q739", "hafta": 38, "tz": "America/Bogota", "fj": "co.1", "takvim": "yil", "dil": "es", "gercek": False},
     "us": {"wiki": "Major League Soccer", "ad": "Yeni Dünya Ligi", "ulke": "ABD", "ulkeQ": "Q30", "hafta": 34, "tz": "America/New_York", "fj": "mls", "takvim": "yil", "dil": "en", "gercek": False},
     "mx": {"wiki": "Liga MX", "ad": "Aztek Ligi", "ulke": "Meksika", "ulkeQ": "Q96", "hafta": 34, "tz": "America/Mexico_City", "kaynak": "wd", "dil": "es", "gercek": False},
+    # Asya ve Afrika (2. aşama): kulüp listesi Vikipedi sezon maddesinin puan tablosundan, fikstürü oyun üretir
+    "jp": {"wiki": "J1 League", "ad": "Fuji Ligi", "ulke": "Japonya", "ulkeQ": "Q17", "hafta": 38, "tz": "Asia/Tokyo", "kaynak": "wd", "dil": "ja", "gercek": False},
+    "kr": {"wiki": "K League 1", "ad": "Han Ligi", "ulke": "Güney Kore", "ulkeQ": "Q884", "hafta": 38, "tz": "Asia/Seoul", "kaynak": "wd", "takvim": "yil", "dil": "ko", "gercek": False},
+    "sa": {"wiki": "Saudi Pro League", "ad": "Necd Ligi", "ulke": "Suudi Arabistan", "ulkeQ": "Q851", "hafta": 34, "tz": "Asia/Riyadh", "kaynak": "wd", "dil": "ar", "gercek": False},
+    "qa": {"wiki": "Qatar Stars League", "ad": "İnci Ligi", "ulke": "Katar", "ulkeQ": "Q846", "hafta": 22, "tz": "Asia/Qatar", "kaynak": "wd", "dil": "ar", "gercek": False},
+    "cn": {"wiki": "Chinese Super League", "ad": "Yangtze Ligi", "ulke": "Çin", "ulkeQ": "Q148", "hafta": 30, "tz": "Asia/Shanghai", "kaynak": "wd", "takvim": "yil", "dil": "zh", "gercek": False},
+    "eg": {"wiki": "Egyptian Premier League", "ad": "Nil Ligi", "ulke": "Mısır", "ulkeQ": "Q79", "hafta": 34, "tz": "Africa/Cairo", "kaynak": "wd", "dil": "ar", "gercek": False},
+    "ma": {"wiki": "Botola Pro", "ad": "Atlas Ligi", "ulke": "Fas", "ulkeQ": "Q1028", "hafta": 30, "tz": "Africa/Casablanca", "kaynak": "wd", "dil": "fr", "gercek": False},
+    "za": {"wiki": "South African Premiership", "ad": "Kap Ligi", "ulke": "Güney Afrika", "ulkeQ": "Q258", "hafta": 30, "tz": "Africa/Johannesburg", "kaynak": "wd", "dil": "en", "gercek": False},
+    "dz": {"wiki": "Algerian Ligue Professionnelle 1", "ad": "Sahra Ligi", "ulke": "Cezayir", "ulkeQ": "Q262", "hafta": 30, "tz": "Africa/Algiers", "kaynak": "wd", "dil": "fr", "gercek": False},
+    "tn": {"wiki": "Tunisian Ligue Professionnelle 1", "ad": "Kartaca Ligi", "ulke": "Tunus", "ulkeQ": "Q948", "hafta": 30, "tz": "Africa/Tunis", "kaynak": "wd", "dil": "fr", "gercek": False},
 }
 _stat = {"istek": 0}
 
@@ -316,7 +327,8 @@ def wiki_takimlar(kod, sezon):
     Maddenin içine aldığı "... table" şablonları da okunur (Liga MX gibi Apertura/Clausura ayrı tabloda)."""
     L = LIGLER[kod]
     y = int(sezon[:4])
-    for kisa in [f"{y}–{str(y + 1)[-2:]}", f"{y - 1}–{str(y)[-2:]}"]:
+    adaylar = [f"{y}", f"{y - 1}"] if L.get("takvim") == "yil" else [f"{y}–{str(y + 1)[-2:]}", f"{y - 1}–{str(y)[-2:]}"]
+    for kisa in adaylar:
         basliklar, bak = [], [f"{kisa} {L['wiki']} season", f"{kisa} {L['wiki']}", f"Template:{kisa} {L['wiki']} table"]
         gorulen = set()
         while bak and len(gorulen) < 8:

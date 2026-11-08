@@ -29,6 +29,17 @@ LIG = {  # kod: (oyundaki ad, ülke, wikidata ülke)
     # Amerika kıtası (1. aşama)
     "br": ("Amazon Ligi", "Brezilya", "Q155"), "ar": ("Pampa Ligi", "Arjantin", "Q414"), "co": ("And Ligi", "Kolombiya", "Q739"),
     "us": ("Yeni Dünya Ligi", "ABD", "Q30"), "mx": ("Aztek Ligi", "Meksika", "Q96"),
+    # Asya ve Afrika (2. aşama)
+    "jp": ("Fuji Ligi", "Japonya", "Q17"),
+    "kr": ("Han Ligi", "Güney Kore", "Q884"),
+    "sa": ("Necd Ligi", "Suudi Arabistan", "Q851"),
+    "qa": ("İnci Ligi", "Katar", "Q846"),
+    "cn": ("Yangtze Ligi", "Çin", "Q148"),
+    "eg": ("Nil Ligi", "Mısır", "Q79"),
+    "ma": ("Atlas Ligi", "Fas", "Q1028"),
+    "za": ("Kap Ligi", "Güney Afrika", "Q258"),
+    "dz": ("Sahra Ligi", "Cezayir", "Q262"),
+    "tn": ("Kartaca Ligi", "Tunus", "Q948"),
 }
 DENEME = bool(os.environ.get("LIGLER"))
 if DENEME:
