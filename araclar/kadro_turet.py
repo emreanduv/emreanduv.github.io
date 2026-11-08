@@ -124,6 +124,7 @@ def kulup_bul(ad, ulke):
 def sehir_sade(s):
     """Wikidata yer etiketinden açıklama eklerini at: 'Bardo (şehir)' → 'Bardo', 'Polokwane Local Municipality' → 'Polokwane'."""
     s = re.sub(r"\s*\([^)]*\)\s*$", "", s or "").strip()
+    s = s.split(",")[0].strip()                                          # "Newcastle, Yeni Güney Galler" → "Newcastle"
     s = re.sub(r"\s+(belediyesi|Belediyesi|ili|İli|Local Municipality|Metropolitan Municipality|Municipality|District|Prefecture)$", "", s).strip()
     return s or None
 
