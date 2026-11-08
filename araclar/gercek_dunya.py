@@ -69,7 +69,7 @@ def main():
     simdi = datetime.now(timezone.utc)
     sezon = sezon_adi(simdi)
     ozet, degisti = [], False
-    for kod in LIGLER:
+    for kod in [k for k in LIGLER if LIGLER[k].get('gercek', True)]:
         yol = os.path.join(KOK, f"maclar-{kod}.json")
         maclar, _ = lig_maclari(kod, sezon)
         if not maclar:

@@ -26,7 +26,14 @@ UA = {"User-Agent": "MrAnduv-ChampionBattleManager/1.0 (+https://emreanduv.githu
 LIG = {  # kod: (oyundaki ad, ülke, wikidata ülke)
     "tr": ("Anadolu Ligi", "Türkiye", "Q43"), "en": ("Ada Ligi", "İngiltere", "Q145"), "es": ("İber Ligi", "İspanya", "Q29"),
     "it": ("Çizme Ligi", "İtalya", "Q38"), "de": ("Ren Ligi", "Almanya", "Q183"), "fr": ("Galya Ligi", "Fransa", "Q142"),
+    # Amerika kıtası (1. aşama)
+    "br": ("Amazon Ligi", "Brezilya", "Q155"), "ar": ("Pampa Ligi", "Arjantin", "Q414"), "co": ("And Ligi", "Kolombiya", "Q739"),
+    "us": ("Yeni Dünya Ligi", "ABD", "Q30"), "mx": ("Aztek Ligi", "Meksika", "Q96"),
 }
+DENEME = bool(os.environ.get("LIGLER"))
+if DENEME:
+    CIKTI = os.path.join(KOK, "cbm", "v1", "deneme.json")                                          # deneme: LIGLER=br,mx yalnız bu ligleri türetir (çıktı yazılmaz)
+    LIG = {k: v for k, v in LIG.items() if k in os.environ["LIGLER"].split(",")}
 # Kaptan Mecit'ten bilinen kulüpler (aynı kod, aynı ad ve renk korunur). Anahtar: eski kulüp listesindeki ad; Wikidata kimliğine çevrilip önbelleğe alınır.
 KM = {
     "tr": {"Galatasaray": "gs", "Fenerbahçe": "fb", "Beşiktaş": "bjk", "Trabzonspor": "ts", "İstanbul Başakşehir": "ibfk", "Konyaspor": "kon",
@@ -716,9 +723,9 @@ def main():
             for o in k["oyuncular"]:
                 o["un"] = round(math.log1p(o["un"]) / math.log1p(m), 3)
     toplam = sum(len(k["oyuncular"]) for l in cikti["ligler"].values() for k in l["kulupler"])
-    if toplam < 1500:
+    if toplam < 1500 and not DENEME:
         print(f"::error::Yalnız {toplam} oyuncu geldi; eski veri korunuyor."); sys.exit(1)
-    if eski.get("ligler") and eski.get("surum") == cikti["surum"]:      # kaynak değişiminde (kulüp anahtarları yenilendi) fark alınmaz
+    if not DENEME and eski.get("ligler") and eski.get("surum") == cikti["surum"]:      # kaynak değişiminde (kulüp anahtarları yenilendi) fark alınmaz
         try:
             olay = transfer_farki(eski, cikti)
         except Exception as e:

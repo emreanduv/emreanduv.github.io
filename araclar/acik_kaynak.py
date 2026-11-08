@@ -25,6 +25,12 @@ LIGLER = {
     "it": {"wiki": "Serie A", "ad": "Çizme Ligi", "ulke": "İtalya", "ulkeQ": "Q38", "hafta": 38, "tz": "Europe/Rome", "fj": "it.1"},
     "de": {"wiki": "Bundesliga", "ad": "Ren Ligi", "ulke": "Almanya", "ulkeQ": "Q183", "hafta": 34, "tz": "Europe/Berlin", "fj": "de.1"},
     "fr": {"wiki": "Ligue 1", "ad": "Galya Ligi", "ulke": "Fransa", "ulkeQ": "Q142", "hafta": 34, "tz": "Europe/Paris", "fj": "fr.1"},
+    # Amerika kıtası (1. aşama). takvim "yil": sezon takvim yılıyla oynanır (openfootball klasörü "2026"); gercek False: Challenge'a girmez
+    "br": {"wiki": "Campeonato Brasileiro Série A", "ad": "Amazon Ligi", "ulke": "Brezilya", "ulkeQ": "Q155", "hafta": 38, "tz": "America/Sao_Paulo", "fj": "br.1", "takvim": "yil", "gercek": False},
+    "ar": {"wiki": "Argentine Primera División", "ad": "Pampa Ligi", "ulke": "Arjantin", "ulkeQ": "Q414", "hafta": 30, "tz": "America/Argentina/Buenos_Aires", "fj": "ar.1", "takvim": "yil", "gercek": False},
+    "co": {"wiki": "Categoría Primera A", "ad": "And Ligi", "ulke": "Kolombiya", "ulkeQ": "Q739", "hafta": 38, "tz": "America/Bogota", "fj": "co.1", "takvim": "yil", "gercek": False},
+    "us": {"wiki": "Major League Soccer", "ad": "Yeni Dünya Ligi", "ulke": "ABD", "ulkeQ": "Q30", "hafta": 34, "tz": "America/New_York", "fj": "mls", "takvim": "yil", "gercek": False},
+    "mx": {"wiki": "Liga MX", "ad": "Aztek Ligi", "ulke": "Meksika", "ulkeQ": "Q96", "hafta": 34, "tz": "America/Mexico_City", "kaynak": "wd", "gercek": False},
 }
 _stat = {"istek": 0}
 
@@ -199,7 +205,7 @@ def sade(ad):
     return " ".join(re.sub(r"[^a-z0-9 ]", " ", a).split())
 
 
-ULKE_EK = {"Q142": ["Q235"]}   # Fransa ligi: Monaco kulübü de oynar
+ULKE_EK = {"Q142": ["Q235"], "Q30": ["Q16"]}   # Fransa ligi: Monaco; MLS: Kanada kulüpleri
 
 
 def qid_ad(ad, ulkeQ, dil="en"):
@@ -235,7 +241,14 @@ def qid_ad(ad, ulkeQ, dil="en"):
 # ---------------- lig maçları ----------------
 def fj_maclari(kod, sezon):
     L = LIGLER[kod]
-    d = http(f"https://raw.githubusercontent.com/openfootball/football.json/master/{sezon}/{L['fj']}.json")
+    if L.get("takvim") == "yil":                                     # takvim yılı ligleri: "2026", yoksa bir önceki yıl
+        y = int(sezon[:4]); d = None
+        for k in (str(y), str(y - 1)):
+            d = http(f"https://raw.githubusercontent.com/openfootball/football.json/master/{k}/{L['fj']}.json")
+            if d and d.get("matches"):
+                print(f"::notice::{kod}: openfootball {k}"); break
+    else:
+        d = http(f"https://raw.githubusercontent.com/openfootball/football.json/master/{sezon}/{L['fj']}.json")
     if not d:
         return None
     out = []
@@ -288,11 +301,33 @@ def wiki_matris(kod, sezon):
     return out
 
 
+def wd_lig_kulupleri(kod):
+    """Fikstür kaynağı olmayan lig: kulüp listesi Wikidata'dan (P118 lig = bu lig, bitiş tarihi yok, futbol kulübü). → {etiket: qid}"""
+    L = LIGLER[kod]
+    d = http("https://www.wikidata.org/w/api.php?" + urllib.parse.urlencode({"action": "wbsearchentities", "search": L["wiki"], "language": "en", "type": "item", "limit": 8, "format": "json"}))
+    adaylar = [x["id"] for x in (d or {}).get("search", [])]
+    for lq in adaylar:
+        r = sparql(f"""SELECT ?c ?l ?n WHERE {{ ?c p:P118 ?st . ?st ps:P118 wd:{lq} . FILTER NOT EXISTS {{ ?st pq:P582 ?bit }}
+                     ?c wdt:P31/wdt:P279* wd:Q476028 ; wdt:P17 wd:{L['ulkeQ']} ; wikibase:sitelinks ?n . FILTER NOT EXISTS {{ ?c wdt:P576 ?kap }}
+                     ?c rdfs:label ?l . FILTER(LANG(?l) = "en") }} ORDER BY DESC(?n)""")
+        q = {}
+        for x in r:
+            c = x["c"]["value"].rsplit("/", 1)[1]
+            if c not in q.values(): q[x["l"]["value"]] = c
+        if 12 <= len(q) <= 24:
+            print(f"::notice::{kod}: Wikidata kulüp listesi {len(q)} ({lq})"); return q
+        if q: print(f"::notice::{kod}: {lq} için {len(q)} kulüp, atlandı")
+    return {}
+
+
 def lig_maclari(kod, sezon):
     """Lig maçları, kulüpler Wikidata anahtarıyla: [{id, hafta, zaman, evk, depk, s, durum}], adlar → qid"""
     L = LIGLER[kod]
+    if L.get("kaynak") == "wd":                                      # fikstür yok: yalnız kulüpler (oyun fikstürü kendi üretir)
+        q = wd_lig_kulupleri(kod)
+        return [{"id": f"{kod}0-{anahtar(v)}", "hafta": None, "zaman": None, "evk": anahtar(v), "depk": anahtar(v), "s": None, "durum": "yok"} for v in q.values()], q
     kisa = f"{sezon[:4]}-{sezon[-2:]}"                                  # "2026-2027" → "2026-27"
-    ham = trwiki_maclari(kisa) if L.get("kaynak") == "trwiki" else fj_maclari(kod, kisa)
+    ham = trwiki_maclari(kisa) if L.get("kaynak") == "trwiki" else fj_maclari(kod, sezon if L.get("takvim") == "yil" else kisa)
     if not ham:
         return None, {}
     adlar = sorted({m["ev"] for m in ham if m["ev"]} | {m["dep"] for m in ham if m["dep"]})
@@ -301,7 +336,7 @@ def lig_maclari(kod, sezon):
     else:
         q = {a: qid_ad(a, L["ulkeQ"], kod) for a in adlar}
     # openfootball ve trwiki şablonu gönüllülerce elle güncellenir, geride kalabilir; eksik skorları en.wiki sonuç matrisinden tamamla
-    if True:
+    if L.get("takvim") != "yil":                                     # takvim yılı liglerinde sonuç matrisi başlığı farklı; sıralama için openfootball yeter
         try:
             mat = wiki_matris(kod, sezon)
             if mat:

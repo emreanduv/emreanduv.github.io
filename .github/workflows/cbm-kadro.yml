@@ -5,6 +5,8 @@ on:
   schedule:
     - cron: "41 4 * * 1"     # her pazartesi (transferler haftalık yansısın)
   workflow_dispatch:
+    inputs:
+      ligler: { description: "Deneme: yalnız bu ligler (ör. br,ar,mx) → veri/cbm/v1/deneme.json. Boş: tam türetme", required: false, default: "" }
 permissions:
   contents: write
 concurrency:
@@ -13,10 +15,11 @@ concurrency:
 jobs:
   kadro:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - name: Türet
+        env: { LIGLER: "${{ inputs.ligler }}" }
         run: python3 araclar/kadro_turet.py
       - name: Değiştiyse kaydet
         run: |
