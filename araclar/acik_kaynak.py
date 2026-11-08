@@ -26,11 +26,11 @@ LIGLER = {
     "de": {"wiki": "Bundesliga", "ad": "Ren Ligi", "ulke": "Almanya", "ulkeQ": "Q183", "hafta": 34, "tz": "Europe/Berlin", "fj": "de.1"},
     "fr": {"wiki": "Ligue 1", "ad": "Galya Ligi", "ulke": "Fransa", "ulkeQ": "Q142", "hafta": 34, "tz": "Europe/Paris", "fj": "fr.1"},
     # Amerika kıtası (1. aşama). takvim "yil": sezon takvim yılıyla oynanır (openfootball klasörü "2026"); gercek False: Challenge'a girmez
-    "br": {"wiki": "Campeonato Brasileiro Série A", "ad": "Amazon Ligi", "ulke": "Brezilya", "ulkeQ": "Q155", "hafta": 38, "tz": "America/Sao_Paulo", "fj": "br.1", "takvim": "yil", "gercek": False},
-    "ar": {"wiki": "Argentine Primera División", "ad": "Pampa Ligi", "ulke": "Arjantin", "ulkeQ": "Q414", "hafta": 30, "tz": "America/Argentina/Buenos_Aires", "fj": "ar.1", "takvim": "yil", "gercek": False},
-    "co": {"wiki": "Categoría Primera A", "ad": "And Ligi", "ulke": "Kolombiya", "ulkeQ": "Q739", "hafta": 38, "tz": "America/Bogota", "fj": "co.1", "takvim": "yil", "gercek": False},
-    "us": {"wiki": "Major League Soccer", "ad": "Yeni Dünya Ligi", "ulke": "ABD", "ulkeQ": "Q30", "hafta": 34, "tz": "America/New_York", "fj": "mls", "takvim": "yil", "gercek": False},
-    "mx": {"wiki": "Liga MX", "ad": "Aztek Ligi", "ulke": "Meksika", "ulkeQ": "Q96", "hafta": 34, "tz": "America/Mexico_City", "kaynak": "wd", "gercek": False},
+    "br": {"wiki": "Campeonato Brasileiro Série A", "ad": "Amazon Ligi", "ulke": "Brezilya", "ulkeQ": "Q155", "hafta": 38, "tz": "America/Sao_Paulo", "fj": "br.1", "takvim": "yil", "dil": "pt", "gercek": False},
+    "ar": {"wiki": "Argentine Primera División", "ad": "Pampa Ligi", "ulke": "Arjantin", "ulkeQ": "Q414", "hafta": 30, "tz": "America/Argentina/Buenos_Aires", "fj": "ar.1", "takvim": "yil", "dil": "es", "gercek": False},
+    "co": {"wiki": "Categoría Primera A", "ad": "And Ligi", "ulke": "Kolombiya", "ulkeQ": "Q739", "hafta": 38, "tz": "America/Bogota", "fj": "co.1", "takvim": "yil", "dil": "es", "gercek": False},
+    "us": {"wiki": "Major League Soccer", "ad": "Yeni Dünya Ligi", "ulke": "ABD", "ulkeQ": "Q30", "hafta": 34, "tz": "America/New_York", "fj": "mls", "takvim": "yil", "dil": "en", "gercek": False},
+    "mx": {"wiki": "Liga MX", "ad": "Aztek Ligi", "ulke": "Meksika", "ulkeQ": "Q96", "hafta": 34, "tz": "America/Mexico_City", "kaynak": "wd", "dil": "es", "gercek": False},
 }
 _stat = {"istek": 0}
 
@@ -301,6 +301,37 @@ def wiki_matris(kod, sezon):
     return out
 
 
+def wiki_takimlar(kod, sezon):
+    """Sezon maddesindeki puan tablolarından (Module:Sports table / results, name_ alanları) kulüp başlıkları → {başlık: qid}.
+    Maddenin içine aldığı "... table" şablonları da okunur (Liga MX gibi Apertura/Clausura ayrı tabloda)."""
+    L = LIGLER[kod]
+    y = int(sezon[:4])
+    for kisa in [f"{y}–{str(y + 1)[-2:]}", f"{y - 1}–{str(y)[-2:]}"]:
+        basliklar, bak = [], [f"{kisa} {L['wiki']} season", f"{kisa} {L['wiki']}", f"Template:{kisa} {L['wiki']} table"]
+        gorulen = set()
+        while bak and len(gorulen) < 8:
+            b = bak.pop(0)
+            if b in gorulen: continue
+            gorulen.add(b)
+            w = wikitext("en.wikipedia.org", b)
+            if not w: continue
+            for _, govde in sablonlar(w, ["#invoke:sports results", "#invoke:sports table"]):
+                for k, v in sablon_alanlari(govde).items():
+                    if k.startswith("name_"):
+                        t = link_hedef(v)
+                        if t and t not in basliklar: basliklar.append(t)
+            for m in re.finditer(r"\{\{\s*(" + re.escape(kisa) + r" " + re.escape(L["wiki"]) + r"[^}|]*?table)\s*[}|]", w):
+                bak.append("Template:" + m.group(1).strip())
+        if 12 <= len(basliklar) <= 24:
+            q = qid_baslik(basliklar, "enwiki")
+            if len(q) >= 12:
+                print(f"::notice::{kod}: Vikipedi tablosundan {len(q)} kulüp ({kisa})")
+                return {t: q[t] for t in basliklar if t in q}
+        elif basliklar:
+            print(f"::notice::{kod}: {kisa} tablolarında {len(basliklar)} kulüp, atlandı")
+    return {}
+
+
 def wd_lig_kulupleri(kod):
     """Fikstür kaynağı olmayan lig: kulüp listesi Wikidata'dan (P118 lig = bu lig, bitiş tarihi yok, futbol kulübü). → {etiket: qid}"""
     L = LIGLER[kod]
@@ -324,7 +355,7 @@ def lig_maclari(kod, sezon):
     """Lig maçları, kulüpler Wikidata anahtarıyla: [{id, hafta, zaman, evk, depk, s, durum}], adlar → qid"""
     L = LIGLER[kod]
     if L.get("kaynak") == "wd":                                      # fikstür yok: yalnız kulüpler (oyun fikstürü kendi üretir)
-        q = wd_lig_kulupleri(kod)
+        q = wiki_takimlar(kod, sezon) or wd_lig_kulupleri(kod)
         return [{"id": f"{kod}0-{anahtar(v)}", "hafta": None, "zaman": None, "evk": anahtar(v), "depk": anahtar(v), "s": None, "durum": "yok"} for v in q.values()], q
     kisa = f"{sezon[:4]}-{sezon[-2:]}"                                  # "2026-2027" → "2026-27"
     ham = trwiki_maclari(kisa) if L.get("kaynak") == "trwiki" else fj_maclari(kod, sezon if L.get("takvim") == "yil" else kisa)
@@ -334,7 +365,7 @@ def lig_maclari(kod, sezon):
     if L.get("kaynak") == "trwiki":
         q = qid_baslik(adlar, "trwiki")
     else:
-        q = {a: qid_ad(a, L["ulkeQ"], kod) for a in adlar}
+        q = {a: qid_ad(a, L["ulkeQ"], L.get("dil", kod)) for a in adlar}
     # openfootball ve trwiki şablonu gönüllülerce elle güncellenir, geride kalabilir; eksik skorları en.wiki sonuç matrisinden tamamla
     if L.get("takvim") != "yil":                                     # takvim yılı liglerinde sonuç matrisi başlığı farklı; sıralama için openfootball yeter
         try:
@@ -365,7 +396,7 @@ def lig_maclari(kod, sezon):
             print(f"::warning::{kod}: {n} kulüp aynı kimliğe eşlendi ({qq})")
     eksik = [a for a in adlar if not q.get(a)]
     if eksik:
-        print(f"::warning::{kod}: kimliği bulunamayan {len(eksik)} kulüp")
+        print(f"::warning::{kod}: kimliği bulunamayan {len(eksik)} kulüp: {', '.join(eksik)}")
     simdi = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     out = []
     for m in ham:
