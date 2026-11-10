@@ -259,7 +259,10 @@ function L3(){const L=B(210,'cave','Demir Dağ');
 const TOTAL=1923;
 const TYPES=['over','under','athletic','castle'],OUTDOOR=['forest','steppe','night','dusk'];
 const PLACE={forest:'Ötüken Ormanı',steppe:'Bozkır Rüzgârı',night:'Ay Işığı Ormanı',dusk:'Alacakaranlık Bozkırı',under:'Yeraltı Yolu',sky:'Gök Katları',kale:'Demir Kale'};
-const BOARDS=['MR. ANDUV!','TAMGA YOLU','KAPTAN MECİT','KURT YOLU','MALAZGİRT','TULPAR'];
+/* Mr. Anduv! ortak pano seti — Kaptan Mecit 3 (km3/veri/takimlar.json "panolar") ve Champion Battle Manager ile AYNI metin ve renkler */
+const PANOLAR=[["MR. ANDUV!","#141414","#f3d35a"],["INSTAGRAM / MR. ANDUV!","#c13584","#ffffff"],["TIKTOK / MR. ANDUV!","#010101","#25f4ee"],["YOUTUBE / MR. ANDUV!","#c4302b","#ffffff"],["X / MR. ANDUV!","#0f1419","#ffffff"],["TWITCH / MR. ANDUV!","#6441a5","#ffffff"],["KICK / MR. ANDUV!","#0b0e0f","#53fc18"],["LINKEDIN / MR. ANDUV!","#0a66c2","#ffffff"],["SPOTIFY / MR. ANDUV!","#1db954","#0b0b0b"],["APPLE MUSIC / MR. ANDUV!","#fa2d48","#ffffff"],["AMAZON MUSIC / MR. ANDUV!","#0b2a35","#25d1da"],["YOUTUBE MUSIC / MR. ANDUV!","#ff0000","#ffffff"],["KURT YOLU","#1d2b38","#ffffff"],["KIRMIZI YALI","#b71c1c","#ffffff"],["CHAMPION BATTLE MANAGER","#2e9e44","#ffffff"],["KAPTAN MECİT","#c8102e","#ffffff"],["MALAZGİRT AKINCILARI","#7a1f3d","#f2c230"],["HİSAR: KARA GECE","#1a1a2e","#e9b949"],["LEGEND HEADS","#ee7b30","#ffffff"],["TOPÇULAR","#5b3a1e","#f2c230"],["TAMGA YOLU","#3a2412","#e8b04a"],["TULPAR","#1c130d","#e0b048"],["NUTUK AKIŞI","#132545","#ffffff"],["YAŞAM REHBERİ","#14171a","#e9d8a6"],["GEZİ PASAPORTU","#0b1e22","#4fd1c5"],["SAAT VİTRİNİ","#0b1e22","#ffb21e"],["EMREANDUV.GITHUB.IO","#1d2b38","#f3d35a"],["FUTBOL AKIŞI","#1f3b3c","#86d36e"],["BORSA AKIŞI","#0d1b3e","#f3d35a"],["FIRSAT AKIŞI","#ed713c","#ffffff"],["BİLGİ AKIŞI","#2a4f8a","#ffffff"]];
+const PANO_RENK=Object.fromEntries(PANOLAR.map(p=>[p[0],[p[1],p[2]]]));
+const BOARDS=PANOLAR.map(p=>p[0]);
 function wsOf(i){return[Math.floor(i/4)+1,i%4+1];}
 function typeOf(i){return i===TOTAL-1?'castle':TYPES[i%4];}
 function themeOf(i){const t=typeOf(i);return t==='over'?OUTDOOR[Math.floor(i/4)%4]:t==='under'?'under':t==='athletic'?'sky':'kale';}
@@ -819,8 +822,11 @@ function drawTile(ch,tx,ty,sx,sy){const th=THEMES[(lv.exitTx!=null&&tx>lv.exitTx
  case'=':{const lf=tileAt(tx-1,ty)!=='=',rt=tileAt(tx+1,ty)!=='=';R(sx+(lf?2:0),sy+3,16-(lf?2:0)-(rt?2:0),9,'#fff8ec');R(sx+3,sy+1,5,3,'#fff8ec');R(sx+9,sy,5,4,'#fff8ec');R(sx+(lf?2:0),sy+9,16-(lf?2:0)-(rt?2:0),4,'#a9c8e4');R(sx+(lf?2:0),sy+12,16-(lf?2:0)-(rt?2:0),1,'#5a7aa0');R(sx+(lf?2:0),sy+2,16-(lf?2:0)-(rt?2:0),1,'#e8d8b8');if(lf)R(sx+1,sy+3,1,9,'#a9c8e4');if(rt)R(sx+14,sy+3,1,9,'#a9c8e4');R(sx+4,sy+2,2,1,'#fff');break;}
  case'L':{R(sx,sy,16,16,'#d8461e');const o=Math.sin((frame+tx*8)*.08)*2;R(sx,sy+2+o,16,3,'#ff9a2c');R(sx+md(tx*5+frame*.2,14),sy+8,2,2,'#ffe066');R(sx,sy,16,2+o,'#2e1810');break;}
  }}
-function drawDeco(d,c){if(d.t==='board'){const sx=d.x*T-c,by=d.y*T;if(sx>W||sx<-60)return;R(sx+8,by+18,3,160-(by+18),'#5a3820');R(sx+37,by+18,3,160-(by+18),'#5a3820');R(sx,by,48,18,'#24150e');R(sx+1,by+1,46,16,'#8a5a32');R(sx+2,by+2,44,14,'#a8743c');
-  let s=8;ctx.font=s+'px '+FONT;while(ctx.measureText(d.text).width>42&&s>5){s-=.5;ctx.font=s+'px '+FONT;}txt(d.text,sx+24,by+9-s/2,'#fff4d0',s,'center',true);}
+function drawDeco(d,c){if(d.t==='board'){const sx=d.x*T-c,by=d.y*T;if(sx>W||sx<-60)return;R(sx+8,by+18,3,160-(by+18),'#5a3820');R(sx+37,by+18,3,160-(by+18),'#5a3820');R(sx,by,48,18,'#24150e');const pr=PANO_RENK[d.text]||['#a8743c','#fff4d0'];R(sx+1,by+1,46,16,'#8a5a32');R(sx+2,by+2,44,14,pr[0]);
+  let ln=d.text.includes(' / ')?d.text.split(' / '):[d.text];let s=8;ctx.font=s+'px '+FONT;const fit=()=>ln.every(l=>ctx.measureText(l).width<=42);
+  while(!fit()&&s>5){s-=.5;ctx.font=s+'px '+FONT;}
+  if(!fit()&&ln.length===1&&d.text.includes(' ')){const w=d.text.split(' '),m=Math.ceil(w.length/2);ln=[w.slice(0,m).join(' '),w.slice(m).join(' ')];s=6;ctx.font=s+'px '+FONT;while(!fit()&&s>4){s-=.5;ctx.font=s+'px '+FONT;}}
+  if(ln.length===1)txt(ln[0],sx+24,by+9-s/2,pr[1],s,'center',true);else{s=Math.min(s,6);txt(ln[0],sx+24,by+5-s/2,pr[1],s,'center',true);txt(ln[1],sx+24,by+12-s/2,pr[1],s,'center',true);}}
  else if(d.t==='otag'){const sx=d.x*T-c;if(sx>W||sx<-60)return;const y=160;R(sx+2,y-24,44,24,'#efe2c0');R(sx+6,y-32,36,8,'#e8d8b0');R(sx+12,y-38,24,6,'#e2d2aa');R(sx+18,y-42,12,4,'#d6c494');R(sx+23,y-48,2,6,'#6a4426');R(sx+22,y-50,4,3,'#e0b048');
   R(sx+2,y-20,44,4,'#b8352b');for(let i=0;i<10;i++)R(sx+4+i*4,y-19,2,2,'#e0b048');R(sx+16,y-16,16,2,'#b8352b');R(sx+18,y-14,12,14,'#3a2414');R(sx+2,y-24,44,1,'#fff6e0');}}
 function drawGoal(e,sx){const py=e.y;const px=sx+1;R(px,py+6,2,8*T-6,'#6a4426');R(px,py-6,2,6,'#d8d8d0');R(px-2,py,6,6,'#e0b048');R(px-1,py+1,2,2,'#fff6d0');
