@@ -875,7 +875,16 @@ function drawHUD(){R(0,0,W,19,'rgba(20,12,8,.72)');R(0,19,W,1,'#c99a4a');const p
  txt(t('time'),156+u*3,1,'#e0b048',7,'left',true);txt(String(timeLeft).padStart(3,'0'),156+u*3,9,timeLeft<=100&&(frame>>4)%2?'#ff7a5a':'#f4ecd8',8);
  for(let i=0;i<5;i++){const x=W-54+i*10;R(x,6,9,9,'#5a3418');R(x+1,7,7,7,lv.got[i]?'#f0c040':'#2a1d14');if(lv.got[i])R(x+4,8,1,5,'#7a3a12');}
  if(save.auto)txt(t('auto'),W-54,1,'#8fd0ea',6);}
-function drawTop(c){const th=THEMES[(lv.exitTx!=null&&c+W/2>lv.exitTx*T)?lv.outTheme:lv.theme];const top=VH-H;R(0,0,W,top+2,th.sky[0]);if(th.stars){for(let i=0;i<Math.floor(W*top/400);i++)R(md(i*53-c*.02,W),md(i*37,Math.max(1,top)),1,1,i%3?'#cfd8ff':'#fff6c0');}else if(lv.theme!=='under'&&lv.theme!=='kale'&&lv.theme!=='cave'){for(let i=0;i<Math.ceil(top/40);i++){const x=md(i*91-c*.05,W+80)-40;cloud(x,22+i*40);}}else{for(let x=-md(c*.3,24);x<W;x+=24){R(x,0,22,top,th.far);R(x+22,0,2,top,'#000');}}}
+function drawTop(c){const top=VH-H;if(top<=0)return;
+ const exX=lv.exitTx!=null?lv.exitTx*T-c+8:1e9;
+ const part=(theme,x0,x1)=>{if(x1<=x0)return;const th=THEMES[theme];ctx.save();ctx.beginPath();ctx.rect(x0,0,x1-x0,top+1);ctx.clip();R(0,0,W,top+1,th.sky[0]);
+  if(th.stars){for(let i=0;i<Math.floor(W*top/300);i++)R(md(i*53-c*.02,W),md(i*37,top),1,1,i%3?'#cfd8ff':'#fff6c0');}
+  else if(theme==='forest'||theme==='steppe'||theme==='sky'||theme==='dusk'){for(let i=0;i<Math.ceil(top/36)+1;i++){const x=md(i*91-c*.05,W+80)-40;cloud(x,md(i*47,Math.max(1,top-10)));}}
+  ctx.restore();};
+ part(lv.theme,0,Math.min(W,exX));part(lv.outTheme||lv.theme,Math.max(0,exX),W);
+ // tavanı olan sütunlarda (yeraltı, kale, mağara) taş yukarı doğru sürer
+ const x0=Math.max(0,Math.floor(c/T)),x1=Math.min(lv.w-1,x0+Math.ceil(W/T)+1);
+ for(let tx=x0;tx<=x1;tx++){const ch=lv.g[0][tx];if(ch!=='X'&&ch!=='B')continue;const sx=tx*T-c;for(let y=top-T;y>-T;y-=T)drawTile('X',tx,0,sx,y);R(sx,0,16,top,'rgba(10,6,4,.45)');}}
 function drawWorld(){const c=Math.round(cam);drawTop(c);ctx.save();ctx.translate(0,VH-H);if(shake>0)ctx.translate(Math.round((Math.random()-.5)*4),Math.round((Math.random()-.5)*3));
  drawLevelBG(c);for(const d of lv.deco)drawDeco(d,c);
  const x0=Math.max(0,Math.floor(c/T)),x1=Math.min(lv.w-1,x0+W/T+1);
