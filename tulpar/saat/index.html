@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Tulpar Süzülüşü</title>
+<style>
+@font-face{font-family:"Pixelify Sans";src:url(fonts/pixelify-sans-latin-700-normal.woff2) format("woff2");font-weight:700}
+@font-face{font-family:"Pixelify Sans";src:url(fonts/pixelify-sans-latin-ext-700-normal.woff2) format("woff2");font-weight:700;unicode-range:U+0100-024F}
+html,body{margin:0;height:100%;background:#120b07;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+#saat{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:22%;overflow:hidden;box-shadow:0 0 0 3px #3a2618,0 0 0 5px #e0b048}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+</style>
+</head>
+<body>
+<div id="saat"><canvas id="cv"></canvas></div>
+<script>
+(()=>{'use strict';
+// Saat ekranı: Apple Watch 45 mm (198x242 nokta) oranında; tarayıcıda ortada bir saat kadranı gibi görünür.
+const W=99,H=121,SC=4;const cv=document.getElementById('cv');cv.width=W*SC;cv.height=H*SC;const ctx=cv.getContext('2d');ctx.setTransform(SC,0,0,SC,0,0);ctx.imageSmoothingEnabled=false;
+function fit(){const s=Math.max(1,Math.floor(Math.min(innerWidth/W,innerHeight/H)*.92));const b=document.getElementById('saat');b.style.width=W*s+'px';b.style.height=H*s+'px';}addEventListener('resize',fit);fit();
+const FONT='"Pixelify Sans",monospace';
+function makeSprite(rows,pal){const h=rows.length,w=Math.max(...rows.map(r=>r.length));const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');rows.forEach((r,j)=>{for(let i=0;i<r.length;i++){const col=pal[r[i]];if(!col)continue;x.fillStyle=col;x.fillRect(i,j,1,1);}});return polish(c);}
+function flip(c){const f=document.createElement('canvas');f.width=c.width;f.height=c.height;const x=f.getContext('2d');x.translate(c.width,0);x.scale(-1,1);x.drawImage(c,0,0);return f;}
+function spr(rows,pal){const r=makeSprite(rows,pal);return{r,l:flip(r)};}
+function polish(c){const x=c.getContext('2d'),w=c.width,h=c.height,id=x.getImageData(0,0,w,h),d=id.data,o=new Uint8ClampedArray(d);
+ const lum=i=>(o[i]*.3+o[i+1]*.59+o[i+2]*.11);const sol=(X,Y)=>{if(X<0||Y<0||X>=w||Y>=h)return false;const i=(Y*w+X)*4;return o[i+3]>0&&lum(i)>48;};
+ for(let Y=0;Y<h;Y++)for(let X=0;X<w;X++){const i=(Y*w+X)*4;if(!o[i+3]||lum(i)<=48)continue;let f=0;if(!sol(X,Y-1))f=.3;else if(!sol(X,Y+1)||!sol(X+1,Y))f=-.24;else if(!sol(X-1,Y))f=.12;
+  if(f>0){d[i]+= (255-d[i])*f;d[i+1]+=(250-d[i+1])*f;d[i+2]+=(235-d[i+2])*f;}else if(f<0){d[i]*=1+f;d[i+1]*=1+f;d[i+2]*=1+f*.7;}}
+ x.putImageData(id,0,0);return c;}
+const HEAD=["....kkkkk.....", "...krrrryk....", "..kRrrrrrrk...", ".kwwwwwwwwwk..", ".kbbsssseksk..", ".kbbssssskssk.", ".kbsssssssssk.", "..kkSSsmmSkk.."];
+const SMB={"stand": ["..kcccyyccck..", ".kscccyycccsk.", ".kkcccyyccckk.", "..kggggggggk..", "..kcccCCccck..", "..knnnkknnnk..", ".kNNNk..kNNNk.", ".kkkkk..kkkkk."], "walk1": ["..kcccyycccsk.", ".kscccyyccckk.", "..kcccyyccck..", "..kggggggggk..", "..kcccCCccck..", ".knnnk...knnk.", "kNNNk....kNNk.", "kkkkk....kkkk."], "walk2": ["..kcccyyccck..", "..kccsyycsck..", "..kcccyyccck..", "..kggggggggk..", "..kcccCCcck...", "...knnnnnk....", "..kNNNkNNk....", "..kkkkkkkk...."], "jump": ["..kcccyycccksk", ".kscccyyccck..", "..kcccyyccck..", "..kggggggggk..", "..kcccCCccck..", "..knnnkkNNNk..", ".kNNNk.kkkk...", ".kkkk........."]};
+const BASE={k:'#1e120c',s:'#f2c08e',S:'#c98a5c',e:'#ffffff',r:'#c8382c',R:'#7e1e18',c:'#b83228',C:'#7a1c18',y:'#f0c048',g:'#f0c048',w:'#f6eedc',W:'#c9bca0',b:'#4a2a14',m:'#6a2a1a',n:'#3c2a5a',N:'#7a4424'};
+const TULB=["..............kk....", ".............kyyk...", "............kyywwk..", "...........kyywwkwk.", "...........kyywwwwwk", "...........kyywwwwpk", "....kkk...kyywwkkk..", "...kccck..kywwk.....", "..kcCccckwwwwwk.....", ".kcCCcckwwwwwwwk....", "kyykkkwwwwwwwwwk....", "kyk.kwwwwwwwwwWk....", "ky..kWwwwwwwwWWk...."];
+const TL={"stand": ["....kwk....kwk......", "....kwk....kwk......", "....khk....khk......", "....kkk....kkk......"], "walk": ["...kwk......kwk.....", "..kwk........kwk....", "..khk........khk....", "..kkk........kkk...."], "jump": ["....kwwk..kwwk......", ".....khk...khk......", ".....kk.....kk......", "...................."]};
+const TPAL={k:'#24150e',w:'#f8f4ea',W:'#c4bed6',y:'#f0c048',c:'#a6dcf4',C:'#5a9ac8',p:'#e8a0a0',h:'#6a4a2a'};
+const TUL={stand:spr([...TULB,...TL.stand],TPAL),walk:spr([...TULB,...TL.walk],TPAL),jump:spr([...TULB,...TL.jump],TPAL)};
+TUL.glide=spr([...["..............kk....", ".............kyyk...", "............kyywwk..", "..kk.......kyywwkwk.", "..kcck.....kyywwwwwk", "...kccck...kyywwwwpk", "....kccck.kyywwkkk..", "....kcCcckkywwk.....", "...kcCCcckwwwwwk....", ".kcCCcckwwwwwwwk....", "kyykkkwwwwwwwwwk....", "kyk.kwwwwwwwwwWk....", "ky..kWwwwwwwwWWk...."],...TL.jump],TPAL);
+TUL.walk2=spr([...TULB,"....kwk...kwk.......","....kwk....kwk......","...khk.....khk......","...kkk.....kkk......"],TPAL);TUL.glide2=spr([...TULB,...TL.jump],TPAL);
+const SBIRD=[spr(["..kk........kk..", ".kwgk......kwgk.", "..kggk....kggk..", "...kGgkkkkggkRk.", "....kgggggggggyk", ".....kGgggggGkk.", "......kkGGk.....", ".......kkk......"],{"k": "#141018", "g": "#40385a", "G": "#2a2440", "R": "#ff4030", "y": "#f0b848", "w": "#8a80b0"}),spr(["................", "..........kkk...", ".....kkkkkggRk..", "..kkkwggggggggyk", ".kwgggggggggkk..", "kggk.kGgggk.....", "kk...kkGGk......", "......kkk......."],{"k": "#141018", "g": "#40385a", "G": "#2a2440", "R": "#ff4030", "y": "#f0b848", "w": "#8a80b0"})];
+const PS={stand:spr([...HEAD,...SMB.stand],BASE)};
+const R=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h);};
+function txt(s,x,y,c='#f4ecd8',size=8,al='center'){ctx.font='700 '+size+'px '+FONT;ctx.textAlign=al;ctx.textBaseline='top';ctx.fillStyle='#1a0f0a';ctx.fillText(s,x+.6,y+.6);ctx.fillStyle=c;ctx.fillText(s,x,y);}
+const L={tr:{lang:'Dil',sub:'Süzülüş',tap:'Dokun: kanat çırp',best:'En iyi',lvl:'Bölüm',over:'Düştün!',again:'Dokun: yeniden',by:'Bir Mr. Anduv! yapımıdır.'},
+ en:{lang:'Language',sub:'Glide',tap:'Tap: flap wings',best:'Best',lvl:'Level',over:'You fell!',again:'Tap: try again',by:'A Mr. Anduv! production.'}};
+let save={lang:null,best:0,coins:0};try{Object.assign(save,JSON.parse(localStorage.getItem('tulpar_saat')||'{}'));}catch(e){}
+const persist=()=>{try{localStorage.setItem('tulpar_saat',JSON.stringify(save));}catch(e){}};
+const t=k=>L[save.lang||'tr'][k];
+let state=save.lang?'title':'lang',langSel=0,frame=0,cam=0,px,py,vy,obs,coins,got,dead,deadT,score;
+const lvl=()=>Math.min(1923,1+Math.floor(save.coins/10));
+function reset(){px=24;py=50;vy=0;obs=[];coins=[];got=0;dead=false;deadT=0;cam=0;score=0;for(let x=110;x<400;x+=46)spawn(x);}
+function spawn(x){const gap=44-Math.min(14,lvl()/140),cy=24+Math.random()*(H-48-gap)+gap/2;obs.push({x,cy,gap,bird:Math.random()<Math.min(.35,.08+lvl()/2500),by:cy,ph:Math.random()*6});
+ for(let k=0;k<3;k++)coins.push({x:x+16+k*9,y:cy+Math.sin(k)*4,on:true});}
+function flap(){if(state==='lang'){save.lang=langSel?'en':'tr';persist();state='title';return;}if(state==='title'){reset();state='play';vy=-1.9;snd(660);return;}if(state==='play'){vy=-1.9;snd(520+Math.random()*80);return;}if(state==='over'&&deadT>40){state='title';}}
+addEventListener('pointerdown',e=>{if(state==='lang'){const r=cv.getBoundingClientRect();const y=(e.clientY-r.top)/r.height*H;if(y>40&&y<70){langSel=0;flap();}else if(y>=70&&y<100){langSel=1;flap();}return;}flap();});
+addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'||e.code==='ArrowUp')flap();if(state==='lang'&&(e.code==='ArrowDown'||e.code==='ArrowUp'))langSel^=1;});
+let wheelAcc=0;addEventListener('wheel',e=>{wheelAcc+=Math.abs(e.deltaY);if(wheelAcc>30){wheelAcc=0;flap();}},{passive:true}); // Digital Crown / döner çerçeve
+let AC=null;function snd(f){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.05,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.12);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.13);}catch(e){}}
+function rock(x,y0,y1,up){const w=12;for(let y=y0;y<y1;y++){const f=up?(y-y0)/(y1-y0+1):(y1-y)/(y1-y0+1);const tip=Math.min(1,f*5);const ww=Math.max(2,w*tip);R(x+(w-ww)/2-1,y,ww+2,1,'#2a1a14');R(x+(w-ww)/2,y,ww,1,'#7a6a5a');R(x+(w-ww)/2,y,Math.max(1,ww*.3),1,'#a8988a');}}
+function update(){frame++;if(state!=='play'){if(state==='over')deadT++;return;}
+ cam+=.75+Math.min(.5,lvl()/4000);vy+=.11;vy=Math.min(vy,2.4);py+=vy;
+ if(obs.length&&obs[obs.length-1].x-cam<W+120)spawn(obs[obs.length-1].x+46);obs=obs.filter(o=>o.x-cam>-20);coins=coins.filter(c=>c.x-cam>-10);
+ for(const o of obs){if(o.bird)o.by=o.cy+Math.sin(frame*.05+o.ph)*10;const sx=o.x-cam;
+  if(px+14>sx&&px+4<sx+12&&(py+4<o.cy-o.gap/2||py+12>o.cy+o.gap/2))die();
+  if(o.bird){const bx=sx+30-((frame*.4)%40);if(Math.abs(bx-(px+8))<9&&Math.abs(o.by-(py+8))<7)die();}}
+ for(const c of coins)if(c.on&&Math.abs(c.x-cam-(px+10))<6&&Math.abs(c.y-(py+8))<7){c.on=false;got++;save.coins++;snd(1320);}
+ if(py<-6||py>H-8)die();score=Math.floor(cam/10);}
+function die(){if(dead)return;dead=true;state='over';deadT=0;if(score>save.best)save.best=score;persist();snd(160);}
+function bg(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#3a96e0');g.addColorStop(1,'#e8f6ff');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ for(let i=0;i<5;i++){const x=((i*37-cam*.2)%140+140)%140-20,y=10+(i*23)%50;R(x,y+2,22,5,'#9ac2e4');R(x+1,y+1,20,5,'#fff');R(x+5,y-2,10,4,'#fff');}
+ for(let i=0;i<8;i++){const x=((i*18-cam*.5)%144+144)%144-20;ctx.fillStyle='#d8ecfa';ctx.beginPath();ctx.arc(x,H+2,13,0,7);ctx.fill();}}
+function draw(){bg();
+ if(state==='lang'){R(0,0,W,H,'rgba(18,11,7,.75)');txt('Tulpar',W/2,8,'#e0b048',14);txt('Dil / Language',W/2,28,'#c9a46a',7);
+  ['Türkçe','English'].forEach((s,i)=>{const y=44+i*30;R(14,y,W-28,22,i===langSel?'#e0b048':'#3a2618');R(15,y+1,W-30,20,i===langSel?'#5a3418':'#24150e');txt(s,W/2,y+6,'#f4ecd8',9);});return;}
+ for(const o of obs){const sx=o.x-cam;rock(sx,0,o.cy-o.gap/2,false);rock(sx,o.cy+o.gap/2,H,true);if(o.bird)ctx.drawImage(SBIRD[(frame>>3)%2].l,sx+22-((frame*.4)%40),o.by-4);}
+ for(const c of coins)if(c.on){const w=[3,2,1,2][(frame>>3)%4];R(c.x-cam-w-1,c.y-4,w*2+2,8,'#5a2e06');R(c.x-cam-w,c.y-3,w*2,6,'#f8c030');}
+ const tul=state==='play'&&vy<0?TUL.glide:TUL.glide2,rs=PS.stand;const bob=state==='title'?Math.sin(frame*.08)*3:0;const yy=Math.round(py+bob);
+ if(state!=='title'||true){ctx.drawImage(rs.r,px-2,(state==='title'?50:yy)+13-rs.r.height);ctx.drawImage(tul.r,px,(state==='title'?50+bob:yy));}
+ if(state==='title'){txt('Tulpar',W/2,8,'#e0b048',14);txt(t('sub'),W/2,24,'#24150e',8);txt(t('tap'),W/2,82,'#24150e',7);txt(t('best')+' '+save.best+' · '+t('lvl')+' '+lvl()+'/1923',W/2,94,'#24150e',6);txt(t('by'),W/2,H-12,'#5a3418',5);}
+ if(state==='play'||state==='over'){txt(String(score),W/2,4,'#fff',10);txt('◆ '+got,W/2,15,'#f8c030',6);}
+ if(state==='over'){R(8,38,W-16,44,'rgba(36,21,14,.88)');txt(t('over'),W/2,43,'#e0b048',10);txt(t('best')+' '+save.best,W/2,57,'#f4ecd8',7);txt(t('again'),W/2,68,'#c9a46a',7);}}
+reset();let acc=0,last=performance.now();function loop(n){acc+=Math.min(100,n-last);last=n;while(acc>=16.67){update();acc-=16.67;}draw();requestAnimationFrame(loop);}
+document.fonts&&document.fonts.load('700 8px "Pixelify Sans"');requestAnimationFrame(loop);
+window.__saat={get state(){return state;},get py(){return py;},flap,reset};
+})();
+</script>
+</body>
+</html>

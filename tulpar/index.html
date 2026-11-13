@@ -1050,14 +1050,14 @@ function drawWorld(){const c=Math.round(cam);drawTop(c);ctx.save();ctx.translate
  ctx.restore();drawHUD();}
 function updParts(){for(const p of parts){p.x+=p.vx;p.y+=p.vy;if(!p.ng)p.vy+=.22;p.life--;}parts=parts.filter(p=>p.life>0);}
 function drawTitle(){const top=VH-H;R(0,0,W,top+2,THEMES.night.sky[0]);for(let i=0;i<60;i++)R(md(i*53,W),md(i*37,Math.max(1,top+60)),1,1,i%3?'#cfd8ff':'#fff6c0');ctx.save();ctx.translate(0,top);drawBG('night',titleCam);{const o=md(Math.round(titleCam),16),b=Math.floor(titleCam/16);for(let i=0;i*16-o<W;i++)for(let j=0;j<3;j++)ctx.drawImage(groundT(THEMES.night,'night',b+i,10+j,j===0,false,false),i*16-o,152+j*16);}
- const fy=96+Math.sin(frame*.05)*6,fx=md(frame*.6,W+80)-40;const rs=PS[0][0].stand;ctx.drawImage(rs.r,fx-2,fy+21-rs.height);ctx.drawImage(TUL.glide.r,fx,fy+8);ctx.restore();}
+ const fy=96+Math.sin(frame*.05)*6,fx=md(frame*.6,W+80)-40;const rs=PS[0][0].stand;ctx.drawImage(rs.r,fx-2,fy+21-rs.r.height);ctx.drawImage(TUL.glide.r,fx,fy+8);ctx.restore();}
 function drawIntro(){R(0,0,W,H,'#120b07');{const [ww,ss]=wsOf(lvIdx);txt(t('world')+' '+ww+'-'+ss,W/2,46,'#e0b048',14,'center',true);}txt(t('level')+' '+(lvIdx+1)+' / 1923',W/2,66,'#c9a46a',8,'center');if(lv.tulparOut)txt(t('gate'),W/2,150,'#8fd0ea',7,'center');txt(lv.name,W/2,82,'#f4ecd8',10,'center');if(lv.bossX0)txt(t('yel'),W/2,96,'#e07a5a',8,'center');ctx.drawImage(LIFE,W/2-22,112,12,8);txt('× '+lives,W/2-6,111,'#f4ecd8',9);txt('ALP '+String(score).padStart(6,'0'),W/2,134,'#c9a46a',8,'center');
  if(pl.mount){ctx.drawImage(TUL.stand.r,W/2+22,106);}txt('Bir Mr. Anduv! yapımıdır.',W/2,H-14,'#7a6040',7,'center');}
 function drawGameOver(){R(0,0,W,H,'#120b07');txt(t('over1'),W/2,70,'#e0b048',16,'center',true);txt(t('over2'),W/2,96,'#f4ecd8',8,'center');if((frame>>5)%2&&stateT>40)txt(t('over3'),W/2,122,'#fff6d0',9,'center');}
 function drawEnding(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#2a1830');g.addColorStop(.6,'#e98a58');g.addColorStop(1,'#f8dca0');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
  ctx.fillStyle='#ffe2a0';ctx.beginPath();ctx.arc(W/2,150,28,0,7);ctx.fill();mountains(0,'#4a3040',160,false);
  txt(t('end1'),W/2,30,'#fff6d0',11,'center',true);
- const fx=W/2-8+Math.sin(frame*.04)*30;const fy2=96+Math.sin(frame*.07)*4,rs=PS[0][0].stand;ctx.drawImage(rs.r,fx-2,fy2+13-rs.height);ctx.drawImage(TUL.glide.r,fx,fy2);
+ const fx=W/2-8+Math.sin(frame*.04)*30;const fy2=96+Math.sin(frame*.07)*4,rs=PS[0][0].stand;ctx.drawImage(rs.r,fx-2,fy2+13-rs.r.height);ctx.drawImage(TUL.glide.r,fx,fy2);
  const tot=Object.values(save.tamga).reduce((a,b)=>a+b,0);txt(t('end2')+tot+' / '+TOTAL*5,W/2,52,'#f4ecd8',8,'center');txt(t('end3'),W/2,66,'#e0b048',9,'center',true);
  R(0,H-15,W,15,'rgba(20,12,8,.8)');txt('Bir Mr. Anduv! yapımıdır.',W/2,H-12,'#e0b048',8,'center');}
 function draw(){ctx.setTransform(SC,0,0,SC,0,0);ctx.imageSmoothingEnabled=false;
