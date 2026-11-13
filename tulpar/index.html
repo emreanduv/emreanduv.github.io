@@ -145,7 +145,7 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image
 'use strict';
 let W=256,VH=212;const H=192,T=16,SC=3;
 const cv=document.getElementById('cv');cv.width=W*SC;cv.height=VH*SC;
-const ctx=cv.getContext('2d');ctx.setTransform(SC,0,0,SC,0,0);ctx.imageSmoothingEnabled=false;
+let ctx=cv.getContext('2d');ctx.setTransform(SC,0,0,SC,0,0);ctx.imageSmoothingEnabled=false;
 const FONT='"Pixelify Sans",monospace';
 
 /* ---------- save ---------- */
@@ -172,18 +172,12 @@ const TPAL={k:'#24150e',w:'#f8f4ea',W:'#c4bed6',y:'#f0c048',c:'#a6dcf4',C:'#5a9a
 const TUL={stand:spr([...TULB,...TL.stand],TPAL),walk:spr([...TULB,...TL.walk],TPAL),jump:spr([...TULB,...TL.jump],TPAL)};
 TUL.glide=spr([...["..............kk....", ".............kyyk...", "............kyywwk..", "..kk.......kyywwkwk.", "..kcck.....kyywwwwwk", "...kccck...kyywwwwpk", "....kccck.kyywwkkk..", "....kcCcckkywwk.....", "...kcCCcckwwwwwk....", ".kcCCcckwwwwwwwk....", "kyykkkwwwwwwwwwk....", "kyk.kwwwwwwwwwWk....", "ky..kWwwwwwwwWWk...."],...TL.jump],TPAL);
 TUL.walk2=spr([...TULB,"....kwk...kwk.......","....kwk....kwk......","...khk.....khk......","...kkk.....kkk......"],TPAL);TUL.glide2=spr([...TULB,...TL.jump],TPAL);
-const ALB=["....kkkkkk....","...knnnnnnk...","..knnnnnnnnk..","..knpppppnnk..",".knnpRpRpnnnk.",".knnppppppnnk.",".knnpkkkkpnnk.","knnnnppppnnnnk","knnnnnnnnnnnnk","knnnnnnnnnnnnk",".knnnnnnnnnnk."];
-const APAL={k:'#1d1a14',n:'#4a5a3e',p:'#d8cfa8',R:'#d0302a'};
-const SALB=[spr([...ALB,"..kpk....kpk..","..kpk....kpk..",".kkkk...kkkk.."],APAL),spr([...ALB,"...kpk..kpk...","...kpk..kpk...","..kkkk..kkkk.."],APAL)];
-const DIK=["...k..k..k....","..kik.kik.kik.",".kiiikiiikiiik",".kddddddddddk.","kddddddddwkddk","kdddddddddddk.","kdddddddddddk.",".kdddddddddk.."];
-const DPAL={k:'#1a1218',i:'#aab0ba',d:'#4a2c4a',w:'#f4ecd8',o:'#e8762c'};
-const SDIK=[spr([...DIK,"..kok...kok...","..kkk...kkk..."],DPAL),spr([...DIK,"...kok.kok....","...kkk.kkk...."],DPAL)];
+const ALB=["....kkkkkk....", "..kknnnnnnkk..", ".knLLnnnnnnDk.", ".kLLnnnnnnnDk.", "knnnkkppkknnDk", "knnpkRkkRkpnDk", "knnppRppRppnDk", "kDnpppppppppDk", "kDnpkwpwpkpDDk", ".kDkpppppppkk.", "..kkPPPPPPkk.."];const APAL={"k": "#1d1a14", "n": "#4a5e3e", "L": "#7a9a5e", "D": "#33422c", "p": "#e6dcb4", "P": "#b8ac84", "R": "#ff3a22", "w": "#ffffff", "N": "#5a3a22"};const SALB=[["..kNNk..kNNk..", ".kNNNk..kNNNk.", ".kkkkk..kkkkk."], ["...kNNkkNNk...", "..kNNNkkNNNk..", "..kkkkkkkkkk.."]].map(f=>spr([...ALB,...f],APAL));
+const DIK=["..k..k..k.....", ".kik.kik.kik..", "kiIikiIikiIik.", "kddddddddddkk.", "kdDdddddddwkok", "kdDddddddkddok", ".kdDDdddddddk.", "..kkkkkkkkkk.."];const DPAL={"k": "#1a1218", "i": "#d8dce4", "I": "#8a909c", "d": "#6a3c70", "D": "#40224a", "w": "#ffffff", "o": "#f08a3a", "O": "#a8501a"};const SDIK=[["..kOk...kOk...", "..kkk...kkk..."], ["...kOk.kOk....", "...kkk.kkk...."]].map(f=>spr([...DIK,...f],DPAL));
 const BPAL={k:'#1a1218',g:'#3b3550',R:'#e0402a',y:'#e0b048'};
 const SBIRD=[spr(["k..............k","kg............gk",".kgg..kkkk..ggk.","..kggkgggRkggk..","...kkggggggkk...",".....kggggk.....","......kyyk......"],BPAL),spr(["................","......kkkk......",".....kgggRk.....","..kkkggggggkkk..",".kggggggggggggk.","kgg..kggggk..ggk","kk....kyyk....kk"],BPAL)];
-const BGP={k:'#1d1a14',g:'#3f7f6a',y:'#e0b048',p:'#e8d8a8'};
-const BGB=["........kk....","........kppk..","........kpkpk.","........kppppk","...kkkk.kppk..","..kgyggk.kpk..",".kgygyggkkpk..","kgggyggggkk...","kgyggggyggk...","kggygggyggk...",".kkkkkkkkkk..."];
-const SBAGA=[spr([...BGB,"..kpk..kpk....","..kpk..kpk....",".kkk..kkk....."],BGP),spr([...BGB,"...kpk.kpk....","...kpk.kpk....","..kkk.kkk....."],BGP)];
-const SSHELL=makeSprite(["....kkkkkk....","..kkgggyggkk..",".kgggyggygggk.","kggyggggggyggk","kgyggyyyyggygk","kggggyggygggk.","kgyggggggggygk",".kkkkkkkkkkkk.",".kyyyyyyyyyyk.","..kkkkkkkkkk.."],BGP);
+const BGP={"k": "#1d1a14", "g": "#3f8f6a", "G": "#2a5e48", "y": "#f0c048", "p": "#ecdcae", "P": "#b8a478", "e": "#ffffff"};const BGB=["........kk....", "........kppk..", "........kpekk.", "........kpppk.", "...kkkk.kppk..", "..kgygGk.kpk..", ".kgyGygGkkpk..", "kgyGGGygGkk...", "kGygGgyGgGk...", "kGGyGGGyGGk...", ".kkkkkkkkkk..."];const SBAGA=[["..kPk..kPk....", "..kpk..kpk....", ".kkk..kkk....."], ["...kpk.kpk....", "...kPk.kPk....", "..kkk.kkk....."]].map(f=>spr([...BGB,...f],BGP));
+const SSHELL=makeSprite(["....kkkkkk....", "..kkgygGgykk..", ".kgyGGyGGGygk.", "kgGyGGGGGyGgk.", "kgGGyyyyyGGGk.", "kGGyGGGGyGGGk.", "kGyGGGGGGGyGk.", ".kkkkkkkkkkkk.", ".kppppppppppk.", "..kkkkkkkkkk.."],BGP);
 const SONEUP=makeSprite(HEAD,Object.assign({},BASE,{r:'#3fae4a',R:'#2f7a3a',y:'#8fe07a',w:'#e8f8e0',W:'#b8d8b0'}));
 const SBOWL=makeSprite(["............","..kkkkkkkk..",".kwwwwwwwwk.","kbwwwwwwwwbk","kbbbbbbbbbbk",".kbbyybbbbk.","..kbbbbbbk..","...kkkkkk...","....kbbk....","...kkkkkk..."],{k:'#24150e',w:'#fbf6ea',b:'#9a6234',y:'#e0b048'});
 const SFLAME=makeSprite([".....k......","....kyk.....","....kyyk....","...kyoyk....","..kyoooyk.k.",".kyoorooykyk",".kyorrrooyk.","kyoorrrroyk.","kyorrwrroyk.",".kyorrrroyk.","..kyooooyk..","...kkkkkk..."],{k:'#5a1a10',y:'#ffe066',o:'#ff9a2c',r:'#e0402a',w:'#fff8e0'});
@@ -926,6 +920,12 @@ function drawBoss(e,sx){const y=Math.round(e.y),x=sx;const fl=e.inv>0&&(frame>>2
  const cx=e.face>0?x+30:x-8;R(cx,y+4,4,22,'#6a4426');R(cx-2,y+2,8,6,'#5a3820');
  const heads=[[x+0,y+2],[x+18,y+2],[x+9,y-4]];const alive=[e.hp>=3,e.hp>=2,e.hp>=1];
  heads.forEach(([hx,hy],i)=>{if(!alive[i]){R(hx+3,hy+8,4,3,dark);return;}R(hx+3,hy+8,4,4,body);R(hx,hy,10,10,skin);R(hx,hy-3,2,3,'#e8dcc0');R(hx+8,hy-3,2,3,'#e8dcc0');R(hx+2,hy+3,2,2,'#ff3020');R(hx+6,hy+3,2,2,'#ff3020');R(hx+2,hy+7,6,1,'#1a1010');R(hx+3,hy+8,1,1,'#fff');R(hx+6,hy+8,1,1,'#fff');});}
+// Yelbegen: konturlu ve gölgeli çizim (ara tuvalde çizilip cilalanır)
+const BCV=document.createElement('canvas');BCV.width=60;BCV.height=64;const BCX=BCV.getContext('2d');
+function drawBossHD(e,sx){const main=ctx;ctx=BCX;BCX.setTransform(1,0,0,1,0,0);BCX.clearRect(0,0,60,64);const f=Object.assign({},e,{y:14});drawBoss(f,14);ctx=main;
+ const id=BCX.getImageData(0,0,60,64),d=id.data,o=new Uint8ClampedArray(d);for(let y=0;y<64;y++)for(let x=0;x<60;x++){const i=(y*60+x)*4;if(o[i+3])continue;
+  const n=(X,Y)=>X>=0&&Y>=0&&X<60&&Y<64&&o[(Y*60+X)*4+3]>0;if(n(x-1,y)||n(x+1,y)||n(x,y-1)||n(x,y+1)){d[i]=22;d[i+1]=14;d[i+2]=12;d[i+3]=255;}}
+ BCX.putImageData(id,0,0);polish(BCV);ctx.drawImage(BCV,sx-14,Math.round(e.y)-14);}
 function drawEnt(e,sx){const y=Math.round(e.y);
  switch(e.t){
  case'a':{if(e.squash){R(sx,y+e.h-4,14,4,'#4a5a3e');R(sx+3,y+e.h-3,2,1,'#d0302a');R(sx+9,y+e.h-3,2,1,'#d0302a');return;}const s=SALB[(e.anim>>3)%2];const img=e.vx>0?s.r:s.l;if(e.flip){ctx.save();ctx.translate(sx,y+e.h);ctx.scale(1,-1);ctx.drawImage(img,0,0);ctx.restore();}else ctx.drawImage(img,sx,y);return;}
@@ -943,7 +943,7 @@ function drawEnt(e,sx){const y=Math.round(e.y);
  case'S':ctx.drawImage(STAMGA,sx,y+Math.round(Math.sin(frame*.08)*1.5));return;
  case'C':drawCheck(e,sx);return;
  case'G':if(lv.goalOpen)drawGoal(e,sx);return;
- case'E':drawBoss(e,sx);return;
+ case'E':drawBossHD(e,sx);return;
  case'rock':R(sx,y,8,8,'#6c675e');R(sx+1,y+1,6,6,'#9a948a');R(sx+2,y+2,2,2,'#c8c2b2');return;
  case'tul':{if(e.st==='loose'&&e.timer<90&&(frame>>2)%2)return;const fr=e.st==='fly'?((frame>>3)%2?'glide2':'glide'):(!e.onG?'jump':(Math.abs(e.vx)>.1?['walk','stand','walk2','stand'][(e.anim>>2)%4]:'stand'));const s=TUL[fr];const bob=e.st==='wait'?Math.round(Math.sin(frame*.1)):0;ctx.drawImage(e.face>0?s.r:s.l,sx-3,y+bob-3);
   if(e.st==='wait'&&(frame>>4)%2)txt('!',sx+7,y-12,'#e0b048',8,'center',true);return;}
