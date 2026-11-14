@@ -50,6 +50,8 @@ LIG = {  # kod: (oyundaki ad, ülke, wikidata ülke)
     "au": ("Güney Haç Ligi", "Avustralya", "Q408"),
 }
 DENEME = bool(os.environ.get("LIGLER"))
+if DENEME:                                                                                          # deneme ligleri (2. ligler): yalnız açıkça istenince
+    LIG.update({k: v for k, v in {"en2": ("Ada Şampiyonası", "İngiltere", "Q145"), "tr2": ("Anadolu 2. Ligi", "Türkiye", "Q43")}.items() if k in os.environ["LIGLER"].split(",")})
 if DENEME:
     CIKTI = os.path.join(KOK, "cbm", "v1", "deneme.json")                                          # deneme: LIGLER=br,mx yalnız bu ligleri türetir (çıktı yazılmaz)
     LIG = {k: v for k, v in LIG.items() if k in os.environ["LIGLER"].split(",")}

@@ -51,6 +51,13 @@ LIGLER = {
     "gr": {"wiki": "Super League Greece", "ad": "Olimpos Ligi", "ulke": "Yunanistan", "ulkeQ": "Q41", "hafta": 26, "tz": "Europe/Athens", "kaynak": "wd", "dil": "el", "gercek": False},
     "au": {"wiki": "A-League Men", "ad": "Güney Haç Ligi", "ulke": "Avustralya", "ulkeQ": "Q408", "hafta": 26, "tz": "Australia/Sydney", "kaynak": "wd", "dil": "en", "gercek": False},
 }
+# Deneme ligleri: yalnız LIGLER ortam değişkeniyle açıkça istenince türetilir (haftalık tam koşuya girmez; oyun bu kodları henüz tanımıyor)
+DENEME_LIGLER = {
+    "en2": {"wiki": "EFL Championship", "ad": "Ada Şampiyonası", "ulke": "İngiltere", "ulkeQ": "Q145", "hafta": 46, "tz": "Europe/London", "fj": "en.2", "dil": "en", "gercek": False},
+    "tr2": {"wiki": "TFF 1. Lig", "ad": "Anadolu 2. Ligi", "ulke": "Türkiye", "ulkeQ": "Q43", "hafta": 38, "tz": "Europe/Istanbul", "kaynak": "wd", "dil": "tr", "gercek": False},
+}
+if os.environ.get("LIGLER"):
+    LIGLER.update({k: v for k, v in DENEME_LIGLER.items() if k in os.environ["LIGLER"].split(",")})
 _stat = {"istek": 0}
 
 
