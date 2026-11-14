@@ -1,0 +1,51 @@
+name: Kaptan Mecit 3 web (güncel kadrolar)
+# Kaptan Mecit deposundaki haftalık kadro aktarımından (km-kadro.yml, pazartesi 08:17) sonra Kaptan Mecit 3'ün web sürümünü
+# main'den yeniden dışa aktarır. Aktarılan veri değişmediyse (kaptan-mecit-3/KADRO = araclar/cbm-veri/KAYNAK) hiçbir şey yapmaz.
+on:
+  schedule:
+    - cron: "47 9 * * 1"
+  workflow_dispatch:
+    inputs:
+      zorla: { description: "Veri aynı olsa da dışa aktar", required: false, default: "" }
+permissions:
+  contents: write
+concurrency:
+  group: km3-web
+  cancel-in-progress: false
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: kaptan-mecit-3 }
+      - uses: actions/checkout@v4
+        with: { repository: emreanduv/kaptan-mecit, ref: main, path: _km, sparse-checkout: "km3\naraclar/cbm-veri/KAYNAK" }
+      - name: Değişti mi
+        id: d
+        run: |
+          Y=$(cat _km/araclar/cbm-veri/KAYNAK); E=$(cat kaptan-mecit-3/KADRO 2>/dev/null || echo yok)
+          echo "yeni=$Y" >> "$GITHUB_OUTPUT"
+          if [ "$Y" != "$E" ] || [ -n "${{ inputs.zorla }}" ]; then echo "yap=1" >> "$GITHUB_OUTPUT"; else echo "Kadro aynı ($Y)"; fi
+      - name: Godot 4.3 ve web şablonu
+        if: steps.d.outputs.yap == '1'
+        run: |
+          curl -sSL -o /tmp/g.zip https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
+          curl -sSL -o /tmp/t.tpz https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
+          unzip -q /tmp/g.zip -d /tmp/g
+          mkdir -p ~/.local/share/godot/export_templates/4.3.stable
+          unzip -q -j /tmp/t.tpz 'templates/web_*' 'templates/version.txt' -d ~/.local/share/godot/export_templates/4.3.stable
+      - name: Dışa aktar
+        if: steps.d.outputs.yap == '1'
+        run: |
+          G=/tmp/g/Godot_v4.3-stable_linux.x86_64; mkdir -p /tmp/web
+          $G --headless --path _km/km3 --import >/dev/null 2>&1 || true
+          $G --headless --path _km/km3 --export-release Web /tmp/web/index.html
+          test -s /tmp/web/index.pck
+          cp /tmp/web/* kaptan-mecit-3/ && echo "${{ steps.d.outputs.yeni }}" > kaptan-mecit-3/KADRO
+      - name: Kaydet
+        if: steps.d.outputs.yap == '1'
+        run: |
+          git config user.name "Mr. Anduv! veri"; git config user.email "actions@users.noreply.github.com"
+          git add kaptan-mecit-3 && git commit -qm "Kaptan Mecit 3 web: güncel kadrolar (${{ steps.d.outputs.yeni }})"
+          for i in 1 2 3; do git pull -q --rebase origin main && git push -q origin main && break; sleep 5; done
