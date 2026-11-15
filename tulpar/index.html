@@ -1511,5 +1511,6 @@ function boot(){applyLang();yerlesTekrar();if(!save.lang)show('ovLang');else goT
 (document.fonts&&document.fonts.load?Promise.race([Promise.all([document.fonts.load('500 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('800 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('8px "Bungee"','TULPARİŞĞÇÖÜ')]),new Promise(r=>setTimeout(r,1500))]):Promise.resolve()).then(boot,boot);
 })();
 </script>
+<script>if('serviceWorker' in navigator&&location.protocol==='https:'&&!window.Capacitor&&!/claude|anthropic/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
 </body>
 </html>
