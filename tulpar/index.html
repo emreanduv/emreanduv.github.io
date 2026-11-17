@@ -86,7 +86,7 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image
     <div class="imza" style="color:var(--gold);font-size:12px;margin-top:6px">Bir Mr. Anduv! yapımıdır.</div>
   </div>
   <div id="ovTitle" class="ov" hidden>
-    <div class="top"><button class="mb sm" id="bShare" type="button">📣 <span data-t="share"></span></button><button class="mb sm" id="bMusic" type="button">♪</button></div>
+    <div class="top"><button class="mb sm" id="bShare" type="button">📣 <span data-t="share"></span></button><button class="mb sm" id="bTam" type="button">★ <span data-t="tamTtl"></span></button><button class="mb sm" id="bMusic" type="button">♪</button></div>
     <div class="logo">TULPAR</div>
     <div class="sub" data-t="subtitle"></div>
     <button class="mb" id="bNew" type="button" data-t="new"></button>
@@ -116,6 +116,8 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image
     <button class="mb sm" id="setLang" type="button"></button>
     <button class="mb sm" id="setSound" type="button"></button>
     <button class="mb sm" id="setAuto" type="button"></button>
+    <button class="mb sm" id="setTam" type="button">★ <span data-t="tamTtl"></span></button>
+    <button class="mb sm" id="setRestore" type="button" data-t="tamRestore"></button>
     <button class="mb sm" id="setRate" type="button">★ <span data-t="rate"></span></button>
     <button class="mb sm" id="setFeed" type="button">✉ <span data-t="feedback"></span></button>
     <button class="mb sm" id="setHelp" type="button">❓ <span data-t="help"></span></button>
@@ -133,6 +135,13 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image
     <p id="winTxt"></p>
     <button class="mb" id="wShare" type="button">📣 <span data-t="shareWin"></span></button>
     <button class="mb" id="wGo" type="button" data-t="continue"></button>
+  </div>
+  <div id="ovTam" class="ov dim" hidden>
+    <h2>★ <span data-t="tamTtl"></span></h2>
+    <p id="tamTxt"></p>
+    <button class="mb" id="tBuy" type="button"></button>
+    <button class="mb sm" id="tRestore" type="button" data-t="tamRestore"></button>
+    <button class="mb sm" id="tLater" type="button" data-t="tamLater"></button>
   </div>
   <div id="rateBox" class="ov dim" hidden>
     <h2 data-t="rateQ"></h2>
@@ -509,9 +518,9 @@ function musicTick(){if(!AC||!(musOn||state==='title')||!save.sound||uiPaused())
 const APP_VER='1.0.0';
 const AR_L='◀︎',AR_R='▶︎';
 const L10={
-tr:{g_ruzgar:'Rüzgârlı bölüm: esintiye dikkat!',g_karanlik:'Karanlık bölüm: ışığın yalnız etrafında',g_kayan:'Kayan gök: ekran kendiliğinden ilerler!',g_kuzgun:'Kuzgun akını: gökten sürüler gelir',map:'Harita',mapHint:'◀︎ ▶︎ yürü · A gir · dokunarak da yürüyebilirsin',kimiz:'Kımız Otağı',kimizGot:'Kımız içtin! +1 can',kimizNo:'Bu dünyanın kımızını içtin',evTxt:'Tulpar seni bekliyor, yola çık!',evName:'Alp\'in Otağı',share:'Arkadaşına öner',subtitle:'Alp ile Tulpar',new:'Yeni Yolculuk',cont:'Devam Et',sel:'Bölüm Seç',selLock:'🔒 Bölüm Seç · bir bölüm bitir',help:'Nasıl Oynanır',settings:'Ayarlar',select:'Bölüm Seç',start:'Başla',back:'Geri',pause:'Mola',resume:'Devam',restart:'Bölümü baştan başlat',home:'Ana menü',langBtn:'Dil: Türkçe',soundOn:'Ses: Açık',soundOff:'Ses: Kapalı',autoOn:'Otomatik koşu: Açık',autoOff:'Otomatik koşu: Kapalı',rate:'Puan ver',feedback:'Bize yaz',erase:'Verilerimi sil',eraseSure:'Emin misin? Tekrar dokun',close:'Kapat',ok:'Tamam',resetGuide:'Rehberi baştan göster',guideReset:'Rehber baştan gösterilecek',shareWin:'Paylaş',continue:'Devam',worldClear:'Dünya {w} tamam!',worldTxt:'Yelbegen yenildi. Tulpar\'la yol sürüyor: bölüm {n} / 1923.',rateQ:'Tulpar\'ı beğendin mi?',idea:'Önerim var',later:'Sonra',copied:'Bağlantı kopyalandı',shareText:'Tulpar: kanatlı tay Tulpar\'la 1923 bölümlük piksel platform yolculuğu. Bir Mr. Anduv! yapımı.',hero:'ALP',world:'DÜNYA',time:'ZAMAN',auto:'OTO',level:'Bölüm',yel:'Yelbegen bekliyor!',gate:'Tulpar kale kapısında bekliyor',clear:'Bölüm tamam!',flag:'Tuğ bonusu: ',tamga:'Tamga: ',over1:'Yol bitmedi!',over2:'Alp yeniden doğrulur.',over3:'A: yeniden dene',end1:'1923 bölümlük yol tamam!',end2:'Toplanan tamga: ',end3:'Tulpar ve alp Ötüken\'e döndü.',worldW:'Dünya',
+tr:{tamTtl:'Tam Sürüm',tamBuy:'Tam Sürümü Al',tamRestore:'Satın alımı geri yükle',tamLater:'Şimdi değil',tamTxt:'Tulpar\'ın bütün yolu: 1923 bölüm, bütün dünyalar ve Yelbegen\'in kaleleri. Bir kez al, hep senin.',tamTxtEnd:'İlk dünyayı bitirdin, eline sağlık! Yolun devamı için Tam Sürüm\'ü bir kez al: 1923 bölüm, bütün dünyalar.',tamOk:'Tam Sürüm açıldı. İyi yolculuklar!',tamNone:'Geri yüklenecek satın alım bulunamadı',g_ruzgar:'Rüzgârlı bölüm: esintiye dikkat!',g_karanlik:'Karanlık bölüm: ışığın yalnız etrafında',g_kayan:'Kayan gök: ekran kendiliğinden ilerler!',g_kuzgun:'Kuzgun akını: gökten sürüler gelir',map:'Harita',mapHint:'◀︎ ▶︎ yürü · A gir · dokunarak da yürüyebilirsin',kimiz:'Kımız Otağı',kimizGot:'Kımız içtin! +1 can',kimizNo:'Bu dünyanın kımızını içtin',evTxt:'Tulpar seni bekliyor, yola çık!',evName:'Alp\'in Otağı',share:'Arkadaşına öner',subtitle:'Alp ile Tulpar',new:'Yeni Yolculuk',cont:'Devam Et',sel:'Bölüm Seç',selLock:'🔒 Bölüm Seç · bir bölüm bitir',help:'Nasıl Oynanır',settings:'Ayarlar',select:'Bölüm Seç',start:'Başla',back:'Geri',pause:'Mola',resume:'Devam',restart:'Bölümü baştan başlat',home:'Ana menü',langBtn:'Dil: Türkçe',soundOn:'Ses: Açık',soundOff:'Ses: Kapalı',autoOn:'Otomatik koşu: Açık',autoOff:'Otomatik koşu: Kapalı',rate:'Puan ver',feedback:'Bize yaz',erase:'Verilerimi sil',eraseSure:'Emin misin? Tekrar dokun',close:'Kapat',ok:'Tamam',resetGuide:'Rehberi baştan göster',guideReset:'Rehber baştan gösterilecek',shareWin:'Paylaş',continue:'Devam',worldClear:'Dünya {w} tamam!',worldTxt:'Yelbegen yenildi. Tulpar\'la yol sürüyor: bölüm {n} / 1923.',rateQ:'Tulpar\'ı beğendin mi?',idea:'Önerim var',later:'Sonra',copied:'Bağlantı kopyalandı',shareText:'Tulpar: kanatlı tay Tulpar\'la 1923 bölümlük piksel platform yolculuğu. Bir Mr. Anduv! yapımı.',hero:'ALP',world:'DÜNYA',time:'ZAMAN',auto:'OTO',level:'Bölüm',yel:'Yelbegen bekliyor!',gate:'Tulpar kale kapısında bekliyor',clear:'Bölüm tamam!',flag:'Tuğ bonusu: ',tamga:'Tamga: ',over1:'Yol bitmedi!',over2:'Alp yeniden doğrulur.',over3:'A: yeniden dene',end1:'1923 bölümlük yol tamam!',end2:'Toplanan tamga: ',end3:'Tulpar ve alp Ötüken\'e döndü.',worldW:'Dünya',
  pamukkale:'Pamukkale Travertenleri',karadeniz:'Karadeniz Yaylası',agri:'Ağrı Dağı Eteği',isikgol:'Isık Göl Kıyısı',van:'Van Gölü Kıyısı',kapadokya:'Peri Bacaları',forest:'Ötüken Ormanı',steppe:'Bozkır Rüzgârı',night:'Ay Işığı Ormanı',dusk:'Alacakaranlık Bozkırı',under:'Yeraltı Yolu',sky:'Gök Katları',kale:'Demir Kale',iron:'Demir Dağ',last:'Yolun Sonu'},
-en:{g_ruzgar:'Windy level: mind the gusts!',g_karanlik:'Dark level: light only around you',g_kayan:'Moving sky: the screen scrolls on its own!',g_kuzgun:'Raven raid: flocks keep coming',map:'Map',mapHint:'◀︎ ▶︎ walk · A enter · or tap a level',kimiz:'Kumis Yurt',kimizGot:'You drank kumis! +1 life',kimizNo:'Already drank this world\'s kumis',evTxt:'Tulpar is waiting, hit the road!',evName:'The Hero\'s Yurt',share:'Tell a friend',subtitle:'The Hero and the Winged Foal',new:'New Journey',cont:'Continue',sel:'Select Level',selLock:'🔒 Select Level · clear a level',help:'How to Play',settings:'Settings',select:'Select Level',start:'Start',back:'Back',pause:'Paused',resume:'Resume',restart:'Restart level',home:'Main menu',langBtn:'Language: English',soundOn:'Sound: On',soundOff:'Sound: Off',autoOn:'Auto-run: On',autoOff:'Auto-run: Off',rate:'Rate the game',feedback:'Write to us',erase:'Delete my data',eraseSure:'Sure? Tap again',close:'Close',ok:'OK',resetGuide:'Show the guide again',guideReset:'The guide will show again',shareWin:'Share',continue:'Continue',worldClear:'World {w} cleared!',worldTxt:'Yelbegen is defeated. The journey goes on: level {n} / 1923.',rateQ:'Enjoying Tulpar?',idea:'I have a suggestion',later:'Later',copied:'Link copied',shareText:'Tulpar: a 1923-level pixel platformer with a winged foal. A Mr. Anduv! game.',hero:'HERO',world:'WORLD',time:'TIME',auto:'AUTO',level:'Level',yel:'Yelbegen awaits!',gate:'Tulpar waits at the castle gate',clear:'Level clear!',flag:'Standard bonus: ',tamga:'Tamga: ',over1:'The road goes on!',over2:'The hero rises again.',over3:'A: try again',end1:'All 1923 levels cleared!',end2:'Tamgas collected: ',end3:'Tulpar and the hero return home.',worldW:'World',
+en:{tamTtl:'Full Version',tamBuy:'Get the Full Version',tamRestore:'Restore purchase',tamLater:'Not now',tamTxt:'The whole road of Tulpar: 1923 levels, every world and every castle of Yelbegen. Buy once, keep forever.',tamTxtEnd:'You finished the first world, well done! Unlock the rest of the road once: 1923 levels, every world.',tamOk:'Full Version unlocked. Safe travels!',tamNone:'No purchase found to restore',g_ruzgar:'Windy level: mind the gusts!',g_karanlik:'Dark level: light only around you',g_kayan:'Moving sky: the screen scrolls on its own!',g_kuzgun:'Raven raid: flocks keep coming',map:'Map',mapHint:'◀︎ ▶︎ walk · A enter · or tap a level',kimiz:'Kumis Yurt',kimizGot:'You drank kumis! +1 life',kimizNo:'Already drank this world\'s kumis',evTxt:'Tulpar is waiting, hit the road!',evName:'The Hero\'s Yurt',share:'Tell a friend',subtitle:'The Hero and the Winged Foal',new:'New Journey',cont:'Continue',sel:'Select Level',selLock:'🔒 Select Level · clear a level',help:'How to Play',settings:'Settings',select:'Select Level',start:'Start',back:'Back',pause:'Paused',resume:'Resume',restart:'Restart level',home:'Main menu',langBtn:'Language: English',soundOn:'Sound: On',soundOff:'Sound: Off',autoOn:'Auto-run: On',autoOff:'Auto-run: Off',rate:'Rate the game',feedback:'Write to us',erase:'Delete my data',eraseSure:'Sure? Tap again',close:'Close',ok:'OK',resetGuide:'Show the guide again',guideReset:'The guide will show again',shareWin:'Share',continue:'Continue',worldClear:'World {w} cleared!',worldTxt:'Yelbegen is defeated. The journey goes on: level {n} / 1923.',rateQ:'Enjoying Tulpar?',idea:'I have a suggestion',later:'Later',copied:'Link copied',shareText:'Tulpar: a 1923-level pixel platformer with a winged foal. A Mr. Anduv! game.',hero:'HERO',world:'WORLD',time:'TIME',auto:'AUTO',level:'Level',yel:'Yelbegen awaits!',gate:'Tulpar waits at the castle gate',clear:'Level clear!',flag:'Standard bonus: ',tamga:'Tamga: ',over1:'The road goes on!',over2:'The hero rises again.',over3:'A: try again',end1:'All 1923 levels cleared!',end2:'Tamgas collected: ',end3:'Tulpar and the hero return home.',worldW:'World',
  pamukkale:'Pamukkale Terraces',karadeniz:'Black Sea Highlands',agri:'Foot of Mount Ararat',isikgol:'Shores of Issyk-Kul',van:'Shores of Lake Van',kapadokya:'Fairy Chimneys',forest:'Ötüken Forest',steppe:'Windy Steppe',night:'Moonlit Forest',dusk:'Dusk Steppe',under:'Underground Path',sky:'Sky Realms',kale:'Iron Castle',iron:'Iron Mountain',last:'End of the Road'}};
 const TIPS={
 tr:{kontrol:`<b>${AR_L} ${AR_R}</b> yürü · <b>A</b> zıpla (basılı tut: daha yüksek) · <b>B</b> basılı tut: koş`,
@@ -563,7 +572,8 @@ const $=id=>document.getElementById(id);
 if(!Array.isArray(save.rh))save.rh=save.unlocked>1?['kontrol','blok','tulpar','tamga','guc','tug','ara']:[];
 const seen=k=>save.rh.includes(k);
 function applyLang(){document.documentElement.lang=LANG;document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t(el.dataset.t);});refreshUI();}
-function refreshUI(){
+function refreshUI(){{const al=tamAlinabilir();['bTam','setTam','setRestore'].forEach(id=>{const el=$(id);if(el)el.hidden=!(al||(id==='setRestore'&&satisVar()));});}
+
  const [cw,cs]=wsOf(Math.min(save.last??0,TOTAL-1));
  $('bCont').textContent=t('cont')+(save.last!=null?` · ${t('worldW')} ${cw}-${cs}`:'');$('bCont').disabled=save.last==null;
  const canSel=save.unlocked>1;$('bSel').textContent=canSel?t('sel'):t('selLock');$('bSel').disabled=!canSel;
@@ -579,14 +589,32 @@ const CAP=window.Capacitor,native=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlat
 const NAV_UA=navigator['user'+'Agent']||'';
 const isElectron=/Electron/i.test(NAV_UA),isQuest=/OculusBrowser|Quest/i.test(NAV_UA);
 const platformName=()=>native?(CAP.getPlatform?CAP.getPlatform():'native'):isElectron?'steam':isQuest?'quest':'web';
+/* ---------- Tam Sürüm (Mr. Anduv! kuralı G70, 17 Kasım 2026) ----------
+   Oyun ücretsiz indirilir; 1. dünya (1-1 … 1-4, ilk Yelbegen kalesi) sonuna kadar oynanır.
+   Dünya 2 ve sonrası uygulama içi tek seferlik "Tam Sürüm" ile açılır (1,99 $). Kilit ekranı bölüm ortasında değil,
+   ilk kale bitip yola devam edilirken çıkar. Ana ekranda ★ Tam Sürüm, Ayarlar'da satın al ve "Satın alımı geri yükle".
+   Telefon dışında (web, Steam, Quest) kilit yok: satış yalnız mağaza uygulamasında. Örnek: Kurt Yolu src/tamsurum.js */
+const TAM_URUN='com.anduv.tulpar.tamsurum',TAM_SINIR=4;
+const satisVar=()=>(native&&['ios','android'].includes(CAP.getPlatform&&CAP.getPlatform())&&!isQuest)||!!window.__TAM_TEST;
+const NP=()=>CAP&&CAP.Plugins&&CAP.Plugins.NativePurchases;
+const tamMi=()=>!satisVar()||!!save.tam;
+const tamAlinabilir=()=>satisVar()&&!save.tam;
+function tamAc(neden){save.tam=true;save.tamNeden=save.tamNeden||neden;persist();refreshUI();}
+let tamSonra=null,tamVaz=null,tamFiyat='';
+async function tamFiyatOku(){if(!satisVar()||!NP())return'';try{const r=await NP().getProducts({productIdentifiers:[TAM_URUN],productType:'inapp'});return(r&&r.products&&r.products[0]&&r.products[0].priceString)||'';}catch(e){return'';}}
+async function tamSatinAl(){if(!NP())return false;try{const r=await NP().purchaseProduct({productIdentifier:TAM_URUN,productType:'inapp',quantity:1});if(r&&r.transactionId){tamAc('satin');return true;}}catch(e){}return false;}
+async function tamGeriYukle(){if(!NP())return false;try{try{await NP().restorePurchases();}catch(e){}const r=await NP().getPurchases({productType:'inapp'});const v=((r&&r.purchases)||[]).some(p=>p.productIdentifier===TAM_URUN&&(p.purchaseState===undefined||p.purchaseState==='PURCHASED'||p.purchaseState==='1'||p.purchaseState===1));if(v){tamAc('geri-yukle');return true;}}catch(e){}return false;}
+function tamEkrani(sonra,bolumSonu,vazgec){tamSonra=sonra||null;tamVaz=vazgec||null;$('tamTxt').textContent=bolumSonu?t('tamTxtEnd'):t('tamTxt');$('tBuy').textContent=t('tamBuy')+(tamFiyat?' · '+tamFiyat:'');show('ovTam');
+ tamFiyatOku().then(p=>{if(p){tamFiyat=p;$('tBuy').textContent=t('tamBuy')+' · '+p;}});}
+function tamKapat(acildi){hide('ovTam');const s=tamSonra,v=tamVaz;tamSonra=null;tamVaz=null;if(acildi&&s)s();else if(!acildi&&v)v();}
 const canRate=()=>native&&!isQuest&&!!(CAP.Plugins&&CAP.Plugins.InAppReview);
 /* ---------- ekran katmanları ---------- */
-const OVS=['coach','rateBox','ovWin','ovHelp','ovSet','ovSel','ovPause','ovLang','ovTitle'];
+const OVS=['coach','ovTam','rateBox','ovWin','ovHelp','ovSet','ovSel','ovPause','ovLang','ovTitle'];
 let coachOn=false,coachSoft=false,retTo=null,pendingNext=null,eraseArm=false;
 const vis=id=>{const el=$(id);return el&&!el.hidden;};
 function show(id){$(id).hidden=false;refreshUI();odakSifirla();}
 function hide(id){$(id).hidden=true;odakSifirla();}
-function uiPaused(){return coachOn||['rateBox','ovWin','ovHelp','ovSet','ovSel','ovPause','ovLang'].some(vis);}
+function uiPaused(){return coachOn||['ovTam','rateBox','ovWin','ovHelp','ovSet','ovSel','ovPause','ovLang'].some(vis);}
 let menuOpen=false;
 function toggleMenu(force){const open=force!==undefined?force:!vis('ovPause');if(open&&!(state==='play'||state==='intro'||state==='map'))return;if(open){$('pRestart').hidden=state==='map';$('pMap').hidden=state==='map';}menuOpen=open;if(open)show('ovPause');else{hide('ovPause');if(AC&&musOn)musNext=AC.currentTime+.05;}}
 function toast(msg){const el=$('toast');el.textContent=msg;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2200);}
@@ -620,7 +648,7 @@ function feedback(){const body=`Tulpar ${APP_VER} · ${platformName()} · ${LANG
 function askRate(){try{CAP.Plugins.InAppReview.requestReview();}catch(e){}save.rated=true;persist();}
 const rateEligible=()=>canRate()&&!save.rated&&(save.rateAsked||0)<2;
 function afterWin(){hide('ovWin');if(rateEligible()){save.rateAsked=(save.rateAsked||0)+1;persist();show('rateBox');}else goNext();}
-function goNext(){hide('rateBox');const n=pendingNext;pendingNext=null;if(n!=null){if(save.auto)startLevel(n);else goMap(Math.floor(n/4),0,{a:0,b:1,t:0});}}
+function goNext(){hide('rateBox');const n=pendingNext;pendingNext=null;if(n!=null&&n>=TAM_SINIR&&!tamMi()){const go=()=>goMap(Math.floor(n/4),0,{a:0,b:1,t:0});tamEkrani(go,true,go);return;}if(n!=null){if(save.auto)startLevel(n);else goMap(Math.floor(n/4),0,{a:0,b:1,t:0});}}
 function showWin(next){pendingNext=next;const [w]=wsOf(lvIdx);$('winTtl').textContent=t('worldClear').replace('{w}',w);$('winTxt').textContent=t('worldTxt').replace('{n}',next+1);show('ovWin');}
 /* ---------- düğmeler ---------- */
 const on=(id,f)=>$(id).addEventListener('click',()=>{initAudio();tone(660,.05,'square',.04);f();});
@@ -641,7 +669,8 @@ on('pHome',()=>goTitle());on('pMap',()=>{toggleMenu(false);goMap(Math.floor(lvId
 on('setLang',()=>{LANG=LANG==='tr'?'en':'tr';save.lang=LANG;persist();applyLang();});
 on('setSound',()=>{save.sound=!save.sound;persist();refreshUI();});
 on('setAuto',()=>{save.auto=!save.auto;persist();refreshUI();});
-on('setRate',()=>askRate());on('setFeed',()=>feedback());
+on('setRate',()=>askRate());on('setTam',()=>tamEkrani(null));on('bTam',()=>tamEkrani(null));on('setRestore',async()=>{const ok=await tamGeriYukle();toast(ok?t('tamOk'):t('tamNone'));});
+on('tBuy',async()=>{const ok=await tamSatinAl();if(ok){toast(t('tamOk'));tamKapat(true);}});on('tRestore',async()=>{const ok=await tamGeriYukle();toast(ok?t('tamOk'):t('tamNone'));if(ok)tamKapat(true);});on('tLater',()=>tamKapat(false));on('setFeed',()=>feedback());
 on('setHelp',()=>{hide('ovSet');show('ovHelp');});
 on('setErase',()=>{if(!eraseArm){eraseArm=true;refreshUI();setTimeout(()=>{eraseArm=false;refreshUI();},4000);return;}try{localStorage.removeItem('tulpar_v1');}catch(e){}location.reload();});
 on('setOk',()=>{hide('ovSet');if(retTo){show(retTo);retTo=null;}});
@@ -656,9 +685,9 @@ const kaynak={pad:{},klavye:{},kol:{}};let onceki={},odak=null,kumandaIzi=false;
 function aktifKap(){for(const id of OVS){if(id==='coach'){if(coachOn&&vis('coach'))return $('coach');continue;}if(vis(id))return $(id);}return null;}
 const gorunur=el=>!!el&&!el.hidden&&el.offsetParent!==null&&el.getBoundingClientRect().width>0;
 const dugmeler=kap=>[...kap.querySelectorAll('button:not([disabled])')].filter(gorunur);
-const VARS='#coachOk,#lTr,#bCont:not([disabled]),#bNew,#pRes,#sGo,#setOk,#hOk,#wGo,#rLater';
+const VARS='#tBuy,#coachOk,#lTr,#bCont:not([disabled]),#bNew,#pRes,#sGo,#setOk,#hOk,#wGo,#rLater';
 function varsayilan(kap){const l=dugmeler(kap);for(const q of VARS.split(',')){const b=l.find(x=>x.matches(q));if(b)return b;}return l[0]||null;}
-const GERI={ovPause:'#pRes',ovSet:'#setOk',ovHelp:'#hOk',ovSel:'#sBack',ovWin:'#wGo',rateBox:'#rLater',coach:'#coachOk'};
+const GERI={ovTam:'#tLater',ovPause:'#pRes',ovSet:'#setOk',ovHelp:'#hOk',ovSel:'#sBack',ovWin:'#wGo',rateBox:'#rLater',coach:'#coachOk'};
 function odakla(b){document.querySelectorAll('.tp-odak').forEach(x=>x.classList.remove('tp-odak'));odak=b;if(b&&kumandaIzi){b.classList.add('tp-odak');try{b.scrollIntoView({block:'nearest'});}catch(e){}}}
 function odakSifirla(){odak=null;document.querySelectorAll('.tp-odak').forEach(x=>x.classList.remove('tp-odak'));}
 function odakTasi(kap,yon){const l=dugmeler(kap);if(!odak||!l.includes(odak))return odakla(varsayilan(kap));
@@ -769,7 +798,7 @@ function spawn(d){const e={t:d.t,vx:0,vy:0,active:false,anim:0};const put=(w,h)=
  return e;}
 
 function setBox(){const bottom=pl.y+pl.h;pl.w=pl.mount?14:12;const sh=pl.size?24:16;pl.h=pl.mount?14+sh-7:(pl.size?24:14);pl.y=bottom-pl.h;}
-function startLevel(i,fromCheck){lvIdx=i;save.last=i;persist();coachSoft=false;coachHide();lv=getLevel(i);let si=0;ents=lv.ents.map(d=>{const e=spawn(d);if(e.t==='S')e.idx=si++;return e;});parts=[];fires=[];bumps={};lv.got=[0,0,0,0,0];
+function startLevel(i,fromCheck){if(i>=TAM_SINIR&&!tamMi()){const st=state;tamEkrani(()=>startLevel(i,fromCheck),false,()=>{if(st==='title'||st==='won')goMap(Math.floor(Math.min(i,TOTAL-1)/4),0);});return;}lvIdx=i;save.last=i;persist();coachSoft=false;coachHide();lv=getLevel(i);let si=0;ents=lv.ents.map(d=>{const e=spawn(d);if(e.t==='S')e.idx=si++;return e;});parts=[];fires=[];bumps={};lv.got=[0,0,0,0,0];
  const sx=(fromCheck&&checkX!=null)?checkX:lv.start*T;
  pl={x:sx,y:10*T-14,w:12,h:14,vx:0,vy:0,face:1,onG:false,size:carry.size,mount:carry.mount,inv:0,kut:0,jh:0,glide:0,buf:0,coy:0,anim:0,hidden:false,gliding:false,combo:0};
  if(lv.type==='castle'&&pl.mount){pl.mount=false;lv.tulparOut=true;const gx=(lv.tulGate||(lv.exitTx?lv.exitTx+4:0));if(gx)ents.push({t:'tul',x:gx*T+1,y:10*T-14,w:14,h:14,vx:0,vy:0,st:'wait',active:true,anim:0,face:-1});}
@@ -1722,6 +1751,7 @@ function loop(now){requestAnimationFrame(loop);girisTick();let dt=now-last;last=
 async function songDemo(k,secs=12){const oc=new OfflineAudioContext(1,44100*secs,44100);const sAC=AC,sM=master,sL=LEADBUS,sN=NOISE;AC=oc;master=oc.createGain();master.gain.value=.5;master.connect(oc.destination);LEADBUS=null;NOISE=null;
  const S=SONGS[k],mul=S.lo?.5:1;let t=.05,i=0;while(t<secs-.5){const n=S.lead[i%S.lead.length];if(n)leadAt(NT[n]*mul,t,S.st*1.6,S.w,S.w==='sawtooth'?.025:S.w==='square'?.03:.06);const b=S.bass[i%S.bass.length];if(b)noteAt(NT[b],t,S.st*1.7,'triangle',.09);const dc=S.dr[i%S.dr.length];if(dc!=='.')drumAt(dc,t);i++;t+=S.st;}
  const buf=await oc.startRendering();AC=sAC;master=sM;LEADBUS=sL;NOISE=sN;return Array.from(buf.getChannelData(0));}
+if(tamAlinabilir())setTimeout(()=>{tamGeriYukle();},2500);
 window.__tulpar={songDemo,goMap,get M(){return M;},get state(){return state;},get ents(){return ents;},get score(){return score;},get pl(){return pl;},get lv(){return lv;},startLevel,inp,get cam(){return cam;},getLevel,startGame,goTitle,showTip,get save(){return save;},kaynak,GEN,levelName,spr:{TUL,PS,STAMGA,THEMES}};
 function boot(){applyLang();yerlesTekrar();if(!save.lang)show('ovLang');else goTitle();requestAnimationFrame(loop);}
 (document.fonts&&document.fonts.load?Promise.race([Promise.all([document.fonts.load('500 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('800 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('8px "Bungee"','TULPARİŞĞÇÖÜ')]),new Promise(r=>setTimeout(r,1500))]):Promise.resolve()).then(boot,boot);
