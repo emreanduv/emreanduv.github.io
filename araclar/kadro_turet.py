@@ -386,10 +386,24 @@ def yonetim_coz(metin):
             if k:
                 y[alan] = k
                 break
-    m = re.search(r"(?i)(sporting director|director of football|football director|sports director|technical director)\s*(?:\]\])?\s*(?:\n\s*\|\|?|\|\||\||:|–|-)\s*([^\n]{2,160})", metin)
-    k = _kisi(m.group(2)) if m else None
-    if k:
-        y["sd"] = k
+    # teknik ekip ve yönetim tabloları ("Current staff", "Club officials"): her rolde bulunan bütün kişiler
+    ROLLER = (("sd", r"sporting director|director of football|football director|sports director|technical director"),
+              ("yardimci", r"assistant (?:head )?(?:coach|manager)|assistant first[- ]team coach"),
+              ("antrenor", r"first[- ]team coach|goalkeeping coach|goalkeeper coach|coach(?=\s*(?:\|\||\n|\|))"),
+              ("kondisyoner", r"fitness coach|strength and conditioning(?: coach)?|conditioning coach|athletic (?:coach|trainer)|physical (?:coach|trainer)"),
+              ("fizyo", r"(?:head |chief |first[- ]team )?physiotherapist|physio(?:therapy)?|team doctor|club doctor|head of medical|masseur"),
+              ("scout", r"(?:chief |head )?scout|head of recruitment|recruitment"))
+    for rol, desen in ROLLER:
+        bul = []
+        for m in re.finditer(r"(?i)(?:^|\n)\s*[|!]\s*(?:\[\[)?(?:" + desen + r")s?\s*(?:\]\])?\s*(?:\n\s*\|\|?|\|\||\||:|–|-)\s*([^\n]{2,160})", metin):
+            k = _kisi(m.group(1))
+            if k and k not in bul and k not in y.values():
+                bul.append(k)
+        if bul:
+            if rol == "sd":
+                y["sd"] = bul[0]
+            else:
+                y.setdefault("ekip", {})[rol] = bul[:6]
     return y
 
 
@@ -778,7 +792,7 @@ def main():
                 kulup["oyuncular"].append(ty)
             yon = YONETIM.get(wk.get(q) or "", {})
             if yon:                                                        # gerçek kişiler yalnız türetilmiş adla (Lukaku → Lakaka gibi)
-                kulup["yonetim"] = {k: turet(v) for k, v in yon.items()}
+                kulup["yonetim"] = {k: ({r: [turet(x) for x in L] for r, L in v.items()} if k == "ekip" else turet(v)) for k, v in yon.items()}
             kulup["_wk"] = wk.get(q); kulup["_q"] = q
             kul.append(kulup)
             print(f"{kod} {t}: {len(kulup['oyuncular'])} oyuncu")
