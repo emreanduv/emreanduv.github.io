@@ -369,6 +369,7 @@ def _kisi(deger):
     m = re.search(r"\[\[([^\]|#]+)(?:\|([^\]]+))?\]\]", deger)
     ad = (m.group(2) or m.group(1)) if m else re.split(r"<br|\(|,|\{\{|\n", deger)[0]
     ad = re.sub(r"\{\{[^}]*\}\}", "", ad).replace("'", "").strip(" *:-|")
+    ad = re.sub(r"^(?:(?:Dr|Prof|Doç|Op|Uzm|Mr|Sir)\.?\s+)+", "", ad, flags=re.I)   # unvan isim değildir (Dr. → Dl. olmasın)
     ad = re.sub(r"\s+", " ", ad)
     if not ad or len(ad) > 40 or len(ad.split()) > 5 or not re.search(r"[A-Za-zÀ-ž]", ad) or re.search(r"(?i)vacant|tbd|board|committee|unknown", ad):
         return None
