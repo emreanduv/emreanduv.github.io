@@ -1375,7 +1375,7 @@ function draw(){ctx.setTransform(SC,0,0,SC,0,0);ctx.imageSmoothingEnabled=false;
  else if(lv)drawWorld();
  if(uiPaused()&&state!=='title'){R(0,0,W,VH,'rgba(0,0,0,.3)');}}
 
-let drawAlpHook=null;
+let drawAlpHook=null,drawArtHook=null;
 /* ---------- görsel yenileme (gorsel.js) ---------- */
 {
 /* ==========================================================================
@@ -1740,6 +1740,7 @@ drawEnding=function(){g=ctx;g.fillStyle=lg(0,0,0,H,['#2a1830','#a85a6a','#e98a58
  const tot=Object.values(save.tamga).reduce((a,b)=>a+b,0);txt(t('end2')+tot+' / '+TOTAL*5,W/2,48,'#fff8e8',8,'center');txt(t('end3'),W/2,62,'#f3d58a',9,'center',true);
  g.fillStyle='rgba(20,12,8,0.8)';g.fillRect(0,H-15,W,15);txt('Bir Mr. Anduv! yapımıdır.',W/2,H-12,'#f3d58a',8,'center',true);postFX('dusk');};
 drawAlpHook=(x,y,f,o)=>{g=ctx;drawAlp(x,y,f,o);};
+drawArtHook=(cx,fn)=>{const old=g;g=cx;try{fn({drawAlp,drawTulparHorse,drawBGV,glow,circ,ell,rrect,lg,rg,fs,shade});}finally{g=old;}};
 
 }
 /* ---------- loop ---------- */
@@ -1752,7 +1753,7 @@ async function songDemo(k,secs=12){const oc=new OfflineAudioContext(1,44100*secs
  const S=SONGS[k],mul=S.lo?.5:1;let t=.05,i=0;while(t<secs-.5){const n=S.lead[i%S.lead.length];if(n)leadAt(NT[n]*mul,t,S.st*1.6,S.w,S.w==='sawtooth'?.025:S.w==='square'?.03:.06);const b=S.bass[i%S.bass.length];if(b)noteAt(NT[b],t,S.st*1.7,'triangle',.09);const dc=S.dr[i%S.dr.length];if(dc!=='.')drumAt(dc,t);i++;t+=S.st;}
  const buf=await oc.startRendering();AC=sAC;master=sM;LEADBUS=sL;NOISE=sN;return Array.from(buf.getChannelData(0));}
 if(tamAlinabilir())setTimeout(()=>{tamGeriYukle();},2500);
-window.__tulpar={songDemo,goMap,get M(){return M;},get state(){return state;},get ents(){return ents;},get score(){return score;},get pl(){return pl;},get lv(){return lv;},startLevel,inp,get cam(){return cam;},getLevel,startGame,goTitle,showTip,get save(){return save;},kaynak,GEN,levelName,spr:{TUL,PS,STAMGA,THEMES}};
+window.__tulpar={get art(){return drawArtHook;},songDemo,goMap,get M(){return M;},get state(){return state;},get ents(){return ents;},get score(){return score;},get pl(){return pl;},get lv(){return lv;},startLevel,inp,get cam(){return cam;},getLevel,startGame,goTitle,showTip,get save(){return save;},kaynak,GEN,levelName,spr:{TUL,PS,STAMGA,THEMES}};
 function boot(){applyLang();yerlesTekrar();if(!save.lang)show('ovLang');else goTitle();requestAnimationFrame(loop);}
 (document.fonts&&document.fonts.load?Promise.race([Promise.all([document.fonts.load('500 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('800 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('8px "Bungee"','TULPARİŞĞÇÖÜ')]),new Promise(r=>setTimeout(r,1500))]):Promise.resolve()).then(boot,boot);
 })();
