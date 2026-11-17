@@ -357,12 +357,49 @@ def parametreler(govde):
     return p
 
 
+YONETIM = {}   # madde başlığı → {"bas": gerçek ad, "td": …, "sd": …}; dosyaya yalnız türetilmiş (bozulmuş) ad yazılır
+
+
+def _kisi(deger):
+    """bilgi kutusu ya da tablo hücresinden ilk kişi adı: [[Ad Soyad|görünen]] ya da düz metin"""
+    if not deger:
+        return None
+    deger = re.sub(r"<ref[^>]*/>|<ref[^>]*>.*?</ref>", "", deger, flags=re.S)
+    deger = re.sub(r"\{\{(?:flag|flagicon|fb|flagathlete)[^}]*\}\}", "", deger, flags=re.I)
+    m = re.search(r"\[\[([^\]|#]+)(?:\|([^\]]+))?\]\]", deger)
+    ad = (m.group(2) or m.group(1)) if m else re.split(r"<br|\(|,|\{\{|\n", deger)[0]
+    ad = re.sub(r"\{\{[^}]*\}\}", "", ad).replace("'", "").strip(" *:-|")
+    ad = re.sub(r"\s+", " ", ad)
+    if not ad or len(ad) > 40 or len(ad.split()) > 5 or not re.search(r"[A-Za-zÀ-ž]", ad) or re.search(r"(?i)vacant|tbd|board|committee|unknown", ad):
+        return None
+    return ad
+
+
+def yonetim_coz(metin):
+    """Kulüp maddesinden başkan (bilgi kutusu chairman/president), teknik direktör (manager/head coach) ve
+    sportif direktör (yönetim/teknik ekip tablosundaki "Sporting director / Director of football" satırı)."""
+    y = {}
+    for alan, anahtarlar in (("bas", ("chairman", "president")), ("td", ("manager", "head coach", "coach"))):
+        for a in anahtarlar:
+            m = re.search(r"\|\s*" + a + r"\s*=\s*([^\n]+)", metin, re.I)
+            k = _kisi(m.group(1)) if m else None
+            if k:
+                y[alan] = k
+                break
+    m = re.search(r"(?i)(sporting director|director of football|football director|sports director|technical director)\s*(?:\]\])?\s*(?:\n\s*\|\|?|\|\||\||:|–|-)\s*([^\n]{2,160})", metin)
+    k = _kisi(m.group(2)) if m else None
+    if k:
+        y["sd"] = k
+    return y
+
+
 def wiki_kadro(baslik):
     d = http("https://en.wikipedia.org/w/api.php?" + urllib.parse.urlencode({"action": "parse", "page": baslik, "prop": "wikitext", "format": "json", "redirects": 1}))
     time.sleep(0.4)
     metin = ((d or {}).get("parse", {}).get("wikitext", {}) or {}).get("*", "")
     if not metin:
         return [], []
+    YONETIM[baslik] = yonetim_coz(metin)
     renk = []
     for k in ("body1", "shorts1", "socks1"):
         m = re.search(r"\|\s*" + k + r"\s*=\s*#?([0-9A-Fa-f]{6})", metin)
@@ -739,6 +776,9 @@ def main():
                 if GECMIS.get(o.get("baslik") or ""):
                     ty["_g"] = GECMIS[o["baslik"]]                     # sonra kulüpler türetilmiş adlara çevrilir
                 kulup["oyuncular"].append(ty)
+            yon = YONETIM.get(wk.get(q) or "", {})
+            if yon:                                                        # gerçek kişiler yalnız türetilmiş adla (Lukaku → Lakaka gibi)
+                kulup["yonetim"] = {k: turet(v) for k, v in yon.items()}
             kulup["_wk"] = wk.get(q); kulup["_q"] = q
             kul.append(kulup)
             print(f"{kod} {t}: {len(kulup['oyuncular'])} oyuncu")
