@@ -473,9 +473,30 @@ def zenginlestir(basliklar):
     """Wikipedia başlıklarından doğum, boy, mevki ve ünlülük (Wikidata)."""
     out = {}
     basliklar = [b for b in basliklar if b]
-    for i in range(0, len(basliklar), 40):
-        parca = basliklar[i:i + 40]
-        vals = " ".join("<https://en.wikipedia.org/wiki/" + urllib.parse.quote(b.replace(" ", "_"), safe="()_,'-.") + ">" for b in parca)
+    # kadro tablosundaki bağlantı çoğu zaman yönlendirmedir (N'golo Kanté → N'Golo Kanté); Wikidata yalnız asıl başlığı tanır
+    asil = {}
+    for i in range(0, len(basliklar), 50):
+        parca = basliklar[i:i + 50]
+        try:
+            d = http("https://en.wikipedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "titles": "|".join(parca), "redirects": 1, "format": "json", "formatversion": 2}))
+            q = (d or {}).get("query", {})
+            for x in (q.get("normalized") or []) + (q.get("redirects") or []):
+                asil[x["from"]] = x["to"]
+        except Exception:
+            pass
+    def son(b):
+        for _ in range(3):
+            if b not in asil: break
+            b = asil[b]
+        return b
+    geri = {}
+    for b in basliklar:
+        geri.setdefault(son(b), []).append(b)
+    hedefler = list(geri)
+    for i in range(0, len(hedefler), 40):
+        parca = hedefler[i:i + 40]
+        # Wikidata makale adresleri MediaWiki biçiminde kodlanır: kesme işareti %27 olur
+        vals = " ".join("<https://en.wikipedia.org/wiki/" + urllib.parse.quote(b.replace(" ", "_"), safe="()_,-.:;@$!*/~") + ">" for b in parca)
         r = sparql(f"""SELECT ?a ?dob ?boy ?n ?posLabel WHERE {{ VALUES ?a {{ {vals} }} ?a schema:about ?p . ?p wikibase:sitelinks ?n .
           OPTIONAL {{ ?p wdt:P569 ?dob }} OPTIONAL {{ ?p wdt:P2048 ?boy }} OPTIONAL {{ ?p wdt:P413 ?pos }}
           SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }} }}""")
@@ -491,6 +512,10 @@ def zenginlestir(basliklar):
                     pass
             if x.get("posLabel") and x["posLabel"]["value"].lower() not in o["pos"]:
                 o["pos"].append(x["posLabel"]["value"].lower())
+    for h, eski in geri.items():   # sonuçları kadrodaki (yönlendirme) başlıklara da yaz
+        if h in out:
+            for e in eski:
+                out.setdefault(e, out[h])
     return out
 
 
