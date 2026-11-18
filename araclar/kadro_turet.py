@@ -497,12 +497,17 @@ def zenginlestir(basliklar):
         parca = hedefler[i:i + 40]
         # Wikidata makale adresleri MediaWiki biçiminde kodlanır: kesme işareti %27 olur
         vals = " ".join("<https://en.wikipedia.org/wiki/" + urllib.parse.quote(b.replace(" ", "_"), safe="()_,-.:;@$!*/~") + ">" for b in parca)
-        r = sparql(f"""SELECT ?a ?dob ?boy ?n ?posLabel WHERE {{ VALUES ?a {{ {vals} }} ?a schema:about ?p . ?p wikibase:sitelinks ?n .
+        r = sparql(f"""SELECT ?a ?dob ?boy ?n ?posLabel ?spor ?vat WHERE {{ VALUES ?a {{ {vals} }} ?a schema:about ?p . ?p wikibase:sitelinks ?n .
           OPTIONAL {{ ?p wdt:P569 ?dob }} OPTIONAL {{ ?p wdt:P2048 ?boy }} OPTIONAL {{ ?p wdt:P413 ?pos }}
+          OPTIONAL {{ ?p wdt:P1532 ?su . ?su wdt:P297 ?spor }} OPTIONAL {{ ?p wdt:P27 ?vu . ?vu wdt:P297 ?vat }}
           SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }} }}""")
         for x in r:
             b = urllib.parse.unquote(x["a"]["value"].rsplit("/wiki/", 1)[1]).replace("_", " ")
-            o = out.setdefault(b, {"dob": None, "boy": None, "n": int(x["n"]["value"]), "pos": []})
+            o = out.setdefault(b, {"dob": None, "boy": None, "n": int(x["n"]["value"]), "pos": [], "spor": None, "vat": []})
+            if x.get("spor") and not o["spor"]:
+                o["spor"] = x["spor"]["value"]                                    # sporda temsil ettiği ülke (P1532)
+            if x.get("vat") and x["vat"]["value"] not in o["vat"]:
+                o["vat"].append(x["vat"]["value"])                                # vatandaşlıklar (P27)
             if x.get("dob") and not o["dob"]:
                 o["dob"] = x["dob"]["value"][:10]
             if x.get("boy") and not o["boy"]:
@@ -520,6 +525,12 @@ def zenginlestir(basliklar):
 
 
 GENEL = {"GK": "KL", "DF": "D", "MF": "MOS", "FW": "SF"}
+# kadro şablonunda ülke kodu yerine ad ya da eski kod yazılan durumlar (nat=Kosovo, nat=KOS …)
+NAT_AD = {"KOS": "KVX", "KOSOVO": "KVX", "SERBIA": "SRB", "TURKEY": "TUR", "TÜRKIYE": "TUR", "TURKIYE": "TUR", "MONTENEGRO": "MNE", "NORTH MACEDONIA": "MKD", "MACEDONIA": "MKD",
+          "BOSNIA AND HERZEGOVINA": "BIH", "CROATIA": "CRO", "ALBANIA": "ALB", "GERMANY": "GER", "NETHERLANDS": "NED", "PORTUGAL": "POR", "SPAIN": "ESP", "FRANCE": "FRA", "ITALY": "ITA", "BRAZIL": "BRA",
+          "ARGENTINA": "ARG", "BELGIUM": "BEL", "DENMARK": "DEN", "SWEDEN": "SWE", "NORWAY": "NOR", "POLAND": "POL", "ENGLAND": "ENG", "SCOTLAND": "SCO", "WALES": "WAL", "GREECE": "GRE",
+          "NIGERIA": "NGA", "GHANA": "GHA", "SENEGAL": "SEN", "MOROCCO": "MAR", "ALGERIA": "ALG", "EGYPT": "EGY", "CAMEROON": "CMR", "IVORY COAST": "CIV", "UKRAINE": "UKR", "AUSTRIA": "AUT",
+          "SWITZERLAND": "SUI", "CZECH REPUBLIC": "CZE", "SLOVAKIA": "SVK", "SLOVENIA": "SVN", "HUNGARY": "HUN", "ROMANIA": "ROU", "GEORGIA": "GEO", "AZERBAIJAN": "AZE", "URUGUAY": "URU", "COLOMBIA": "COL"}
 
 
 def fnv(s):
@@ -530,6 +541,26 @@ def fnv(s):
         h ^= b[i] | (b[i + 1] << 8)
         h = (h * 16777619) & 0xFFFFFFFF
     return h
+
+
+def katla(s):
+    """Arama için sadeleştirme (oyundaki ara.js katla() ile birebir): Kadıoğlu → kadioglu, Vlahović → vlahovic."""
+    import unicodedata
+    s = (s or "").replace("İ", "i").replace("I", "i").replace("ı", "i").lower()
+    s = s.replace("ß", "ss").replace("ø", "o").replace("đ", "d").replace("ł", "l").replace("æ", "ae").replace("œ", "oe")
+    s = "".join(c for c in unicodedata.normalize("NFD", s) if not unicodedata.combining(c))
+    return [t for t in re.split(r"[^a-z0-9]+", s) if len(t) >= 2]
+
+
+def ara_iz(*adlar):
+    """Gerçek adın arama izi: her sözcüğün FNV özeti (ad saklanmaz; oyunda gerçek adla aranınca türetilmiş ad bulunur)."""
+    iz = []
+    for a in adlar:
+        for t in katla(re.sub(r"\s*\(.*?\)", "", a or "")):
+            h = fnv(t)
+            if h not in iz:
+                iz.append(h)
+    return iz
 
 
 def anahtar(o):
@@ -766,7 +797,9 @@ def main():
                 for o in wl:
                     z = zen.get(o["baslik"] or "", {})
                     oyuncular.append({"baslik": o["baslik"], "ad": o["ad"], "dob": z.get("dob"), "boy": z.get("boy"), "n": z.get("n", 3), "no": o["no"],
-                                      "pos": z.get("pos", []), "genel": GENEL.get(o["pos"]), "ev": None, "ulke": FIFA.get(o["nat"])})
+                                      "pos": z.get("pos", []), "genel": GENEL.get(o["pos"]), "ev": None, "ulke": FIFA.get(o["nat"]) or FIFA.get(NAT_AD.get(o["nat"], "")) or z.get("spor") or (z.get("vat") or [None])[0]})
+                    if o["nat"] and not FIFA.get(o["nat"]) and not FIFA.get(NAT_AD.get(o["nat"], "")):
+                        print(f"  UYRUK? {t}: nat={o['nat']!r} -> wikidata {z.get('spor') or z.get('vat')}")
             else:
                 if oy is None:
                     oy = kadro(list(qmap.values()))
@@ -813,6 +846,7 @@ def main():
                 if kesin:
                     ty["kesin"] = 1
                 ty["k"] = anahtar(ty)
+                ty["ara"] = ara_iz(o["ad"], o.get("baslik"))                # gerçek adla arama (özet; ad yazılmaz)
                 if GECMIS.get(o.get("baslik") or ""):
                     ty["_g"] = GECMIS[o["baslik"]]                     # sonra kulüpler türetilmiş adlara çevrilir
                 kulup["oyuncular"].append(ty)
