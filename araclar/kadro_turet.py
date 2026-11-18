@@ -806,7 +806,7 @@ def main():
                     mev, yan, kesin = o["genel"], [], False
                 no = o.get("no") or ""
                 ty = {"ad": " ".join(parca[:-1]) if len(parca) > 1 else "", "soyad": parca[-1],
-                      "dogum": (o["dob"] or "")[:4] or None, "uyruk": o["ev"] or o["ulke"] or "", "mevki": mev,
+                      "dogum": (o["dob"] or "")[:10] or None, "uyruk": o["ev"] or o["ulke"] or "", "mevki": mev,
                       "boy": o["boy"], "un": o["n"], "no": int(no) if no.isdigit() else None}
                 if yan:
                     ty["yan"] = yan
