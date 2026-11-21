@@ -1,6 +1,6 @@
 // Tulpar çevrimdışı önbelleği: bir kez internetle açıldıktan sonra oyun uçakta da oynanır.
-const SURUM='tulpar-v2';
-const DOSYALAR=['./','index.html','manifest.webmanifest','ikon-512.png',
+const SURUM='tulpar-v3';
+const DOSYALAR=['./','index.html','manifest.webmanifest','ikon-512.png','pano.js',
  'fonts/bungee-latin-400-normal.woff2','fonts/bungee-latin-ext-400-normal.woff2',
  'fonts/rubik-latin-500-normal.woff2','fonts/rubik-latin-800-normal.woff2','fonts/rubik-latin-ext-500-normal.woff2','fonts/rubik-latin-ext-800-normal.woff2',
  'fonts/pixelify-sans-latin-700-normal.woff2','fonts/pixelify-sans-latin-ext-700-normal.woff2'];

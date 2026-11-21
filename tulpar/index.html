@@ -89,6 +89,7 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image
     <div class="top"><button class="mb sm" id="bShare" type="button">📣 <span data-t="share"></span></button><button class="mb sm" id="bTam" type="button">★ <span data-t="tamTtl"></span></button><button class="mb sm" id="bMusic" type="button">♪</button></div>
     <div class="logo">TULPAR</div>
     <div class="sub" data-t="subtitle"></div>
+    <button class="mb sm kar" id="bKar" type="button"></button>
     <button class="mb" id="bNew" type="button" data-t="new"></button>
     <button class="mb" id="bCont" type="button"></button>
     <button class="mb" id="bSel" type="button"></button>
@@ -116,6 +117,7 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image
     <button class="mb sm" id="setLang" type="button"></button>
     <button class="mb sm" id="setSound" type="button"></button>
     <button class="mb sm" id="setAuto" type="button"></button>
+    <button class="mb sm" id="setKar" type="button"></button>
     <button class="mb sm" id="setTam" type="button">★ <span data-t="tamTtl"></span></button>
     <button class="mb sm" id="setRestore" type="button" data-t="tamRestore"></button>
     <button class="mb sm" id="setRate" type="button">★ <span data-t="rate"></span></button>
@@ -152,6 +154,7 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image
   <div id="coach" hidden><div id="coachTxt"></div><button class="mb sm" id="coachOk" type="button" data-t="ok"></button></div>
   <div id="toast" hidden></div>
 </div></div>
+<script src="pano.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -161,8 +164,9 @@ let ctx=cv.getContext('2d');ctx.setTransform(SC,0,0,SC,0,0);ctx.imageSmoothingEn
 const FONT='"Rubik",sans-serif';
 
 /* ---------- save ---------- */
-let save={unlocked:1,auto:false,sound:true,tamga:{}};
+let save={unlocked:1,auto:false,sound:true,tamga:{},kar:'karagoz'};
 try{const s=JSON.parse(localStorage.getItem('tulpar_v1')||'null');if(s)save=Object.assign(save,s);}catch(e){}
+let KAR=save.kar==='hacivat'?'hacivat':'karagoz';
 function persist(){try{localStorage.setItem('tulpar_v1',JSON.stringify(save));}catch(e){}}
 
 /* ---------- sprites ---------- */
@@ -416,7 +420,9 @@ const TOTAL=1923;
 const TYPES=['over','under','athletic','castle'],OUTDOOR=['forest','steppe','van','kapadokya','pamukkale','karadeniz','agri','night','isikgol','dusk'];
 const PLACE={pamukkale:'Pamukkale Travertenleri',karadeniz:'Karadeniz Yaylası',agri:'Ağrı Dağı Eteği',isikgol:'Isık Göl Kıyısı',van:'Van Gölü Kıyısı',kapadokya:'Peri Bacaları',forest:'Ötüken Ormanı',steppe:'Bozkır Rüzgârı',night:'Ay Işığı Ormanı',dusk:'Alacakaranlık Bozkırı',under:'Yeraltı Yolu',sky:'Gök Katları',kale:'Demir Kale'};
 /* Mr. Anduv! ortak pano seti — Kaptan Mecit 3 (km3/veri/takimlar.json "panolar") ve Champion Battle Manager ile AYNI metin ve renkler */
-const PANOLAR=[["MR. ANDUV!","#141414","#f3d35a"],["INSTAGRAM / MR. ANDUV!","#c13584","#ffffff"],["TIKTOK / MR. ANDUV!","#010101","#25f4ee"],["YOUTUBE / MR. ANDUV!","#c4302b","#ffffff"],["X / MR. ANDUV!","#0f1419","#ffffff"],["TWITCH / MR. ANDUV!","#6441a5","#ffffff"],["KICK / MR. ANDUV!","#0b0e0f","#53fc18"],["LINKEDIN / MR. ANDUV!","#0a66c2","#ffffff"],["SPOTIFY / MR. ANDUV!","#1db954","#0b0b0b"],["APPLE MUSIC / MR. ANDUV!","#fa2d48","#ffffff"],["AMAZON MUSIC / MR. ANDUV!","#0b2a35","#25d1da"],["YOUTUBE MUSIC / MR. ANDUV!","#ff0000","#ffffff"],["KURT YOLU","#1d2b38","#ffffff"],["KIRMIZI YALI","#b71c1c","#ffffff"],["CHAMPION BATTLE MANAGER","#2e9e44","#ffffff"],["KAPTAN MECİT","#c8102e","#ffffff"],["MALAZGİRT AKINCILARI","#7a1f3d","#f2c230"],["HİSAR: KARA GECE","#1a1a2e","#e9b949"],["LEGEND HEADS","#ee7b30","#ffffff"],["TOPÇULAR","#5b3a1e","#f2c230"],["TAMGA YOLU","#3a2412","#e8b04a"],["TULPAR","#1c130d","#e0b048"],["NUTUK SALONU","#132545","#ffffff"],["YAŞAM REHBERİ","#14171a","#e9d8a6"],["GEZİ PASAPORTU","#0b1e22","#4fd1c5"],["SAAT VİTRİNİ","#0b1e22","#ffb21e"],["EMREANDUV.GITHUB.IO","#1d2b38","#f3d35a"],["FUTBOL VİTRİNİ","#1f3b3c","#86d36e"],["BORSA VİTRİNİ","#0d1b3e","#f3d35a"],["FIRSAT VİTRİNİ","#ed713c","#ffffff"],["BİLGİ VİTRİNİ","#2a4f8a","#ffffff"]];
+const PANOLAR=[["MR. ANDUV!","#141414","#f3d35a"],["INSTAGRAM / MR. ANDUV!","#c13584","#ffffff"],["TIKTOK / MR. ANDUV!","#010101","#25f4ee"],["YOUTUBE / MR. ANDUV!","#c4302b","#ffffff"],["X / MR. ANDUV!","#0f1419","#ffffff"],["TWITCH / MR. ANDUV!","#6441a5","#ffffff"],["KICK / MR. ANDUV!","#0b0e0f","#53fc18"],["LINKEDIN / MR. ANDUV!","#0a66c2","#ffffff"],["SPOTIFY / MR. ANDUV!","#1db954","#0b0b0b"],["APPLE MUSIC / MR. ANDUV!","#fa2d48","#ffffff"],["AMAZON MUSIC / MR. ANDUV!","#0b2a35","#25d1da"],["YOUTUBE MUSIC / MR. ANDUV!","#ff0000","#ffffff"],["KURT YOLU","#1d2b38","#ffffff"],["KIRMIZI YALI","#b71c1c","#ffffff"],["CHAMPION BATTLE MANAGER","#2e9e44","#ffffff"],["KAPTAN MECİT","#c8102e","#ffffff"],["MALAZGİRT AKINCILARI","#7a1f3d","#f2c230"],["HİSAR: KARA GECE","#1a1a2e","#e9b949"],["LEGEND HEADS","#ee7b30","#ffffff"],["TOPÇULAR","#5b3a1e","#f2c230"],["TAMGA YOLU","#3a2412","#e8b04a"],["TULPAR","#1c130d","#e0b048"],["NUTUK SALONU","#132545","#ffffff"],["YAŞAM REHBERİ","#14171a","#e9d8a6"],["GEZİ PASAPORTU","#0b1e22","#4fd1c5"],["SAAT VİTRİNİ","#0b1e22","#ffb21e"],["EMREANDUV.GITHUB.IO","#1d2b38","#f3d35a"],["FUTBOL VİTRİNİ","#1f3b3c","#86d36e"],["BORSA VİTRİNİ","#0d1b3e","#f3d35a"],["FIRSAT VİTRİNİ","#ed713c","#ffffff"],["BİLGİ VİTRİNİ","#2a4f8a","#ffffff"],["GÖKALP","#1a1440","#ffffff"],["DEMİR KAĞNI","#4a3018","#fff0d0"],["YOKUŞ YOLU","#1d3157","#f3c04d"]];
+/* çizimli afişler (Çizim Planı F3): kaynak kaptan-mecit km3/veri/takimlar.json → "afisler"; çizici www/pano.js (MrPano) */
+const AFISLER=[["MR. ANDUV!","Bir Mr. Anduv! yapımıdır","A Mr. Anduv! production","#141414","#2a2410","#f3d35a","#f3d35a","imza"],["KAPTAN MECİT","Sahaya çık, maçı sen çevir","Take the pitch, turn the match","#c8102e","#7a0a1c","#ffffff","#ffd23f","top"],["CHAMPION BATTLE MANAGER","Kulübünü kur, dünyayı yen","Build your club, beat the world","#2e9e44","#16582a","#ffffff","#f3d35a","kupa"],["LEGEND HEADS","Efsanelerle kafa kafaya","Head to head with legends","#ee7b30","#a8431a","#ffffff","#fff2c2","kafa"],["TULPAR","Kanatlı atla gökyüzü yolu","A sky road on a winged horse","#e0782a","#5a2a10","#fff4dc","#ffd27a","kanat"],["KURT YOLU","Bozbörü'yle bozkırda","Across the steppe with the grey wolf","#1d2b38","#3e5468","#ffffff","#e8c070","kurt"],["GÖKALP","Gök katlarında bir alp","An alp across the sky layers","#1a1440","#3a2a6a","#ffffff","#9ad0ff","gokalp"],["DEMİR KAĞNI","Yük ağır, yol uzun","Heavy load, long road","#4a3018","#2a1a0c","#fff0d0","#e8b04a","kagni"],["TAMGA YOLU","Basamak basamak bir yol","One road, step by step","#3a2412","#7a4a1e","#ffe9c2","#e8b04a","tamga"],["HİSAR: KARA GECE","Kale düşerse sabah olmaz","If the keep falls, dawn never comes","#1a1a2e","#3a2a5e","#f4e6c8","#e9b949","kale"],["MALAZGİRT AKINCILARI","1071'in akıncısı ol","Ride with the raiders of 1071","#7a1f3d","#3e0e1e","#ffffff","#f2c230","ok"],["TOPÇULAR","Nişan al, ateşle, fethet","Aim, fire, conquer","#5b3a1e","#2e1c0e","#fff0d0","#f2c230","gulle"],["KIRMIZI YALI","Boğaz'da bir gece, bir sır","One night on the Bosphorus, one secret","#b71c1c","#4a0a0a","#ffffff","#ffcf9a","yali"],["NUTUK SALONU","Nutuk'un tamamı, salonda","The whole of Nutuk, in the hall","#132545","#2a4a7a","#ffffff","#e9c46a","kursu"],["YAŞAM REHBERİ","Her gün bir sayfa","A page every day","#14171a","#2e3a30","#e9d8a6","#e9d8a6","kitap"],["GEZİ PASAPORTU","Gittiğin her yer bir mühür","Every place you go, a stamp","#0b1e22","#14444a","#ffffff","#4fd1c5","pusula"],["SAAT VİTRİNİ","Bileğine yakışanı bul","Find the one for your wrist","#0b1e22","#3a2a0a","#ffffff","#ffb21e","saat"],["FUTBOL VİTRİNİ","Maçlar tek vitrinde","Every match in one window","#1f3b3c","#0e2020","#ffffff","#86d36e","vitrin"],["BORSA VİTRİNİ","Piyasa tek bakışta","The market at a glance","#0d1b3e","#1e3a7a","#ffffff","#f3d35a","vitrin"],["FIRSAT VİTRİNİ","Günün fırsatları burada","Today's deals, here","#ed713c","#9a3a14","#ffffff","#fff2c2","vitrin"],["BİLGİ VİTRİNİ","Bilgi tek ekranda","Knowledge on one screen","#2a4f8a","#14284a","#ffffff","#bfe0ff","vitrin"],["YOUTUBE · MR. ANDUV!","Yapım günlükleri YouTube'da","Making-of diaries on YouTube","#c4302b","#6a0e0a","#ffffff","#ffffff","oynat"],["INSTAGRAM · MR. ANDUV!","Perde arkası Instagram'da","Behind the scenes on Instagram","#c13584","#5b2a9a","#ffffff","#ffd27a","kamera"],["TIKTOK · MR. ANDUV!","15 saniyede yeni bölüm","New levels in 15 seconds","#010101","#1a1a1a","#ffffff","#25f4ee","nota"],["SPOTIFY · MR. ANDUV!","Oyunların şarkıları Spotify'da","The games' songs on Spotify","#1db954","#0b4a22","#0b0b0b","#0b0b0b","nota"],["X · MR. ANDUV!","Yenilikler ilk burada","News first, here","#0f1419","#2a3038","#ffffff","#9ad0ff","imza"]];
 const PANO_RENK=Object.fromEntries(PANOLAR.map(p=>[p[0],[p[1],p[2]]]));
 const BOARDS=PANOLAR.map(p=>p[0]);
 function wsOf(i){return[Math.floor(i/4)+1,i%4+1];}
@@ -515,15 +521,16 @@ function musicTick(){if(!AC||!(musOn||state==='title')||!save.sound||uiPaused())
   const dc=S.dr[musStep%S.dr.length];if(dc!=='.')drumAt(dc,musNext);if(pl&&pl.mount&&state==='play'&&musStep%2===0)drumAt('h',musNext+st*.5);musStep++;musNext+=st;}}
 
 /* ---------- dil (ilk ekranda sorulur, atlanmaz) ---------- */
-const APP_VER='1.0.0';
+const APP_VER='1.1.0';
 const AR_L='◀︎',AR_R='▶︎';
 const L10={
-tr:{tamTtl:'Tam Sürüm',tamBuy:'Tam Sürümü Al',tamRestore:'Satın alımı geri yükle',tamLater:'Şimdi değil',tamTxt:'Tulpar\'ın bütün yolu: 1923 bölüm, bütün dünyalar ve Yelbegen\'in kaleleri. Bir kez al, hep senin.',tamTxtEnd:'İlk dünyayı bitirdin, eline sağlık! Yolun devamı için Tam Sürüm\'ü bir kez al: 1923 bölüm, bütün dünyalar.',tamOk:'Tam Sürüm açıldı. İyi yolculuklar!',tamNone:'Geri yüklenecek satın alım bulunamadı',g_ruzgar:'Rüzgârlı bölüm: esintiye dikkat!',g_karanlik:'Karanlık bölüm: ışığın yalnız etrafında',g_kayan:'Kayan gök: ekran kendiliğinden ilerler!',g_kuzgun:'Kuzgun akını: gökten sürüler gelir',map:'Harita',mapHint:'◀︎ ▶︎ yürü · A gir · dokunarak da yürüyebilirsin',kimiz:'Kımız Otağı',kimizGot:'Kımız içtin! +1 can',kimizNo:'Bu dünyanın kımızını içtin',evTxt:'Tulpar seni bekliyor, yola çık!',evName:'Alp\'in Otağı',share:'Arkadaşına öner',subtitle:'Alp ile Tulpar',new:'Yeni Yolculuk',cont:'Devam Et',sel:'Bölüm Seç',selLock:'🔒 Bölüm Seç · bir bölüm bitir',help:'Nasıl Oynanır',settings:'Ayarlar',select:'Bölüm Seç',start:'Başla',back:'Geri',pause:'Mola',resume:'Devam',restart:'Bölümü baştan başlat',home:'Ana menü',langBtn:'Dil: Türkçe',soundOn:'Ses: Açık',soundOff:'Ses: Kapalı',autoOn:'Otomatik koşu: Açık',autoOff:'Otomatik koşu: Kapalı',rate:'Puan ver',feedback:'Bize yaz',erase:'Verilerimi sil',eraseSure:'Emin misin? Tekrar dokun',close:'Kapat',ok:'Tamam',resetGuide:'Rehberi baştan göster',guideReset:'Rehber baştan gösterilecek',shareWin:'Paylaş',continue:'Devam',worldClear:'Dünya {w} tamam!',worldTxt:'Yelbegen yenildi. Tulpar\'la yol sürüyor: bölüm {n} / 1923.',rateQ:'Tulpar\'ı beğendin mi?',idea:'Önerim var',later:'Sonra',copied:'Bağlantı kopyalandı',shareText:'Tulpar: kanatlı tay Tulpar\'la 1923 bölümlük piksel platform yolculuğu. Bir Mr. Anduv! yapımı.',hero:'ALP',world:'DÜNYA',time:'ZAMAN',auto:'OTO',level:'Bölüm',yel:'Yelbegen bekliyor!',gate:'Tulpar kale kapısında bekliyor',clear:'Bölüm tamam!',flag:'Tuğ bonusu: ',tamga:'Tamga: ',over1:'Yol bitmedi!',over2:'Alp yeniden doğrulur.',over3:'A: yeniden dene',end1:'1923 bölümlük yol tamam!',end2:'Toplanan tamga: ',end3:'Tulpar ve alp Ötüken\'e döndü.',worldW:'Dünya',
+tr:{tamTtl:'Tam Sürüm',tamBuy:'Tam Sürümü Al',tamRestore:'Satın alımı geri yükle',tamLater:'Şimdi değil',tamTxt:'Tulpar\'ın bütün yolu: 1923 bölüm, bütün dünyalar ve Yelbegen\'in kaleleri. Bir kez al, hep senin.',tamTxtEnd:'İlk dünyayı bitirdin, eline sağlık! Yolun devamı için Tam Sürüm\'ü bir kez al: 1923 bölüm, bütün dünyalar.',tamOk:'Tam Sürüm açıldı. İyi yolculuklar!',tamNone:'Geri yüklenecek satın alım bulunamadı',g_ruzgar:'Rüzgârlı bölüm: esintiye dikkat!',g_karanlik:'Karanlık bölüm: ışığın yalnız etrafında',g_kayan:'Kayan gök: ekran kendiliğinden ilerler!',g_kuzgun:'Kuzgun akını: gökten sürüler gelir',map:'Harita',mapHint:'◀︎ ▶︎ yürü · A gir · dokunarak da yürüyebilirsin',kimiz:'Kımız Otağı',kimizGot:'Kımız içtin! +1 can',kimizNo:'Bu dünyanın kımızını içtin',evTxt:'Tulpar seni bekliyor, yola çık!',evName:'Karagöz ile Hacivat\'ın Otağı',share:'Arkadaşına öner',subtitle:'Karagöz, Hacivat ve Tulpar',new:'Yeni Yolculuk',cont:'Devam Et',sel:'Bölüm Seç',selLock:'🔒 Bölüm Seç · bir bölüm bitir',help:'Nasıl Oynanır',settings:'Ayarlar',select:'Bölüm Seç',start:'Başla',back:'Geri',pause:'Mola',resume:'Devam',restart:'Bölümü baştan başlat',home:'Ana menü',langBtn:'Dil: Türkçe',soundOn:'Ses: Açık',soundOff:'Ses: Kapalı',autoOn:'Otomatik koşu: Açık',autoOff:'Otomatik koşu: Kapalı',rate:'Puan ver',feedback:'Bize yaz',erase:'Verilerimi sil',eraseSure:'Emin misin? Tekrar dokun',close:'Kapat',ok:'Tamam',resetGuide:'Rehberi baştan göster',guideReset:'Rehber baştan gösterilecek',shareWin:'Paylaş',continue:'Devam',worldClear:'Dünya {w} tamam!',worldTxt:'Yelbegen yenildi. Tulpar\'la yol sürüyor: bölüm {n} / 1923.',rateQ:'Tulpar\'ı beğendin mi?',idea:'Önerim var',later:'Sonra',copied:'Bağlantı kopyalandı',shareText:'Tulpar: kanatlı tay Tulpar\'la 1923 bölümlük piksel platform yolculuğu. Bir Mr. Anduv! yapımı.',hero:'%U',k_karagoz:'Karagöz',k_hacivat:'Hacivat',karBtn:'Kahraman: ',karD_karagoz:'hızlı koşar',karD_hacivat:'yüksek zıplar, uzun süzülür',karS_karagoz:'Ah Hacivat ah! Yine yola düştük.',karS_hacivat:'Hay hak! Yâr bana bir eğlence, medet!',world:'DÜNYA',time:'ZAMAN',auto:'OTO',level:'Bölüm',yel:'Yelbegen bekliyor!',gate:'Tulpar kale kapısında bekliyor',clear:'Bölüm tamam!',flag:'Tuğ bonusu: ',tamga:'Tamga: ',over1:'Yol bitmedi!',over2:'%K yeniden doğrulur.',over3:'A: yeniden dene',end1:'1923 bölümlük yol tamam!',end2:'Toplanan tamga: ',end3:'Tulpar, Karagöz ve Hacivat Ötüken\'e döndü.',worldW:'Dünya',
  pamukkale:'Pamukkale Travertenleri',karadeniz:'Karadeniz Yaylası',agri:'Ağrı Dağı Eteği',isikgol:'Isık Göl Kıyısı',van:'Van Gölü Kıyısı',kapadokya:'Peri Bacaları',forest:'Ötüken Ormanı',steppe:'Bozkır Rüzgârı',night:'Ay Işığı Ormanı',dusk:'Alacakaranlık Bozkırı',under:'Yeraltı Yolu',sky:'Gök Katları',kale:'Demir Kale',iron:'Demir Dağ',last:'Yolun Sonu'},
-en:{tamTtl:'Full Version',tamBuy:'Get the Full Version',tamRestore:'Restore purchase',tamLater:'Not now',tamTxt:'The whole road of Tulpar: 1923 levels, every world and every castle of Yelbegen. Buy once, keep forever.',tamTxtEnd:'You finished the first world, well done! Unlock the rest of the road once: 1923 levels, every world.',tamOk:'Full Version unlocked. Safe travels!',tamNone:'No purchase found to restore',g_ruzgar:'Windy level: mind the gusts!',g_karanlik:'Dark level: light only around you',g_kayan:'Moving sky: the screen scrolls on its own!',g_kuzgun:'Raven raid: flocks keep coming',map:'Map',mapHint:'◀︎ ▶︎ walk · A enter · or tap a level',kimiz:'Kumis Yurt',kimizGot:'You drank kumis! +1 life',kimizNo:'Already drank this world\'s kumis',evTxt:'Tulpar is waiting, hit the road!',evName:'The Hero\'s Yurt',share:'Tell a friend',subtitle:'The Hero and the Winged Foal',new:'New Journey',cont:'Continue',sel:'Select Level',selLock:'🔒 Select Level · clear a level',help:'How to Play',settings:'Settings',select:'Select Level',start:'Start',back:'Back',pause:'Paused',resume:'Resume',restart:'Restart level',home:'Main menu',langBtn:'Language: English',soundOn:'Sound: On',soundOff:'Sound: Off',autoOn:'Auto-run: On',autoOff:'Auto-run: Off',rate:'Rate the game',feedback:'Write to us',erase:'Delete my data',eraseSure:'Sure? Tap again',close:'Close',ok:'OK',resetGuide:'Show the guide again',guideReset:'The guide will show again',shareWin:'Share',continue:'Continue',worldClear:'World {w} cleared!',worldTxt:'Yelbegen is defeated. The journey goes on: level {n} / 1923.',rateQ:'Enjoying Tulpar?',idea:'I have a suggestion',later:'Later',copied:'Link copied',shareText:'Tulpar: a 1923-level pixel platformer with a winged foal. A Mr. Anduv! game.',hero:'HERO',world:'WORLD',time:'TIME',auto:'AUTO',level:'Level',yel:'Yelbegen awaits!',gate:'Tulpar waits at the castle gate',clear:'Level clear!',flag:'Standard bonus: ',tamga:'Tamga: ',over1:'The road goes on!',over2:'The hero rises again.',over3:'A: try again',end1:'All 1923 levels cleared!',end2:'Tamgas collected: ',end3:'Tulpar and the hero return home.',worldW:'World',
+en:{tamTtl:'Full Version',tamBuy:'Get the Full Version',tamRestore:'Restore purchase',tamLater:'Not now',tamTxt:'The whole road of Tulpar: 1923 levels, every world and every castle of Yelbegen. Buy once, keep forever.',tamTxtEnd:'You finished the first world, well done! Unlock the rest of the road once: 1923 levels, every world.',tamOk:'Full Version unlocked. Safe travels!',tamNone:'No purchase found to restore',g_ruzgar:'Windy level: mind the gusts!',g_karanlik:'Dark level: light only around you',g_kayan:'Moving sky: the screen scrolls on its own!',g_kuzgun:'Raven raid: flocks keep coming',map:'Map',mapHint:'◀︎ ▶︎ walk · A enter · or tap a level',kimiz:'Kumis Yurt',kimizGot:'You drank kumis! +1 life',kimizNo:'Already drank this world\'s kumis',evTxt:'Tulpar is waiting, hit the road!',evName:'Karagöz & Hacivat\'s Yurt',share:'Tell a friend',subtitle:'Karagöz, Hacivat and the Winged Foal',new:'New Journey',cont:'Continue',sel:'Select Level',selLock:'🔒 Select Level · clear a level',help:'How to Play',settings:'Settings',select:'Select Level',start:'Start',back:'Back',pause:'Paused',resume:'Resume',restart:'Restart level',home:'Main menu',langBtn:'Language: English',soundOn:'Sound: On',soundOff:'Sound: Off',autoOn:'Auto-run: On',autoOff:'Auto-run: Off',rate:'Rate the game',feedback:'Write to us',erase:'Delete my data',eraseSure:'Sure? Tap again',close:'Close',ok:'OK',resetGuide:'Show the guide again',guideReset:'The guide will show again',shareWin:'Share',continue:'Continue',worldClear:'World {w} cleared!',worldTxt:'Yelbegen is defeated. The journey goes on: level {n} / 1923.',rateQ:'Enjoying Tulpar?',idea:'I have a suggestion',later:'Later',copied:'Link copied',shareText:'Tulpar: a 1923-level pixel platformer with a winged foal. A Mr. Anduv! game.',hero:'%U',k_karagoz:'Karagöz',k_hacivat:'Hacivat',karBtn:'Hero: ',karD_karagoz:'runs faster',karD_hacivat:'jumps higher, glides longer',karS_karagoz:'Oh Hacivat! On the road again.',karS_hacivat:'Hay hak! Grant me some fun, I pray!',world:'WORLD',time:'TIME',auto:'AUTO',level:'Level',yel:'Yelbegen awaits!',gate:'Tulpar waits at the castle gate',clear:'Level clear!',flag:'Standard bonus: ',tamga:'Tamga: ',over1:'The road goes on!',over2:'%K rises again.',over3:'A: try again',end1:'All 1923 levels cleared!',end2:'Tamgas collected: ',end3:'Tulpar, Karagöz and Hacivat return home.',worldW:'World',
  pamukkale:'Pamukkale Terraces',karadeniz:'Black Sea Highlands',agri:'Foot of Mount Ararat',isikgol:'Shores of Issyk-Kul',van:'Shores of Lake Van',kapadokya:'Fairy Chimneys',forest:'Ötüken Forest',steppe:'Windy Steppe',night:'Moonlit Forest',dusk:'Dusk Steppe',under:'Underground Path',sky:'Sky Realms',kale:'Iron Castle',iron:'Iron Mountain',last:'End of the Road'}};
 const TIPS={
 tr:{kontrol:`<b>${AR_L} ${AR_R}</b> yürü · <b>A</b> zıpla (basılı tut: daha yüksek) · <b>B</b> basılı tut: koş`,
+ kahraman:'<b>Karagöz</b> daha hızlı koşar; <b>Hacivat</b> daha yüksek zıplar, Tulpar\'la daha uzun süzülür. Ana ekrandan ya da Ayarlar\'dan seç.',
  blok:'<b>Tamga bloğu</b>: alttan vur. Akçe, güç ya da Tulpar çıkar. 100 akçe bir can.',
  tulpar:'<b>Tulpar!</b> Üstüne zıpla, bin. Havada <b>A</b>\'yı basılı tut: süzül. <b>B</b>: kement at, öndekini yakala. <b>Aşağı + A</b>: in.',
  baga:'<b>Bağa</b>: üstüne bas, kabuğuna girer. Kabuğu tekmele, yolundakileri devirir. Duvardan dönen kabuğa dikkat!',
@@ -545,6 +552,7 @@ tr:{kontrol:`<b>${AR_L} ${AR_R}</b> yürü · <b>A</b> zıpla (basılı tut: dah
  kale:'Kaleye Tulpar girmez, kapıda bekler. Çıkışta yine binersin.',
  sure:'<b>Süre azalıyor!</b> Biterse bir can gider.'},
 en:{kontrol:`<b>${AR_L} ${AR_R}</b> walk · <b>A</b> jump (hold: higher) · hold <b>B</b>: run`,
+ kahraman:'<b>Karagöz</b> runs faster; <b>Hacivat</b> jumps higher and glides longer on Tulpar. Pick one on the title screen or in Settings.',
  blok:'<b>Tamga block</b>: hit it from below for coins, power-ups or Tulpar. 100 coins = 1 life.',
  tulpar:'<b>Tulpar!</b> Jump on its back to ride. Hold <b>A</b> in the air to glide. <b>B</b>: throw the lasso. <b>Down + A</b>: hop off.',
  baga:'<b>Bağa</b>: stomp it into its shell, then kick the shell to knock others down. Watch it bounce back!',
@@ -565,9 +573,10 @@ en:{kontrol:`<b>${AR_L} ${AR_R}</b> walk · <b>A</b> jump (hold: higher) · hold
  yelbegen:'<b>Yelbegen</b>: stomp its heads three times. Watch the rocks!',
  kale:'Tulpar can\'t enter castles; it waits at the gate for you.',
  sure:'<b>Time is running out!</b> If it hits zero you lose a life.'}};
-const TIP_ORDER=['kontrol','blok','tulpar','tamga','guc','kivilcim','kut','baga','diken','kefal','ruzgar','karanlik','kayan','kuzgun','ara','tug','asansor','atesc','kale','yelbegen','sure'];
+const TIP_ORDER=['kontrol','kahraman','blok','tulpar','tamga','guc','kivilcim','kut','baga','diken','kefal','ruzgar','karanlik','kayan','kuzgun','ara','tug','asansor','atesc','kale','yelbegen','sure'];
 let LANG=save.lang||'tr';
-const t=k=>(L10[LANG][k]??L10.tr[k]??k);
+const karAd=()=>(L10[LANG]['k_'+KAR]??L10.tr['k_'+KAR]);
+const t=k=>{const v=L10[LANG][k]??L10.tr[k]??k;return typeof v==='string'&&v.includes('%')?v.replace(/%U/g,karAd().toLocaleUpperCase(LANG==='tr'?'tr':'en')).replace(/%K/g,karAd()):v;};
 const $=id=>document.getElementById(id);
 if(!Array.isArray(save.rh))save.rh=save.unlocked>1?['kontrol','blok','tulpar','tamga','guc','tug','ara']:[];
 const seen=k=>save.rh.includes(k);
@@ -578,7 +587,7 @@ function refreshUI(){{const al=tamAlinabilir();['bTam','setTam','setRestore'].fo
  $('bCont').textContent=t('cont')+(save.last!=null?` · ${t('worldW')} ${cw}-${cs}`:'');$('bCont').disabled=save.last==null;
  const canSel=save.unlocked>1;$('bSel').textContent=canSel?t('sel'):t('selLock');$('bSel').disabled=!canSel;
  $('bMusic').textContent=save.sound?'♪':'✕';
- $('setLang').textContent=t('langBtn');$('setSound').textContent=save.sound?t('soundOn'):t('soundOff');$('setAuto').textContent=save.auto?t('autoOn'):t('autoOff');
+ $('setLang').textContent=t('langBtn');$('setSound').textContent=save.sound?t('soundOn'):t('soundOff');$('setAuto').textContent=save.auto?t('autoOn'):t('autoOff');{const kt='‹\uFE0E '+t('karBtn')+karAd()+' ›\uFE0E';$('bKar').textContent=kt;$('setKar').textContent=t('karBtn')+karAd()+' · '+t('karD_'+KAR);}
  $('setErase').textContent=eraseArm?t('eraseSure'):t('erase');
  $('setRate').hidden=!canRate();
  $('helpList').innerHTML=TIP_ORDER.map(k=>`<div class="it">${TIPS[LANG][k]}</div>`).join('');
@@ -669,6 +678,8 @@ on('pHome',()=>goTitle());on('pMap',()=>{toggleMenu(false);goMap(Math.floor(lvId
 on('setLang',()=>{LANG=LANG==='tr'?'en':'tr';save.lang=LANG;persist();applyLang();});
 on('setSound',()=>{save.sound=!save.sound;persist();refreshUI();});
 on('setAuto',()=>{save.auto=!save.auto;persist();refreshUI();});
+function karDegis(){KAR=KAR==='karagoz'?'hacivat':'karagoz';save.kar=KAR;persist();refreshUI();toast(karAd()+': '+t('karS_'+KAR)+'  ('+t('karD_'+KAR)+')');try{SFX.jump();}catch(e){}}
+on('bKar',karDegis);on('setKar',karDegis);
 on('setRate',()=>askRate());on('setTam',()=>tamEkrani(null));on('bTam',()=>tamEkrani(null));on('setRestore',async()=>{const ok=await tamGeriYukle();toast(ok?t('tamOk'):t('tamNone'));});
 on('tBuy',async()=>{const ok=await tamSatinAl();if(ok){toast(t('tamOk'));tamKapat(true);}});on('tRestore',async()=>{const ok=await tamGeriYukle();toast(ok?t('tamOk'):t('tamNone'));if(ok)tamKapat(true);});on('tLater',()=>tamKapat(false));on('setFeed',()=>feedback());
 on('setHelp',()=>{hide('ovSet');show('ovHelp');});
@@ -852,16 +863,16 @@ function updatePlay(E){if(gecitTick())return;gimTick();if(state!=='play')return;
  // player movement
  let dir=(inp.right?1:0)-(inp.left?1:0);
  if(save.auto)dir=inp.left?0:1;
- const run=inp.b&&!save.auto?1:0;const acc=pl.onG?(run?.2:.16):.12,maxv=pl.mount?(run?3.2:2.3):(run?2.9:2.0);
+ const run=inp.b&&!save.auto?1:0;const acc=pl.onG?(run?.2:.16):.12,maxv=(pl.mount?(run?3.2:2.3):(run?2.9:2.0))+(KAR==='karagoz'?(run?.3:.15):-.05);
  if(dir){if(pl.vx*dir<0&&pl.onG)pl.vx+=dir*acc*1.6;pl.vx+=dir*acc;pl.face=dir;if(Math.abs(pl.vx)>maxv)pl.vx-=Math.sign(pl.vx)*Math.min(Math.abs(pl.vx)-maxv,.12);}else{pl.vx*=pl.onG?.8:.96;if(Math.abs(pl.vx)<.05)pl.vx=0;}
- pl.vx=Math.max(-3.2,Math.min(3.2,pl.vx));
+ {const cap=KAR==='karagoz'?3.5:3.2;pl.vx=Math.max(-cap,Math.min(cap,pl.vx));}
  if(E.aP)pl.buf=7;else if(pl.buf>0)pl.buf--;
  if(pl.onG)pl.coy=6;else if(pl.coy>0)pl.coy--;
  if(pl.mount&&E.aP&&inp.down){dismount(!pl.onG);pl.buf=0;}
- if(pl.buf>0&&pl.coy>0){pl.jumped=true;pl.vy=(pl.mount?-5.6:-5.2)-(Math.abs(pl.vx)>2.3?.45:0);pl.jh=16;pl.buf=0;pl.coy=0;pl.glide=pl.mount?80:0;SFX.jump();}
+ if(pl.buf>0&&pl.coy>0){pl.jumped=true;pl.vy=(pl.mount?-5.6:-5.2)-(Math.abs(pl.vx)>2.3?.45:0);if(KAR==='hacivat')pl.vy-=.3;pl.jh=KAR==='hacivat'?20:16;pl.buf=0;pl.coy=0;pl.glide=pl.mount?(KAR==='hacivat'?110:80):0;SFX.jump();}
  let g=.42;if(inp.a&&pl.jh>0&&pl.vy<0){g=.2;pl.jh--;}else pl.jh=0;
  pl.gliding=false;
- if(pl.mount&&inp.a&&pl.vy>0&&pl.glide>0){pl.vy=Math.min(pl.vy+.06,.7);pl.glide--;pl.gliding=true;if(frame%8===0)SFX.flutter();}
+ if(pl.mount&&inp.a&&pl.vy>0&&pl.glide>0){pl.vy=Math.min(pl.vy+(KAR==='hacivat'?.05:.06),KAR==='hacivat'?.55:.7);pl.glide--;pl.gliding=true;if(frame%8===0)SFX.flutter();}
  else pl.vy=Math.min(pl.vy+g,6);
  if(pl.mount&&E.bP&&!pl.bite){pl.bite=28;tone(520,.16,'triangle',.05,260);}
  if(pl.bite>0){pl.bite--;const b=pl.bite,reach=b>22?0:(b>12?(22-b)*4.4:b*3.6);pl.reach=reach;if(b===22)tone(300,.12,'sawtooth',.04,500);if(b>6&&b<=22){const hb={x:pl.face>0?pl.x+pl.w:pl.x-reach,y:pl.y+pl.h-20,w:reach+6,h:16};for(const e of ents){if(e.gone||!e.active||e.flip)continue;if(['a','d','k','f','b','bowl','flame','kut','oneup','cpop'].includes(e.t)&&ov(hb,e)&&!(e.rise>0)){const cx=e.x+e.w/2,cy=e.y+e.h/2;eat(e);burst(cx,cy,['#f4ecd8','#e0b048','#c9a46a','#ffffff'],14,2.2);pl.caught={x:cx,y:cy,t:12};pl.bite=Math.min(pl.bite,12);break;}}}}
@@ -1359,7 +1370,7 @@ function drawWorld(){const c=Math.round(cam);drawTop(c);ctx.save();ctx.translate
 function updParts(){for(const p of parts){p.x+=p.vx;p.y+=p.vy;if(!p.ng)p.vy+=.22;p.life--;}parts=parts.filter(p=>p.life>0);}
 function drawTitle(){const top=VH-H;R(0,0,W,top+2,THEMES.night.sky[0]);for(let i=0;i<60;i++)R(md(i*53,W),md(i*37,Math.max(1,top+60)),1,1,i%3?'#cfd8ff':'#fff6c0');ctx.save();ctx.translate(0,top);drawBG('night',titleCam);{const o=md(Math.round(titleCam),16),b=Math.floor(titleCam/16);for(let i=0;i*16-o<W;i++)for(let j=0;j<3;j++)ctx.drawImage(groundT(THEMES.night,'night',b+i,10+j,j===0,false,false),i*16-o,152+j*16);}
  const fy=96+Math.sin(frame*.05)*6,fx=md(frame*.6,W+80)-40;const rs=PS[0][0].stand;ctx.drawImage(rs.r,fx-2,fy+21-rs.r.height);ctx.drawImage(TUL.glide.r,fx,fy+8);ctx.restore();}
-function drawIntro(){R(0,0,W,H,'#120b07');{const [ww,ss]=wsOf(lvIdx);txt(t('world')+' '+ww+'-'+ss,W/2,46,'#e0b048',14,'center',true);}txt(t('level')+' '+(lvIdx+1)+' / 1923',W/2,66,'#c9a46a',8,'center');if(lv.tulparOut)txt(t('gate'),W/2,150,'#8fd0ea',7,'center');txt(lv.name,W/2,82,'#f4ecd8',10,'center');if(lv.bossX0)txt(t('yel'),W/2,96,'#e07a5a',8,'center');ctx.drawImage(LIFE,W/2-22,112,12,8);txt('× '+lives,W/2-6,111,'#f4ecd8',9);txt('ALP '+String(score).padStart(6,'0'),W/2,134,'#c9a46a',8,'center');
+function drawIntro(){R(0,0,W,H,'#120b07');{const [ww,ss]=wsOf(lvIdx);txt(t('world')+' '+ww+'-'+ss,W/2,46,'#e0b048',14,'center',true);}txt(t('level')+' '+(lvIdx+1)+' / 1923',W/2,66,'#c9a46a',8,'center');if(lv.tulparOut)txt(t('gate'),W/2,150,'#8fd0ea',7,'center');txt(lv.name,W/2,82,'#f4ecd8',10,'center');if(lv.bossX0)txt(t('yel'),W/2,96,'#e07a5a',8,'center');ctx.drawImage(LIFE,W/2-22,112,12,8);txt('× '+lives,W/2-6,111,'#f4ecd8',9);txt(t('hero')+' '+String(score).padStart(6,'0'),W/2,134,'#c9a46a',8,'center');
  if(pl.mount){ctx.drawImage(TUL.stand.r,W/2+22,106);}txt('Bir Mr. Anduv! yapımıdır.',W/2,H-14,'#7a6040',7,'center');}
 function drawGameOver(){R(0,0,W,H,'#120b07');txt(t('over1'),W/2,70,'#e0b048',16,'center',true);txt(t('over2'),W/2,96,'#f4ecd8',8,'center');if((frame>>5)%2&&stateT>40)txt(t('over3'),W/2,122,'#fff6d0',9,'center');}
 function drawEnding(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#2a1830');g.addColorStop(.6,'#e98a58');g.addColorStop(1,'#f8dca0');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
@@ -1425,19 +1436,72 @@ function alpHead(p,hc){const s=p.skin;
  ln(0.6,hc-9.4,0.6,hc-3.4,p.band,0.6);circ(0.6,hc-9.9,0.9);fs(p.band,OL,0.3);
  rrect(-5.4,hc-3.6,11.2,2.4,1.1);fs(lg(0,hc-3.6,0,hc-1.2,[p.fur,shade(p.fur,-0.18)]),OL,0.35);
  for(let k=-4.6;k<5.4;k+=1.3){circ(k,hc-2.4+((k*7|0)%2)*0.25,0.35);g.fillStyle='rgba(150,130,100,0.45)';g.fill();}}
+/* ---------- Karagöz ve Hacivat (oynanan iki kahraman; renkler Tamga Yolu ile aynı) ---------- */
+const KAR_PAL={
+ karagoz:[{kaftan:'#a8322a',kaftanD:'#6e1c16',bork:'#7c2030',band:'#e0a83a',fur:'#f6eedc',pants:'#2c3a66',boot:'#d89a2a',skin:'#f2c08e',hair:'#1a120a',belt:'#e0a83a'},
+  {kaftan:'#ece2c8',kaftanD:'#b0a488',bork:'#c94a35',band:'#e0a83a',fur:'#ffffff',pants:'#a8322a',boot:'#d89a2a',skin:'#f2c08e',hair:'#1a120a',belt:'#c94a35'},
+  {kaftan:'#ffe27a',kaftanD:'#c8962c',bork:'#f39a2c',band:'#ffffff',fur:'#fff6d0',pants:'#c46a1a',boot:'#8a4a14',skin:'#ffd8a8',hair:'#2a1a12',belt:'#ffffff'}],
+ hacivat:[{kaftan:'#3f6b2a',kaftanD:'#26431a',bork:'#f2ead6',band:'#5a8f3a',fur:'#f6eedc',pants:'#d8c49a',boot:'#a8322a',skin:'#f2c08e',hair:'#1a120a',belt:'#e0a83a'},
+  {kaftan:'#ece2c8',kaftanD:'#b0a488',bork:'#ffffff',band:'#3f6b2a',fur:'#ffffff',pants:'#5a8f3a',boot:'#a8322a',skin:'#f2c08e',hair:'#1a120a',belt:'#5a8f3a'},
+  {kaftan:'#ffe27a',kaftanD:'#c8962c',bork:'#fff6d0',band:'#f39a2c',fur:'#fff6d0',pants:'#c46a1a',boot:'#8a4a14',skin:'#ffd8a8',hair:'#2a1a12',belt:'#ffffff'}]};
+function karKim(o){return (o&&o.kar)||((typeof KAR!=='undefined'&&KAR)||'karagoz');}
+function karHead(p,hc){const s=p.skin,B=p.hair;
+ rrect(-0.6,hc+3.4,2.6,2.3,0.6);fs(shade(s,-0.18),null);
+ circ(0.6,hc,5.2);fs(rg(-0.8,hc-2.2,0.3,6.2,[shade(s,0.2),s,shade(s,-0.22)],0.6,hc));
+ ell(-2.6,hc+0.6,1.05,1.4);fs(shade(s,-0.1),OL,0.35);
+ // yuvarlak, dolgun kara sakal
+ g.beginPath();g.moveTo(-1.8,hc+1.2);g.quadraticCurveTo(-2.8,hc+6.8,1.8,hc+7.6);g.quadraticCurveTo(6.9,hc+7.4,6.6,hc+2.4);g.quadraticCurveTo(5.2,hc+3.7,4.2,hc+3.3);g.quadraticCurveTo(2.6,hc+4.5,1.1,hc+3.2);g.quadraticCurveTo(-0.2,hc+2.3,-1.8,hc+1.2);g.closePath();fs(lg(0,hc+1,0,hc+7.6,[shade(B,0.14),B]));
+ for(const [a,b] of [[0.2,hc+5.3],[2.6,hc+6.4],[4.9,hc+5.3]]){g.beginPath();g.arc(a,b,0.85,3.6,5.8);g.strokeStyle='rgba(255,255,255,0.2)';g.lineWidth=0.35;g.stroke();}
+ g.beginPath();g.moveTo(2.3,hc+2.9);g.quadraticCurveTo(4.7,hc+1.5,6.8,hc+2.6);g.quadraticCurveTo(4.6,hc+3.5,2.3,hc+2.9);g.closePath();fs(B,null);
+ // iri kara göz
+ ell(3.1,hc-0.3,1.8,2.05);fs('#fffaf2',OL,0.32);circ(3.65,hc-0.1,1.2);fs('#120a04',null);circ(4,hc-0.65,0.42);fs('#fff',null);
+ g.beginPath();g.moveTo(1.3,hc-2.6);g.quadraticCurveTo(3.2,hc-3.9,5.1,hc-2.5);g.strokeStyle=B;g.lineWidth=0.95;g.lineCap='round';g.stroke();
+ circ(5.95,hc+0.9,1.25);fs(rg(5.6,hc+0.5,0.1,1.35,[shade(s,0.12),shade(s,-0.16)]),OL,0.3);
+ ell(1.3,hc+1.7,0.9,0.5);g.fillStyle='rgba(230,100,90,0.35)';g.fill();
+ // işlik: yuvarlak tepeli kırmızı başlık, altın bant, arkaya yatık
+ g.save();g.translate(0.4,hc-2.4);g.rotate(-0.14);
+ g.beginPath();g.moveTo(-5.2,0.3);g.quadraticCurveTo(-6.6,-8,0,-9);g.quadraticCurveTo(6.4,-8.2,5.4,0);g.closePath();fs(lg(-5,-8,5,0,[shade(p.bork,0.22),p.bork,shade(p.bork,-0.3)]));
+ for(const k of [-2.6,0,2.6]){g.beginPath();g.moveTo(k*0.9,-0.6);g.quadraticCurveTo(k*1.15,-5,k*0.45,-8.4);g.strokeStyle='rgba(0,0,0,0.2)';g.lineWidth=0.4;g.stroke();}
+ rrect(-5.7,-1.5,11.6,2.3,1);fs(lg(0,-1.5,0,0.8,[shade(p.band,0.18),shade(p.band,-0.22)]),OL,0.35);
+ circ(0.2,-9,0.95);fs(p.band,OL,0.3);
+ g.restore();}
+function hacHead(p,hc){const s=p.skin,B=p.hair;
+ rrect(-0.6,hc+3.4,2.6,2.3,0.6);fs(shade(s,-0.18),null);
+ ell(0.7,hc+0.2,5,5.3);fs(rg(-0.8,hc-2.2,0.3,6.2,[shade(s,0.2),s,shade(s,-0.22)],0.6,hc));
+ ell(-2.5,hc+0.6,1,1.35);fs(shade(s,-0.1),OL,0.35);
+ // sivri sakal
+ g.beginPath();g.moveTo(-0.2,hc+2.8);g.quadraticCurveTo(0.6,hc+6.2,3.6,hc+10.2);g.quadraticCurveTo(5,hc+6,5.8,hc+3.1);g.quadraticCurveTo(4,hc+4.1,2.3,hc+3.7);g.quadraticCurveTo(1,hc+3.5,-0.2,hc+2.8);g.closePath();fs(lg(0,hc+3,2,hc+10,[shade(B,0.14),B]));
+ ln(2.4,hc+5,3.4,hc+8.6,'rgba(255,255,255,0.18)',0.3);
+ // ince, uçları kıvrık bıyık
+ g.beginPath();g.moveTo(2.6,hc+2.7);g.quadraticCurveTo(5,hc+2.4,6.4,hc+1.1);g.quadraticCurveTo(7,hc+0.4,6.5,hc+0.2);g.strokeStyle=B;g.lineWidth=0.62;g.lineCap='round';g.stroke();
+ // badem göz, yarı kapalı kapak (kendinden emin)
+ ell(3.15,hc-0.1,1.3,1.15);fs('#fffaf2',OL,0.3);ell(3.55,hc,0.68,0.88);fs('#2a1608',null);circ(3.8,hc-0.35,0.28);fs('#fff',null);
+ g.beginPath();g.ellipse(3.15,hc-0.1,1.35,1.2,0,3.3,6.1);g.lineTo(3.15,hc-0.6);g.closePath();g.fillStyle=shade(s,-0.12);g.fill();
+ g.beginPath();g.moveTo(1.7,hc-2.4);g.quadraticCurveTo(3.4,hc-3.6,5,hc-2.9);g.strokeStyle=B;g.lineWidth=0.5;g.stroke();
+ // uzun sivri burun
+ g.beginPath();g.moveTo(5,hc-0.9);g.quadraticCurveTo(7.6,hc+1.4,7.2,hc+1.9);g.quadraticCurveTo(6.2,hc+2.2,5.3,hc+1.8);g.closePath();fs(lg(5,hc,7,hc+2,[s,shade(s,-0.14)]),OL,0.3);
+ ell(1.4,hc+1.8,0.85,0.45);g.fillStyle='rgba(230,100,90,0.3)';g.fill();
+ // uzun kavuk: krem keçe, yeşil sarık
+ g.save();g.translate(0.5,hc-3);g.rotate(-0.08);
+ rrect(-3.3,-10.9,7,10.4,2.6);fs(lg(-3.5,0,3.9,0,[shade(p.bork,0.1),p.bork,shade(p.bork,-0.24)]));
+ ln(0.2,-10.5,0.2,-2.6,'rgba(0,0,0,0.1)',0.5);
+ ell(0.2,-1,4.9,2.8);fs(lg(0,-3.8,0,1.8,[shade(p.band,0.22),p.band,shade(p.band,-0.3)]));
+ for(let k=0;k<4;k++){g.beginPath();g.ellipse(0.2,-1.6+k*0.55,4.6-k*0.3,1.5,0,0.3+k*0.6,1.9+k*0.6);g.strokeStyle='rgba(255,255,255,0.28)';g.lineWidth=0.35;g.stroke();}
+ g.restore();}
 function drawAlp(x,y,face,o){ // x,y: ayak ortası (dünya), o:{pal,big,anim,vx,air,throwT,dying,sit}
- const p=ALP_PAL[o.pal||0],t=o.anim||0,mv=Math.abs(o.vx||0)>0.2,air=o.air;
+ const kk=karKim(o),HC=kk==='hacivat',p=KAR_PAL[kk][o.pal||0],t=o.anim||0,mv=Math.abs(o.vx||0)>0.2,air=o.air;
  g.save();g.translate(x,y);g.scale(face,1);if(!o.big)g.scale(0.74,0.68);
  const bob=(!air&&mv)?-Math.abs(Math.sin(t))*0.9:0,hip=-9+bob,tH=7.4,sh=hip-tH,hc=sh-4.6;
  let fa,ba;if(o.sit){fa=-1.3;ba=-1.1;}else if(air){fa=-0.85;ba=0.5;}else if(mv){fa=-Math.sin(t)*0.75;ba=Math.sin(t)*0.75;}else{fa=-0.05;ba=0.1;}
  alpLeg(p,-1.1,hip,ba,9,false);
  const sw=(!air&&mv)?Math.sin(t)*0.65:0.25;g.save();g.translate(-1.6,sh+1.3);g.rotate(0.25+sw);cap(0,0,0,5,1.35);fs(p.kaftanD);circ(0,5.6,1.15);fs(shade(p.skin,-0.12));g.restore();
  // kaftan (etekli)
- g.beginPath();g.moveTo(-3.9,sh+1.6);g.quadraticCurveTo(-4.2,sh-0.3,-1.6,sh);g.lineTo(2.4,sh);g.quadraticCurveTo(4.2,sh-0.2,4,sh+1.6);g.lineTo(4.8,hip+3);g.lineTo(-4.6,hip+3);g.closePath();fs(lg(-4,sh,3,hip+3,[shade(p.kaftan,0.2),p.kaftan,shade(p.kaftan,-0.24)]));
+ g.beginPath();g.moveTo(-3.9,sh+1.6);g.quadraticCurveTo(-4.2,sh-0.3,-1.6,sh);g.lineTo(2.4,sh);g.quadraticCurveTo(4.2,sh-0.2,4,sh+1.6);g.lineTo(HC?5.4:4.8,hip+(HC?5.2:3));g.lineTo(HC?-5.2:-4.6,hip+(HC?5.2:3));g.closePath();fs(lg(-4,sh,3,hip+3,[shade(p.kaftan,0.2),p.kaftan,shade(p.kaftan,-0.24)]));
  ln(1.4,sh+0.4,1.8,hip+2.8,p.band,0.5);for(let k=0;k<3;k++){ln(-0.2,sh+1.6+k*1.6,2.6,sh+1.6+k*1.6,p.band,0.35);}
  rrect(-4.1,hip-1.8,8.4,1.9,0.6);fs(p.belt,OL,0.3);rrect(1,hip-2,1.8,2.3,0.4);fs('#fff3c0',OL,0.25);
  alpLeg(p,0.9,hip,fa,9,true);
- alpHead(p,hc);
+ if(HC){g.beginPath();g.moveTo(-5.2,hip+5.2);g.lineTo(5.4,hip+5.2);g.lineTo(4.8,hip+2.6);g.lineTo(-4.6,hip+2.6);g.closePath();fs(lg(0,hip+2.6,0,hip+5.2,[p.kaftan,shade(p.kaftan,-0.3)]),OL,0.4);}
+ (HC?hacHead:karHead)(p,hc);
  // ön kol (yumruk / atış)
  g.save();g.translate(1.4,sh+1.5);const ta=o.throwT>0?-1.25+(1-o.throwT/10)*1.2:(air?-1.6:(mv?-Math.sin(t)*0.55+0.1:0.35));g.rotate(ta);cap(0,0,0,5,1.45);fs(lg(-1.4,0,1.4,0,[shade(p.kaftan,0.12),shade(p.kaftan,-0.18)]));circ(0,5.7,1.3);fs(p.skin);g.restore();
  g.restore();}
@@ -1730,7 +1794,7 @@ drawIntro=function(){g=ctx;g.fillStyle=rg(W/2,H/2,10,W,['#2e1a0c','#0e0805']);g.
  {const [ww,ss]=wsOf(lvIdx);txt(t('world')+' '+ww+'-'+ss,W/2,40,'#f3d58a',14,'center',true);}txt(t('level')+' '+(lvIdx+1)+' / 1923',W/2,62,'#c9a46a',8,'center');txt(lv.name,W/2,78,'#fff8e8',10,'center',true);
  if(lv.bossX0)txt(t('yel'),W/2,93,'#ff8a6a',8,'center',true);if(lv.tulparOut)txt(t('gate'),W/2,150,'#8fd0ea',7,'center');
  const ax=W/2-30,ay=128;glow(ax+4,ay-8,14,'255,190,90',0.3);drawAlp(ax+4,ay,1,{pal:0,big:true,anim:0,vx:0,air:false});txt('× '+lives,ax+14,ay-14,'#fff8e8',9,'left',true);
- if(pl.mount)drawTulparHorse(W/2+18,ay-16,1,frame*0.1,'stand');txt('ALP '+String(score).padStart(6,'0'),W/2,ay+8,'#c9a46a',8,'center');
+ if(pl.mount)drawTulparHorse(W/2+18,ay-16,1,frame*0.1,'stand');txt(t('hero')+' '+String(score).padStart(6,'0'),W/2,ay+8,'#c9a46a',8,'center');
  txt('Bir Mr. Anduv! yapımıdır.',W/2,H-15,'#b89a70',7,'center');postFX('dusk');};
 drawEnding=function(){g=ctx;g.fillStyle=lg(0,0,0,H,['#2a1830','#a85a6a','#e98a58','#f8dca0']);g.fillRect(0,0,W,H);
  glow(W/2,150,70,'255,200,120',0.5);circ(W/2,150,26);fs(rg(W/2-6,144,1,28,['#fffbe8','#ffe2a0','#ffc070']),null);
@@ -1742,6 +1806,32 @@ drawEnding=function(){g=ctx;g.fillStyle=lg(0,0,0,H,['#2a1830','#a85a6a','#e98a58
 drawAlpHook=(x,y,f,o)=>{g=ctx;drawAlp(x,y,f,o);};
 drawArtHook=(cx,fn)=>{const old=g;g=cx;try{fn({drawAlp,drawTulparHorse,drawBGV,glow,circ,ell,rrect,lg,rg,fs,shade});}finally{g=old;}};
 
+/* ---------- çizimli afiş tabelası (Çizim Planı F3) ----------
+   Eski 48×18 yazılı tabela yerine iki ayaklı ahşap çerçevede 72×24 afiş: solda oyunun küçük sahnesi, ad, söz (pano.js, MrPano).
+   Afişi olmayan panolar (Twitch, Kick…) aynı çerçevede yazılı kalır. Alt kenar eskisiyle aynı yerde; yalnız süs, çarpışma yok. */
+const AFIS_AD={};AFISLER.forEach(a=>AFIS_AD[a[0]]=a);
+const _drawDecoEski=drawDeco;
+drawDeco=function(d,c){if(d.t!=='board')return _drawDecoEski(d,c);g=ctx;
+ const sx=d.x*T-c,by=d.y*T;if(sx>W+16||sx<-80)return;
+ const bw=72,bh=24,x0=sx+24-bw/2,y0=by+18-bh,gy=160,A=window.MrPano?AFIS_AD[d.text.replace(' / ',' · ')]:null;
+ // ayaklar ve çapraz destek
+ for(const px of[x0+13,x0+bw-16.5]){feetShadow(px+1.7,gy,4.2,0.28);rrect(px,y0+bh-2,3.4,gy-(y0+bh)+2,0.9);fs(lg(px,0,px+3.4,0,['#9a6a3a','#6a4426','#3a2414']),OL,0.5);
+  ln(px+1,y0+bh+6,px+1,gy-3,'rgba(255,230,190,0.18)',0.4);}
+ ln(x0+15,y0+bh+4,x0+bw-15,gy-12,'#5a3820',1.6);ln(x0+15,y0+bh+4,x0+bw-15,gy-12,'rgba(255,220,170,0.15)',0.4);
+ // çerçeve
+ rrect(x0-2,y0-2,bw+4,bh+4,1.8);fs(lg(0,y0-2,0,y0+bh+2,['#b07a44','#7a4e2a','#4a2c16']),OL,0.6);
+ g.save();rrect(x0,y0,bw,bh,0.8);g.clip();
+ if(A)MrPano.ciz(g,A,x0,y0,bw,bh,{olcek:BS,en:LANG==='en',yaziFont:FB,sozFont:FR});
+ else{const pr=PANO_RENK[d.text]||['#a8743c','#fff4d0'];g.fillStyle=lg(x0,y0,x0+bw,y0+bh,[pr[0],shade(pr[0],-0.35)]);g.fillRect(x0,y0,bw,bh);
+  const lns=d.text.includes(' / ')?d.text.split(' / '):[d.text];let s=lns.length>1?8:10;const f=()=>{g.font=s+'px '+FB;return lns.every(l=>g.measureText(l).width<=bw-8);};while(!f()&&s>4)s-=0.5;
+  g.textAlign='center';g.textBaseline='middle';lns.forEach((l,i)=>{const yy=y0+bh/2+(i-(lns.length-1)/2)*(s+1.5);g.fillStyle='rgba(0,0,0,0.45)';g.fillText(l,x0+bw/2+0.5,yy+0.5);g.fillStyle=pr[1];g.fillText(l,x0+bw/2,yy);});}
+ // üstten vuran ışık ve camsı parıltı
+ g.fillStyle=lg(0,y0,0,y0+bh,['rgba(255,240,200,0.22)','rgba(255,240,200,0)','rgba(0,0,0,0.18)']);g.fillRect(x0,y0,bw,bh);
+ const sw=((frame+d.x*37)%420)/420;if(sw<0.16){const xx=x0-20+(sw/0.16)*(bw+40);g.fillStyle=lg(xx-10,0,xx+10,0,['rgba(255,255,255,0)','rgba(255,255,255,0.35)','rgba(255,255,255,0)']);g.fillRect(x0,y0,bw,bh);}
+ g.restore();
+ // iki küçük lamba
+ for(const lx of[x0+14,x0+bw-14]){rrect(lx-2.6,y0-4.4,5.2,2.4,0.8);fs('#2a2a30',OL,0.4);glow(lx,y0-1.5,7,'255,226,150',0.45);}
+};
 }
 /* ---------- loop ---------- */
 let acc=0,last=performance.now();
@@ -1753,7 +1843,7 @@ async function songDemo(k,secs=12){const oc=new OfflineAudioContext(1,44100*secs
  const S=SONGS[k],mul=S.lo?.5:1;let t=.05,i=0;while(t<secs-.5){const n=S.lead[i%S.lead.length];if(n)leadAt(NT[n]*mul,t,S.st*1.6,S.w,S.w==='sawtooth'?.025:S.w==='square'?.03:.06);const b=S.bass[i%S.bass.length];if(b)noteAt(NT[b],t,S.st*1.7,'triangle',.09);const dc=S.dr[i%S.dr.length];if(dc!=='.')drumAt(dc,t);i++;t+=S.st;}
  const buf=await oc.startRendering();AC=sAC;master=sM;LEADBUS=sL;NOISE=sN;return Array.from(buf.getChannelData(0));}
 if(tamAlinabilir())setTimeout(()=>{tamGeriYukle();},2500);
-window.__tulpar={get art(){return drawArtHook;},songDemo,goMap,get M(){return M;},get state(){return state;},get ents(){return ents;},get score(){return score;},get pl(){return pl;},get lv(){return lv;},startLevel,inp,get cam(){return cam;},getLevel,startGame,goTitle,showTip,get save(){return save;},kaynak,GEN,levelName,spr:{TUL,PS,STAMGA,THEMES}};
+window.__tulpar={setKar(k){KAR=k;save.kar=k;refreshUI();},get KAR(){return KAR;},get art(){return drawArtHook;},songDemo,goMap,get M(){return M;},get state(){return state;},get ents(){return ents;},get score(){return score;},get pl(){return pl;},get lv(){return lv;},startLevel,inp,get cam(){return cam;},getLevel,startGame,goTitle,showTip,get save(){return save;},kaynak,GEN,levelName,spr:{TUL,PS,STAMGA,THEMES}};
 function boot(){applyLang();yerlesTekrar();if(!save.lang)show('ovLang');else goTitle();requestAnimationFrame(loop);}
 (document.fonts&&document.fonts.load?Promise.race([Promise.all([document.fonts.load('500 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('800 8px "Rubik"','ıİşŞğĞçÇöÖüÜ0123456789'),document.fonts.load('8px "Bungee"','TULPARİŞĞÇÖÜ')]),new Promise(r=>setTimeout(r,1500))]):Promise.resolve()).then(boot,boot);
 })();
