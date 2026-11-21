@@ -24,9 +24,12 @@ body{font-family:"Rubik",sans-serif;color:var(--gold)}
 #screen{position:relative;width:100%;height:100%;background:#000;border-radius:7px;overflow:hidden}
 canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image-rendering:auto}
 /* overlays inside the screen */
-.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:14px;text-align:center}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:14px;text-align:center;overflow-x:hidden;overflow-y:auto}
+.ov>*{flex-shrink:0}
 .ov[hidden]{display:none!important}
-.ov.dim{background:rgba(18,11,7,.9)}
+.ov.dim{background:rgba(18,11,7,.96)}
+#ovTitle>.mb,#ovSel>.mb,#ovTam>.mb,#ovWin>.mb{width:min(290px,84%);min-width:0}
+#ovTitle>.mb.kar{width:min(250px,72%)}
 .ov h2{font:400 22px "Bungee",sans-serif;color:var(--gold);text-shadow:2px 2px 0 var(--ink)}
 .ov p{color:var(--cream);font-size:13px;line-height:1.4;max-width:320px}
 .mb{min-width:62%;max-width:340px;padding:11px 14px;border:2px solid var(--gold);border-radius:10px;background:rgba(58,38,24,.92);color:#f3d48e;font:800 19px "Rubik",sans-serif;box-shadow:0 3px 0 var(--ink)}
@@ -35,15 +38,19 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image
 .mb:active{transform:translateY(2px)}
 .row2{display:flex;gap:10px;justify-content:center;width:100%;max-width:420px}
 .row2 .mb{flex:1;min-width:0}
-#ovTitle{justify-content:flex-start;padding-top:12px}
-#ovTitle .top{display:flex;justify-content:space-between;width:100%}
-#ovTitle .logo{margin-top:auto;font:400 40px/1.02 "Bungee",sans-serif;text-align:center;color:var(--gold);letter-spacing:2px;text-shadow:3px 3px 0 var(--ink),0 0 18px rgba(224,176,72,.35)}
-#ovTitle .logo small{display:block;font:800 15px "Rubik",sans-serif;letter-spacing:3px;color:var(--cream);margin:2px 0}
-#ovTitle .sub{font:400 16px "Rubik",sans-serif;color:var(--cream);margin-top:-6px;margin-bottom:auto;text-shadow:1px 1px 0 var(--ink)}
+#ovTitle{justify-content:flex-start;padding-top:10px;gap:8px}
+#ovTitle .top{display:flex;justify-content:space-between;align-items:stretch;gap:6px;width:100%}
+#ovTitle .top .mb{font-size:13px;padding:7px 10px;white-space:nowrap}
+#ovTitle .top #bMusic{margin-left:auto;min-width:38px}
+#ovTitle .logo{margin-top:auto;font:400 36px/1.04 "Bungee",sans-serif;text-align:center;color:var(--gold);letter-spacing:2px;text-shadow:3px 3px 0 var(--ink),0 0 18px rgba(224,176,72,.35)}
+#ovTitle .logo small{display:block;font:800 14px/1 "Rubik",sans-serif;letter-spacing:.5px;color:var(--cream);margin:-1px 0 1px;text-shadow:1px 1px 0 var(--ink)}
+#ovTitle .sub{font:500 14px "Rubik",sans-serif;color:var(--cream);margin-top:-2px;margin-bottom:auto;text-shadow:1px 1px 0 var(--ink)}
 #ovTitle .imza{font-size:12px;color:var(--gold);opacity:.85;margin-top:2px}
 .lnk{position:absolute;bottom:8px;right:10px;font-size:11px;color:var(--gold);opacity:.7}
 #ovHelp{justify-content:flex-start;overflow:auto}
-#ovHelp .list{width:100%;max-width:440px;text-align:left;display:flex;flex-direction:column;gap:7px;margin:4px 0}
+#ovHelp{justify-content:flex-start;overflow:hidden}
+#ovHelp .list{width:100%;max-width:440px;text-align:left;display:flex;flex-direction:column;gap:7px;margin:4px 0;flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:2px}
+#ovSet .mb,#ovPause .mb:not(.row2 .mb){width:min(300px,88%);min-width:0}
 #ovHelp .it{background:rgba(58,38,24,.85);border:1px solid #6a4a2a;border-radius:8px;padding:7px 9px;color:var(--cream);font-size:13px;line-height:1.35}
 #ovHelp .it b{color:var(--gold)}
 #ovSel .lvl{font:800 20px "Rubik",sans-serif;color:var(--cream)}
@@ -88,7 +95,7 @@ canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image
   </div>
   <div id="ovTitle" class="ov" hidden>
     <div class="top"><button class="mb sm" id="bShare" type="button">📣 <span data-t="share"></span></button><button class="mb sm" id="bTam" type="button">★ <span data-t="tamTtl"></span></button><button class="mb sm" id="bMusic" type="button">♪</button></div>
-    <div class="logo">KARAGÖZ<small>ile</small>HACİVAT</div>
+    <div class="logo">KARAGÖZ<small data-t="logoIle">ile</small>HACİVAT</div>
     <div class="sub" data-t="subtitle"></div>
     <button class="mb sm kar" id="bKar" type="button"></button>
     <button class="mb" id="bNew" type="button" data-t="new"></button>
@@ -525,9 +532,9 @@ function musicTick(){if(!AC||!(musOn||state==='title')||!save.sound||uiPaused())
 const APP_VER='1.1.0';
 const AR_L='◀︎',AR_R='▶︎';
 const L10={
-tr:{tamTtl:'Tam Sürüm',tamBuy:'Tam Sürümü Al',tamRestore:'Satın alımı geri yükle',tamLater:'Şimdi değil',tamTxt:'Gök Yolu\'nun tamamı: 1923 bölüm, bütün dünyalar ve Yelbegen\'in kaleleri. Bir kez al, hep senin.',tamTxtEnd:'İlk dünyayı bitirdin, eline sağlık! Yolun devamı için Tam Sürüm\'ü bir kez al: 1923 bölüm, bütün dünyalar.',tamOk:'Tam Sürüm açıldı. İyi yolculuklar!',tamNone:'Geri yüklenecek satın alım bulunamadı',g_ruzgar:'Rüzgârlı bölüm: esintiye dikkat!',g_karanlik:'Karanlık bölüm: ışığın yalnız etrafında',g_kayan:'Kayan gök: ekran kendiliğinden ilerler!',g_kuzgun:'Kuzgun akını: gökten sürüler gelir',map:'Harita',mapHint:'◀︎ ▶︎ yürü · A gir · dokunarak da yürüyebilirsin',kimiz:'Kımız Otağı',kimizGot:'Kımız içtin! +1 can',kimizNo:'Bu dünyanın kımızını içtin',evTxt:'Tulpar seni bekliyor, yola çık!',evName:'Karagöz ile Hacivat\'ın Otağı',share:'Arkadaşına öner',subtitle:'Gök Yolu · Tulpar\'ın sırtında 1923 bölüm',new:'Yeni Yolculuk',cont:'Devam Et',sel:'Bölüm Seç',selLock:'🔒 Bölüm Seç · bir bölüm bitir',help:'Nasıl Oynanır',settings:'Ayarlar',select:'Bölüm Seç',start:'Başla',back:'Geri',pause:'Mola',resume:'Devam',restart:'Bölümü baştan başlat',home:'Ana menü',langBtn:'Dil: Türkçe',soundOn:'Ses: Açık',soundOff:'Ses: Kapalı',autoOn:'Otomatik koşu: Açık',autoOff:'Otomatik koşu: Kapalı',rate:'Puan ver',feedback:'Bize yaz',erase:'Verilerimi sil',eraseSure:'Emin misin? Tekrar dokun',close:'Kapat',ok:'Tamam',resetGuide:'Rehberi baştan göster',guideReset:'Rehber baştan gösterilecek',shareWin:'Paylaş',continue:'Devam',worldClear:'Dünya {w} tamam!',worldTxt:'Yelbegen yenildi. Tulpar\'la yol sürüyor: bölüm {n} / 1923.',rateQ:'Gök Yolu\'nu beğendin mi?',idea:'Önerim var',later:'Sonra',copied:'Bağlantı kopyalandı',shareText:'Karagöz ile Hacivat: Gök Yolu. Kanatlı Tulpar\'la 1923 bölümlük platform macerası. Bir Mr. Anduv! yapımı.',hero:'%U',k_karagoz:'Karagöz',k_hacivat:'Hacivat',karBtn:'Kahraman: ',karD_karagoz:'hızlı koşar',karD_hacivat:'yüksek zıplar, uzun süzülür',karS_karagoz:'Ah Hacivat ah! Yine yola düştük.',karS_hacivat:'Hay hak! Yâr bana bir eğlence, medet!',world:'DÜNYA',time:'ZAMAN',auto:'OTO',level:'Bölüm',yel:'Yelbegen bekliyor!',gate:'Tulpar kale kapısında bekliyor',clear:'Bölüm tamam!',flag:'Tuğ bonusu: ',tamga:'Tamga: ',over1:'Yol bitmedi!',over2:'%K yeniden doğrulur.',over3:'A: yeniden dene',end1:'1923 bölümlük yol tamam!',end2:'Toplanan tamga: ',end3:'Tulpar, Karagöz ve Hacivat Ötüken\'e döndü.',worldW:'Dünya',
+tr:{tamTtl:'Tam Sürüm',tamBuy:'Tam Sürümü Al',tamRestore:'Satın alımı geri yükle',tamLater:'Şimdi değil',tamTxt:'Gök Yolu\'nun tamamı: 1923 bölüm, bütün dünyalar ve Yelbegen\'in kaleleri. Bir kez al, hep senin.',tamTxtEnd:'İlk dünyayı bitirdin, eline sağlık! Yolun devamı için Tam Sürüm\'ü bir kez al: 1923 bölüm, bütün dünyalar.',tamOk:'Tam Sürüm açıldı. İyi yolculuklar!',tamNone:'Geri yüklenecek satın alım bulunamadı',g_ruzgar:'Rüzgârlı bölüm: esintiye dikkat!',g_karanlik:'Karanlık bölüm: ışığın yalnız etrafında',g_kayan:'Kayan gök: ekran kendiliğinden ilerler!',g_kuzgun:'Kuzgun akını: gökten sürüler gelir',map:'Harita',mapHint:'◀︎ ▶︎ yürü · A gir · dokunarak da yürüyebilirsin',kimiz:'Kımız Otağı',kimizGot:'Kımız içtin! +1 can',kimizNo:'Bu dünyanın kımızını içtin',evTxt:'Tulpar seni bekliyor, yola çık!',evName:'Karagöz ile Hacivat\'ın Otağı',share:'Arkadaşına öner',subtitle:'Gök Yolu · Tulpar\'ın sırtında 1923 bölüm',new:'Yeni Yolculuk',cont:'Devam Et',sel:'Bölüm Seç',selLock:'🔒 Bölüm Seç · bir bölüm bitir',help:'Nasıl Oynanır',settings:'Ayarlar',select:'Bölüm Seç',start:'Başla',back:'Geri',pause:'Mola',resume:'Devam',restart:'Bölümü baştan başlat',home:'Ana menü',langBtn:'Dil: Türkçe',soundOn:'Ses: Açık',soundOff:'Ses: Kapalı',autoOn:'Otomatik koşu: Açık',autoOff:'Otomatik koşu: Kapalı',rate:'Puan ver',feedback:'Bize yaz',erase:'Verilerimi sil',eraseSure:'Emin misin? Tekrar dokun',close:'Kapat',ok:'Tamam',resetGuide:'Rehberi baştan göster',guideReset:'Rehber baştan gösterilecek',shareWin:'Paylaş',continue:'Devam',worldClear:'Dünya {w} tamam!',worldTxt:'Yelbegen yenildi. Tulpar\'la yol sürüyor: bölüm {n} / 1923.',rateQ:'Gök Yolu\'nu beğendin mi?',idea:'Önerim var',later:'Sonra',copied:'Bağlantı kopyalandı',shareText:'Karagöz ile Hacivat: Gök Yolu. Kanatlı Tulpar\'la 1923 bölümlük platform macerası. Bir Mr. Anduv! yapımı.',logoIle:'ile',hero:'%U',k_karagoz:'Karagöz',k_hacivat:'Hacivat',karBtn:'Kahraman: ',karD_karagoz:'hızlı koşar',karD_hacivat:'yüksek zıplar, uzun süzülür',karS_karagoz:'Ah Hacivat ah! Yine yola düştük.',karS_hacivat:'Hay hak! Yâr bana bir eğlence, medet!',world:'DÜNYA',time:'ZAMAN',auto:'OTO',level:'Bölüm',yel:'Yelbegen bekliyor!',gate:'Tulpar kale kapısında bekliyor',clear:'Bölüm tamam!',flag:'Tuğ bonusu: ',tamga:'Tamga: ',over1:'Yol bitmedi!',over2:'%K yeniden doğrulur.',over3:'A: yeniden dene',end1:'1923 bölümlük yol tamam!',end2:'Toplanan tamga: ',end3:'Tulpar, Karagöz ve Hacivat Ötüken\'e döndü.',worldW:'Dünya',
  pamukkale:'Pamukkale Travertenleri',karadeniz:'Karadeniz Yaylası',agri:'Ağrı Dağı Eteği',isikgol:'Isık Göl Kıyısı',van:'Van Gölü Kıyısı',kapadokya:'Peri Bacaları',forest:'Ötüken Ormanı',steppe:'Bozkır Rüzgârı',night:'Ay Işığı Ormanı',dusk:'Alacakaranlık Bozkırı',under:'Yeraltı Yolu',sky:'Gök Katları',kale:'Demir Kale',iron:'Demir Dağ',last:'Yolun Sonu'},
-en:{tamTtl:'Full Version',tamBuy:'Get the Full Version',tamRestore:'Restore purchase',tamLater:'Not now',tamTxt:'The whole Sky Road: 1923 levels, every world and every castle of Yelbegen. Buy once, keep forever.',tamTxtEnd:'You finished the first world, well done! Unlock the rest of the road once: 1923 levels, every world.',tamOk:'Full Version unlocked. Safe travels!',tamNone:'No purchase found to restore',g_ruzgar:'Windy level: mind the gusts!',g_karanlik:'Dark level: light only around you',g_kayan:'Moving sky: the screen scrolls on its own!',g_kuzgun:'Raven raid: flocks keep coming',map:'Map',mapHint:'◀︎ ▶︎ walk · A enter · or tap a level',kimiz:'Kumis Yurt',kimizGot:'You drank kumis! +1 life',kimizNo:'Already drank this world\'s kumis',evTxt:'Tulpar is waiting, hit the road!',evName:'Karagöz & Hacivat\'s Yurt',share:'Tell a friend',subtitle:'Sky Road · 1923 levels on the winged Tulpar',new:'New Journey',cont:'Continue',sel:'Select Level',selLock:'🔒 Select Level · clear a level',help:'How to Play',settings:'Settings',select:'Select Level',start:'Start',back:'Back',pause:'Paused',resume:'Resume',restart:'Restart level',home:'Main menu',langBtn:'Language: English',soundOn:'Sound: On',soundOff:'Sound: Off',autoOn:'Auto-run: On',autoOff:'Auto-run: Off',rate:'Rate the game',feedback:'Write to us',erase:'Delete my data',eraseSure:'Sure? Tap again',close:'Close',ok:'OK',resetGuide:'Show the guide again',guideReset:'The guide will show again',shareWin:'Share',continue:'Continue',worldClear:'World {w} cleared!',worldTxt:'Yelbegen is defeated. The journey goes on: level {n} / 1923.',rateQ:'Enjoying Sky Road?',idea:'I have a suggestion',later:'Later',copied:'Link copied',shareText:'Karagöz & Hacivat: Sky Road. A 1923-level platformer on the winged Tulpar. A Mr. Anduv! game.',hero:'%U',k_karagoz:'Karagöz',k_hacivat:'Hacivat',karBtn:'Hero: ',karD_karagoz:'runs faster',karD_hacivat:'jumps higher, glides longer',karS_karagoz:'Oh Hacivat! On the road again.',karS_hacivat:'Hay hak! Grant me some fun, I pray!',world:'WORLD',time:'TIME',auto:'AUTO',level:'Level',yel:'Yelbegen awaits!',gate:'Tulpar waits at the castle gate',clear:'Level clear!',flag:'Standard bonus: ',tamga:'Tamga: ',over1:'The road goes on!',over2:'%K rises again.',over3:'A: try again',end1:'All 1923 levels cleared!',end2:'Tamgas collected: ',end3:'Tulpar, Karagöz and Hacivat return home.',worldW:'World',
+en:{tamTtl:'Full Version',tamBuy:'Get the Full Version',tamRestore:'Restore purchase',tamLater:'Not now',tamTxt:'The whole Sky Road: 1923 levels, every world and every castle of Yelbegen. Buy once, keep forever.',tamTxtEnd:'You finished the first world, well done! Unlock the rest of the road once: 1923 levels, every world.',tamOk:'Full Version unlocked. Safe travels!',tamNone:'No purchase found to restore',g_ruzgar:'Windy level: mind the gusts!',g_karanlik:'Dark level: light only around you',g_kayan:'Moving sky: the screen scrolls on its own!',g_kuzgun:'Raven raid: flocks keep coming',map:'Map',mapHint:'◀︎ ▶︎ walk · A enter · or tap a level',kimiz:'Kumis Yurt',kimizGot:'You drank kumis! +1 life',kimizNo:'Already drank this world\'s kumis',evTxt:'Tulpar is waiting, hit the road!',evName:'Karagöz & Hacivat\'s Yurt',share:'Tell a friend',subtitle:'Sky Road · 1923 levels on the winged Tulpar',new:'New Journey',cont:'Continue',sel:'Select Level',selLock:'🔒 Select Level · clear a level',help:'How to Play',settings:'Settings',select:'Select Level',start:'Start',back:'Back',pause:'Paused',resume:'Resume',restart:'Restart level',home:'Main menu',langBtn:'Language: English',soundOn:'Sound: On',soundOff:'Sound: Off',autoOn:'Auto-run: On',autoOff:'Auto-run: Off',rate:'Rate the game',feedback:'Write to us',erase:'Delete my data',eraseSure:'Sure? Tap again',close:'Close',ok:'OK',resetGuide:'Show the guide again',guideReset:'The guide will show again',shareWin:'Share',continue:'Continue',worldClear:'World {w} cleared!',worldTxt:'Yelbegen is defeated. The journey goes on: level {n} / 1923.',rateQ:'Enjoying Sky Road?',idea:'I have a suggestion',later:'Later',copied:'Link copied',shareText:'Karagöz & Hacivat: Sky Road. A 1923-level platformer on the winged Tulpar. A Mr. Anduv! game.',logoIle:'&',hero:'%U',k_karagoz:'Karagöz',k_hacivat:'Hacivat',karBtn:'Hero: ',karD_karagoz:'runs faster',karD_hacivat:'jumps higher, glides longer',karS_karagoz:'Oh Hacivat! On the road again.',karS_hacivat:'Hay hak! Grant me some fun, I pray!',world:'WORLD',time:'TIME',auto:'AUTO',level:'Level',yel:'Yelbegen awaits!',gate:'Tulpar waits at the castle gate',clear:'Level clear!',flag:'Standard bonus: ',tamga:'Tamga: ',over1:'The road goes on!',over2:'%K rises again.',over3:'A: try again',end1:'All 1923 levels cleared!',end2:'Tamgas collected: ',end3:'Tulpar, Karagöz and Hacivat return home.',worldW:'World',
  pamukkale:'Pamukkale Terraces',karadeniz:'Black Sea Highlands',agri:'Foot of Mount Ararat',isikgol:'Shores of Issyk-Kul',van:'Shores of Lake Van',kapadokya:'Fairy Chimneys',forest:'Ötüken Forest',steppe:'Windy Steppe',night:'Moonlit Forest',dusk:'Dusk Steppe',under:'Underground Path',sky:'Sky Realms',kale:'Iron Castle',iron:'Iron Mountain',last:'End of the Road'}};
 const TIPS={
 tr:{kontrol:`<b>${AR_L} ${AR_R}</b> yürü · <b>A</b> zıpla (basılı tut: daha yüksek) · <b>B</b> basılı tut: koş`,
@@ -583,6 +590,7 @@ if(!Array.isArray(save.rh))save.rh=save.unlocked>1?['kontrol','blok','tulpar','t
 const seen=k=>save.rh.includes(k);
 function applyLang(){document.documentElement.lang=LANG;document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t(el.dataset.t);});refreshUI();}
 function refreshUI(){{const al=tamAlinabilir();['bTam','setTam','setRestore'].forEach(id=>{const el=$(id);if(el)el.hidden=!(al||(id==='setRestore'&&satisVar()));});}
+refreshUI=(f=>function(){f.apply(this,arguments);try{sigdir();}catch(e){}})(refreshUI);
 
  const [cw,cs]=wsOf(Math.min(save.last??0,TOTAL-1));
  $('bCont').textContent=t('cont')+(save.last!=null?` · ${t('worldW')} ${cw}-${cs}`:'');$('bCont').disabled=save.last==null;
@@ -622,7 +630,10 @@ const canRate=()=>native&&!isQuest&&!!(CAP.Plugins&&CAP.Plugins.InAppReview);
 const OVS=['coach','ovTam','rateBox','ovWin','ovHelp','ovSet','ovSel','ovPause','ovLang','ovTitle'];
 let coachOn=false,coachSoft=false,retTo=null,pendingNext=null,eraseArm=false;
 const vis=id=>{const el=$(id);return el&&!el.hidden;};
-function show(id){$(id).hidden=false;refreshUI();odakSifirla();}
+function sigdir(){ // açık katmanlar oyun kutusuna sığmazsa orantılı küçült (hiçbir düğme kesilmesin)
+ document.querySelectorAll('.ov').forEach(el=>{if(el.hidden||el.id==='ovHelp')return;el.style.zoom='';let z=1;
+  for(let k=0;k<4;k++){const ch=el.clientHeight,sh=el.scrollHeight;if(sh<=ch+1)break;z=Math.max(.7,z*ch/sh*.98);el.style.zoom=z;}});}
+function show(id){$(id).hidden=false;refreshUI();odakSifirla();sigdir();requestAnimationFrame(sigdir);}
 function hide(id){$(id).hidden=true;odakSifirla();}
 function uiPaused(){return coachOn||['ovTam','rateBox','ovWin','ovHelp','ovSet','ovSel','ovPause','ovLang'].some(vis);}
 let menuOpen=false;
@@ -779,7 +790,8 @@ function yerles(){const fr=$('frame'),vw=innerWidth,vh=innerHeight,g=guvenli();
    yer(menu,{left:g.sol+S/2+'px',bottom:Math.max(10,g.alt+8)+'px',transform:'translateX(-50%)'});
    yer(imza,{right:g.sag+S/2+'px',bottom:Math.max(12,g.alt+10)+'px',transform:'translateX(50%)'});}}
  const sc=$('screen').getBoundingClientRect();setView(Math.round(sc.width),Math.round(sc.height));}
-function yerlesTekrar(){yerles();requestAnimationFrame(yerles);[60,250,700,1500].forEach(x=>setTimeout(yerles,x));}
+function yerlesTekrar(){yerles();requestAnimationFrame(()=>{yerles();sigdir();});[60,250,700,1500].forEach(x=>setTimeout(()=>{yerles();sigdir();},x));}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>sigdir());
 addEventListener('resize',yerlesTekrar);addEventListener('orientationchange',yerlesTekrar);if(window.visualViewport)visualViewport.addEventListener('resize',yerlesTekrar);
 
 /* ---------- game state ---------- */
