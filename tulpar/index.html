@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
-<head>
+<head><script src="ses-kurtarici.js"></script>
 <meta charset="utf-8"><script src="esitle.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Karagöz ile Hacivat: Gök Yolu</title>
@@ -529,7 +529,7 @@ function musicTick(){if(!AC||!(musOn||state==='title')||!save.sound||uiPaused())
   const dc=S.dr[musStep%S.dr.length];if(dc!=='.')drumAt(dc,musNext);if(pl&&pl.mount&&state==='play'&&musStep%2===0)drumAt('h',musNext+st*.5);musStep++;musNext+=st;}}
 
 /* ---------- dil (ilk ekranda sorulur, atlanmaz) ---------- */
-const APP_VER='1.1.0';
+const APP_VER='1.1.1';
 const AR_L='◀︎',AR_R='▶︎';
 const L10={
 tr:{tamTtl:'Tam Sürüm',tamBuy:'Tam Sürümü Al',tamRestore:'Satın alımı geri yükle',tamLater:'Şimdi değil',tamTxt:'Gök Yolu\'nun tamamı: 1923 bölüm, bütün dünyalar ve Yelbegen\'in kaleleri. Bir kez al, hep senin.',tamTxtEnd:'İlk dünyayı bitirdin, eline sağlık! Yolun devamı için Tam Sürüm\'ü bir kez al: 1923 bölüm, bütün dünyalar.',tamOk:'Tam Sürüm açıldı. İyi yolculuklar!',tamNone:'Geri yüklenecek satın alım bulunamadı',g_ruzgar:'Rüzgârlı bölüm: esintiye dikkat!',g_karanlik:'Karanlık bölüm: ışığın yalnız etrafında',g_kayan:'Kayan gök: ekran kendiliğinden ilerler!',g_kuzgun:'Kuzgun akını: gökten sürüler gelir',map:'Harita',mapHint:'◀︎ ▶︎ yürü · A gir · dokunarak da yürüyebilirsin',kimiz:'Kımız Otağı',kimizGot:'Kımız içtin! +1 can',kimizNo:'Bu dünyanın kımızını içtin',evTxt:'Tulpar seni bekliyor, yola çık!',evName:'Karagöz ile Hacivat\'ın Otağı',share:'Arkadaşına öner',subtitle:'Gök Yolu · Tulpar\'ın sırtında 1923 bölüm',new:'Yeni Yolculuk',cont:'Devam Et',sel:'Bölüm Seç',selLock:'🔒 Bölüm Seç · bir bölüm bitir',help:'Nasıl Oynanır',settings:'Ayarlar',select:'Bölüm Seç',start:'Başla',back:'Geri',pause:'Mola',resume:'Devam',restart:'Bölümü baştan başlat',home:'Ana menü',langBtn:'Dil: Türkçe',soundOn:'Ses: Açık',soundOff:'Ses: Kapalı',autoOn:'Otomatik koşu: Açık',autoOff:'Otomatik koşu: Kapalı',rate:'Puan ver',feedback:'Bize yaz',erase:'Verilerimi sil',eraseSure:'Emin misin? Tekrar dokun',close:'Kapat',ok:'Tamam',resetGuide:'Rehberi baştan göster',guideReset:'Rehber baştan gösterilecek',shareWin:'Paylaş',continue:'Devam',worldClear:'Dünya {w} tamam!',worldTxt:'Yelbegen yenildi. Tulpar\'la yol sürüyor: bölüm {n} / 1923.',rateQ:'Gök Yolu\'nu beğendin mi?',idea:'Önerim var',later:'Sonra',copied:'Bağlantı kopyalandı',shareText:'Karagöz ile Hacivat: Gök Yolu. Kanatlı Tulpar\'la 1923 bölümlük platform macerası. Bir Mr. Anduv! yapımı.',logoIle:'ile',hero:'%U',k_karagoz:'Karagöz',k_hacivat:'Hacivat',karBtn:'Kahraman: ',karD_karagoz:'hızlı koşar',karD_hacivat:'yüksek zıplar, uzun süzülür',karS_karagoz:'Ah Hacivat ah! Yine yola düştük.',karS_hacivat:'Hay hak! Yâr bana bir eğlence, medet!',world:'DÜNYA',time:'ZAMAN',auto:'OTO',level:'Bölüm',yel:'Yelbegen bekliyor!',gate:'Tulpar kale kapısında bekliyor',clear:'Bölüm tamam!',flag:'Tuğ bonusu: ',tamga:'Tamga: ',over1:'Yol bitmedi!',over2:'%K yeniden doğrulur.',over3:'A: yeniden dene',end1:'1923 bölümlük yol tamam!',end2:'Toplanan tamga: ',end3:'Tulpar, Karagöz ve Hacivat Ötüken\'e döndü.',worldW:'Dünya',
@@ -1009,7 +1009,7 @@ function updEnt(e){if(e.gone)return;
   if(e.inv>0)e.inv--;
   e.vy=Math.min(e.vy+.3,6);const spd=(.6+(3-e.hp)*.35)*(lv.bossSpeed||1);e.vx=(e.vx<0?-1:1)*spd;
   moveX(e);if(e.hitWall)e.vx=-e.vx;
-  {const L0=Math.max(lv.bossX0+16,cam+6),R0=Math.max(L0,Math.min(lv.bossX1-e.w,cam+W-e.w-6));if(e.x<L0){e.x=L0;e.vx=spd;}if(e.x>R0){e.x=R0;e.vx=-spd;}}
+  {const L0=Math.min(lv.bossX1-e.w,Math.max(lv.bossX0+16,cam+6)),R0=Math.max(L0,Math.min(lv.bossX1-e.w,cam+W-e.w-6));if(e.x<L0){e.x=L0;e.vx=spd;}if(e.x>R0){e.x=R0;e.vx=-spd;}}
   moveY(e);e.face=pl.x<e.x?-1:1;
   if(--e.timer<=0){e.timer=100-(3-e.hp)*22;ents.push({t:'rock',x:e.x+e.w/2-4,y:e.y+6,w:8,h:8,vx:e.face*(1.1+Math.random()*1.3),vy:-4.5,active:true});SFX.bump();if(e.hp<3&&e.onG&&Math.random()<.55)e.vy=-5.5;}
   return;
@@ -1330,6 +1330,9 @@ function gecitTick(){const ex=lv.exitTx;if(ex==null)return false;
  if(lv.trans){const tr=lv.trans;tr.t++;if(tr.t<20){pl.x+=.7;pl.anim=(pl.anim||0)+1;}
   if(tr.t===22){lv.passed=true;pl.x=(ex+2)*T-6;pl.y=groundY(ex+2)-pl.h;pl.vx=0;pl.vy=0;pl.face=1;cam=Math.min(lv.w*T-W,(ex+2)*T-40);tone(330,.18,'triangle',.05,330);}
   if(tr.t>=46)lv.trans=null;return true;}
+ const kilitli=!!lv.bossX0&&!lv.goalOpen;
+ if(kilitli){lv.kapiA=Math.max(0,(lv.kapiA||0)-.05);if(!lv.passed&&pl.x+pl.w>ex*T-6){pl.x=ex*T-6-pl.w;if(pl.vx>0)pl.vx=0;}return false;}
+ lv.kapiA=Math.min(1,(lv.kapiA||0)+.025);
  if(!lv.passed&&pl.x+pl.w>ex*T-2&&pl.y+pl.h>6*T){lv.trans={t:0};tone(180,.25,'sawtooth',.04,-60);tone(240,.2,'triangle',.04,120);return true;}
  return false;}
 function drawGecit(c){const ex=lv.exitTx;if(ex==null)return;const th=THEMES[lv.theme],ot=THEMES[lv.outTheme];ctx.save();
@@ -1345,6 +1348,12 @@ function drawGecit(c){const ex=lv.exitTx;if(ex==null)return;const th=THEMES[lv.t
    ctx.globalAlpha=.35+Math.sin(frame*.08)*.1;ctx.fillStyle='#ffe9a8';ctx.beginPath();ctx.moveTo(gx-9,bot);ctx.lineTo(gx-30,bot);ctx.lineTo(gx-9,top+30);ctx.closePath();ctx.fill();ctx.globalAlpha=1;
    // açık kapı kanatları
    for(const s of[-1,1]){ctx.fillStyle='#6a3e1e';ctx.strokeStyle='#1e130b';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(gx+s*9,bot);ctx.lineTo(gx+s*9,top+16);ctx.lineTo(gx+s*5,top+19);ctx.lineTo(gx+s*5,bot);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#c9a46a';ctx.fillRect(gx+s*7-1,top+28,2,2);ctx.fillRect(gx+s*7-1,bot-14,2,2);}
+   // demir parmaklık: Yelbegen yenilene kadar kapı kapalı, yenilince yukarı kalkar
+   {const a=lv.bossX0?(lv.kapiA||0):1;if(a<1){const sh=a*(bot-top-4),py=top+6-sh,pb=bot-sh;ctx.save();ctx.beginPath();ctx.moveTo(gx-13,bot);ctx.lineTo(gx-13,top+12);ctx.arc(gx,top+12,13,Math.PI,0);ctx.lineTo(gx+13,bot);ctx.closePath();ctx.clip();
+    ctx.fillStyle='rgba(10,6,4,.55)';ctx.fillRect(gx-14,py,28,pb-py);ctx.strokeStyle='#2a2a30';ctx.lineWidth=2.4;for(let k=-10;k<=10;k+=5){ctx.beginPath();ctx.moveTo(gx+k,py);ctx.lineTo(gx+k,pb);ctx.stroke();}
+    ctx.strokeStyle='#5a5a66';ctx.lineWidth=1;for(let k=-10;k<=10;k+=5){ctx.beginPath();ctx.moveTo(gx+k-.6,py);ctx.lineTo(gx+k-.6,pb);ctx.stroke();}
+    ctx.strokeStyle='#2a2a30';ctx.lineWidth=2;for(let yy=py+8;yy<pb;yy+=9){ctx.beginPath();ctx.moveTo(gx-13,yy);ctx.lineTo(gx+13,yy);ctx.stroke();}
+    ctx.fillStyle='#8a8a96';for(let k=-10;k<=10;k+=5){ctx.beginPath();ctx.moveTo(gx+k-2,pb);ctx.lineTo(gx+k,pb+4);ctx.lineTo(gx+k+2,pb);ctx.fill();}ctx.restore();}}
    // kilit taşı (tamga)
    ctx.fillStyle='#e0b048';ctx.strokeStyle='#1e130b';ctx.beginPath();ctx.moveTo(gx-4,top-3);ctx.lineTo(gx+4,top-3);ctx.lineTo(gx+3,top+5);ctx.lineTo(gx-3,top+5);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#6a2c0a';ctx.beginPath();ctx.moveTo(gx-2,top-1);ctx.lineTo(gx,top+1);ctx.lineTo(gx+2,top-1);ctx.moveTo(gx,top+1);ctx.lineTo(gx,top+4);ctx.stroke();}}
  else{ // dışarıda: kayalık ve tünel ağzı
