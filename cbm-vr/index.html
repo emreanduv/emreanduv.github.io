@@ -4,7 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Champion Battle VR</title>
+<script src="ses-kurtarici.js"></script>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="modulepreload" href="izle.js">
+<link rel="modulepreload" href="lib/three.module.js">
 <link rel="icon" href="ikon-192.png">
 <meta name="theme-color" content="#1f3b3c">
 <style>
@@ -188,7 +191,7 @@ function gorunumUygula() {
   CIM[GORUNUM] ||= cimDokusu(g); cim.material.map = CIM[GORUNUM]; cim.material.needsUpdate = true;
   topRetroMat ||= top.material; topGercekMat ||= new THREE.MeshStandardMaterial({ map: topDokusu(), roughness: 0.45 });
   top.material = g ? topGercekMat : topRetroMat;
-  for (const f of figurler.values()) saha.remove(f.grup || f); figurler.clear();
+  for (const f of figurler.values()) figurBirak(f); figurler.clear();
 }
 const halka = new THREE.Mesh(new THREE.TorusGeometry(0.75 * OLC * OYUNCU_BUYUT, 0.08 * OLC * OYUNCU_BUYUT, 8, 32), new THREE.MeshBasicMaterial({ color: '#ffe14a' }));
 halka.rotation.x = Math.PI / 2; saha.add(halka);
@@ -224,13 +227,16 @@ async function tamHazirla() {
   if (typeof menuCiz === 'function') try { menuCiz(); } catch { /* menü henüz yok */ }
 }
 async function tamAl() {
-  if (ALINIYOR) return; ALINIYOR = true;
+  if (ALINIYOR) return; ALINIYOR = true; menuCiz();
+  /* satın alma penceresi yanıt vermezse düğme "…"da kilitli kalmasın: 90 sn sonra menü yeniden açılır */
+  const bekci = setTimeout(() => { if (ALINIYOR) { ALINIYOR = false; menuCiz(); } }, 90000);
   try {
     const r = new PaymentRequest([{ supportedMethods: 'https://quest.meta.com/billing', data: { sku: TAM_SKU } }], { total: { label: 'Total', amount: { currency: 'USD', value: '0' } } });
     const yanit = await r.show(); const jeton = yanit.details?.purchaseToken; await yanit.complete('success');
     if (jeton) { TAM = true; sakla('cbmvr.tam', '1'); }
   } catch { /* iptal ya da hata */ }
-  ALINIYOR = false; menuCiz();
+  if (!TAM) tamHazirla();                                        // alındıysa ama jeton gelmediyse mağazadan doğrula
+  clearTimeout(bekci); ALINIYOR = false; menuCiz();
 }
 const kilitli = lig => !TAM && lig && lig.kod !== UCRETSIZ_LIG;
 tamHazirla();
@@ -256,10 +262,33 @@ function girisOku() {
 }
 
 /* ---------- 👁 Maçı izle ve yönet (Champion maç motoru) ---------- */
-function figurTemizle() { for (const f of figurler.values()) saha.remove(f.grup || f); figurler.clear(); tabelaSon = ''; sonSkor = '0-0'; sonDurum = ''; }
+/* figürleri sahneden kaldırırken GPU belleğini de bırak (her yeni maçta 22 figür birikip uzun oturumda gözlüğü boğuyordu).
+   Ortak olanlar (iskelet geometrisinin paylaşılan öznitelikleri, sırt numarası dokusu önbelleği) bırakılmaz. */
+function figurBirak(f) {
+  const kok = f.grup || f; saha.remove(kok);
+  kok.traverse(o => {
+    if (o.isSkinnedMesh) {                                       // paylaşılan iskelet tamponları kalsın, yalnız bu figürün renk tamponu gitsin
+      for (const a of ['position', 'normal', 'skinIndex', 'skinWeight']) o.geometry.deleteAttribute(a);
+      o.geometry.setIndex(null); o.geometry.dispose(); o.skeleton?.dispose?.();
+    } else if (o.isMesh) o.geometry.dispose();
+    if (o.material) for (const m of [].concat(o.material)) m.dispose();
+  });
+}
+function figurTemizle() { for (const f of figurler.values()) figurBirak(f); figurler.clear(); tabelaSon = ''; sonSkor = '0-0'; sonDurum = ''; }
+/* maç motoru (3 MB) ağdan gelmezse menü "Yükleniyor…"da asılı kalmasın: 3 sn sonra yeniden dene, tabelada söyle */
+let yukHata = 0, kuruluyor = false, bekleyen;                 // aynı anda tek kurulum; o sırada gelen seçim (ör. "Başla") ardından kurulur
 async function izleYeniMac(sec = null) {
+  if (kuruluyor) { if (sec || bekleyen === undefined) bekleyen = sec; return; }
+  kuruluyor = true;
+  try { await izleKur(sec); } catch (e) { console.warn('maç kurulamadı', e); } finally { kuruluyor = false; }
+  if (bekleyen !== undefined) { const s = bekleyen; bekleyen = undefined; izleYeniMac(s); }
+}
+async function izleKur(sec) {
   izleYukle ||= import('./izle.js');
-  const mod = await izleYukle; IZM = mod;
+  let mod;
+  try { mod = await izleYukle; }
+  catch (e) { izleYukle = null; yukHata++; console.warn('maç motoru yüklenemedi', e); sonOlay = t('Bağlantı bekleniyor…', 'Waiting for connection…'); sonOlayT = 4; setTimeout(() => izleYeniMac(sec), 3000); return; }
+  IZM = mod;
   LIGLER_IZ ||= mod.ligler();
   figurTemizle();
   IZ = mod.izleMac((metin, tur) => {
@@ -461,13 +490,29 @@ for (let i = 0; i < 2; i++) {
   });
   sahne.add(k);
 }
-renderer.xr.addEventListener('sessionstart', () => { Ses.baslat(); setTimeout(() => { if (MENU) menuYerlestir(); }, 300); });
+renderer.xr.addEventListener('sessionstart', () => {
+  Ses.baslat(); setTimeout(() => { if (MENU) menuYerlestir(); }, 300);
+  /* Meta düğmesi / sistem menüsünden dönünce: ses geri gelsin, birikmiş süre tek karede koşturulmasın */
+  const s = renderer.xr.getSession();
+  s?.addEventListener('visibilitychange', () => { if (s.visibilityState === 'visible') { Ses.baslat(); window.sesKurtar?.(); saat.getDelta(); izAcc = 0; } });
+});
 setInterval(() => { if (MOD === 'izle') panelCiz(); }, 1000);
 
 /* ---------- kare döngüsü ---------- */
 const saat = new THREE.Clock();
 let sesT = 0;
+/* Bir karede hata çıkarsa three.js döngüsü bir daha kare istemez ve gözlükte görüntü donar (Meta VRC.Quest.Functional.1).
+   Bu yüzden kare her durumda çizilir; hatalı maç atılır ve yenisi kurulur. */
+let kareHata = 0;
 renderer.setAnimationLoop(() => {
+  try { kare(); }
+  catch (e) {
+    if (kareHata++ < 5) console.error('kare hatası', e);
+    if (kareHata % 30 === 1) { IZ = null; figurTemizle(); izleYeniMac(BASLADI ? (() => { const { lig, ev, dep } = secim(); return lig && ev && dep ? { lig: lig.kod, ev: ev.id, dep: dep.id } : null; })() : null).catch(() => {}); }
+    try { renderer.render(sahne, kamera); } catch { /* */ }
+  }
+});
+function kare() {
   const dt = Math.min(0.05, saat.getDelta());
   orbit.update();
   girisOku();
@@ -479,9 +524,9 @@ renderer.setAnimationLoop(() => {
     else { izBitisT ||= performance.now(); if (performance.now() - izBitisT > 8000) { if (!BASLADI) izleYeniMac(); else if (!MENU) { MENU = true; menuYerlestir(); menuCiz(); } } }
     ciz(izGorunum(IZ, dt), dt, dur ? 0 : dt * HIZ);
   }
-  Ses.dinleyici(renderer.xr.isPresenting ? renderer.xr.getCamera() : kamera);
+  try { Ses.dinleyici(renderer.xr.isPresenting ? renderer.xr.getCamera() : kamera); } catch { /* ses görüntüyü durdurmasın */ }
   renderer.render(sahne, kamera);
-});
+}
 /* Champion motoru: x kale-kale (0–105), y taç-taç (0–68) → KM düzenine çevrilir */
 const SAC = ['#2a1a10', '#4a2e1a', '#1a1a1a', '#7a4a20', '#c8a050'];
 function izGorunum(I, dt) {
@@ -505,7 +550,7 @@ function ciz(G, dt, sdt = dt) {
     let f = figurler.get(p.o);
     const kit = G.kit[p.team];
     if (!f || f.userData.c1 !== kit.c1 || f.userData.gk !== p.gk) {
-      if (f) saha.remove(f.grup || f);
+      if (f) figurBirak(f);
       if (gercek) { f = gercekFigur(p, kit, i); f.userData = { c1: kit.c1, gk: p.gk }; saha.add(f.grup); }
       else { f = figur({ role: p.gk ? 'G' : 'O', skin: p.skin, hair: p.hair }, kit); f.userData = { c1: kit.c1, gk: p.gk }; saha.add(f); }
       figurler.set(p.o, f);

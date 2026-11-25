@@ -17,7 +17,8 @@ function mirildan() {                                       // tribün: kalabal�
 let gurultuKaynak = null;
 function klipCal(ad, x, y, z, v = 1, perde = 1, gecikme = 0) {
   if (!ctx || !acik || !buf[ad]) return false; const p = konum(x, y, z), g = ctx.createGain(), s = ctx.createBufferSource();
-  s.buffer = buf[ad]; s.playbackRate.value = perde; g.gain.value = v; s.connect(g); g.connect(p); s.start(ctx.currentTime + gecikme, 0.03); return true;
+  s.buffer = buf[ad]; s.playbackRate.value = perde; g.gain.value = v; s.connect(g); g.connect(p); s.onended = () => { try { g.disconnect(); p.disconnect(); } catch { /* */ } };
+  s.start(ctx.currentTime + gecikme, 0.03); return true;
 }
 const yeni = () => {
   ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -44,10 +45,11 @@ export const Ses = {
   ac(v) { acik = v; try { if (ana) ana.gain.setTargetAtTime(v ? 0.9 : 0, ctx.currentTime, 0.05); localStorage.setItem('cbmvr.ses', v ? '1' : '0'); } catch { /* */ } },
   /* dinleyici: kameranın dünya matrisinden konum ve yön */
   dinleyici(cam) {
-    if (!ctx) return; const L = ctx.listener, e = cam.matrixWorld.elements, t = ctx.currentTime;
+    if (!ctx) return; const L = ctx.listener, e = cam.matrixWorld.elements;
     const px = e[12], py = e[13], pz = e[14], fx = -e[8], fy = -e[9], fz = -e[10], ux = e[4], uy = e[5], uz = e[6];
-    if (L.positionX) { L.positionX.setValueAtTime(px, t); L.positionY.setValueAtTime(py, t); L.positionZ.setValueAtTime(pz, t);
-      L.forwardX.setValueAtTime(fx, t); L.forwardY.setValueAtTime(fy, t); L.forwardZ.setValueAtTime(fz, t); L.upX.setValueAtTime(ux, t); L.upY.setValueAtTime(uy, t); L.upZ.setValueAtTime(uz, t); }
+    /* .value ile yaz: her karede setValueAtTime, ses zaman çizelgesine kare başına 9 olay ekleyip uzun oturumda ses iş parçacığını boğuyordu */
+    if (L.positionX) { L.positionX.value = px; L.positionY.value = py; L.positionZ.value = pz;
+      L.forwardX.value = fx; L.forwardY.value = fy; L.forwardZ.value = fz; L.upX.value = ux; L.upY.value = uy; L.upZ.value = uz; }
     else { L.setPosition(px, py, pz); L.setOrientation(fx, fy, fz, ux, uy, uz); }
   },
   /* heyecan 0–1: top bir kaleye yaklaştıkça tribün yükselir */
@@ -66,12 +68,12 @@ export const Ses = {
     o.type = 'square'; o.frequency.value = 2900; lfo.frequency.value = 32; lg.gain.value = 140; lfo.connect(lg); lg.connect(o.frequency);
     const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2900; f.Q.value = 4; o.connect(f); f.connect(g);
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.18, t + 0.02); g.gain.setValueAtTime(0.18, t + sure - 0.05); g.gain.linearRampToValueAtTime(0, t + sure);
-    o.start(t); lfo.start(t); o.stop(t + sure + 0.05); lfo.stop(t + sure + 0.05);
+    o.start(t); lfo.start(t); o.stop(t + sure + 0.05); lfo.stop(t + sure + 0.05); o.onended = () => { try { g.disconnect(); p.disconnect(); } catch { /* */ } };
   },
   vurus(x, y, z, guc = 1) {
     if (!ctx || !acik || !gurultu) return; const t = ctx.currentTime, p = konum(x, y, z), g = ctx.createGain(), s = ctx.createBufferSource(), f = ctx.createBiquadFilter();
     s.buffer = gurultu; f.type = 'lowpass'; f.frequency.value = 900; s.connect(f); f.connect(g); g.connect(p);
-    g.gain.setValueAtTime(0.5 * Math.min(1, guc), t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09); s.start(t, Math.random()); s.stop(t + 0.1);
+    g.gain.setValueAtTime(0.5 * Math.min(1, guc), t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.09); s.start(t, Math.random()); s.stop(t + 0.1); s.onended = () => { try { g.disconnect(); p.disconnect(); } catch { /* */ } };
   },
   tik() {
     if (!ctx || !acik) return; const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
@@ -82,7 +84,7 @@ export const Ses = {
     if (klipCal('gol', x, y + 0.3, z, 1)) { this.duduk(false, x, y, z); this.taraftar(takim, 'tezahurat', 2.4); tezT = Math.max(tezT, 20); return; }
     if (!ctx || !acik || !gurultu) return; const t = ctx.currentTime, p = konum(x, y + 0.3, z), g = ctx.createGain(), s = ctx.createBufferSource(), f = ctx.createBiquadFilter();
     s.buffer = gurultu; s.loop = true; f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 0.5; s.connect(f); f.connect(g); g.connect(p);
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.9, t + 0.25); g.gain.setTargetAtTime(0, t + 1.6, 0.6); s.start(t); s.stop(t + 4.5);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.9, t + 0.25); g.gain.setTargetAtTime(0, t + 1.6, 0.6); s.start(t); s.stop(t + 4.5); s.onended = () => { try { g.disconnect(); p.disconnect(); } catch { /* */ } };
     this.duduk(false, x, y, z);
   },
 };
