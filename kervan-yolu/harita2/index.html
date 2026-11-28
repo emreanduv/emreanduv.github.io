@@ -206,7 +206,7 @@ body.fotom #speedo,body.fotom #cl,body.fotom #cr,body.fotom #bcam,body.fotom #hS
 <div id="hPause" class="tb">II</div>
 
 <script src="iletisim.js"></script>
-<script src="veri/rota-hatay.js"></script><script src="veri/dem-hatay.js"></script><script src="js/rota.js"></script>
+<script src="veri/rota-hatay.js"></script><script src="veri/dem-hatay.js"></script><script src="veri/bina-hatay.js"></script><script src="js/rota.js"></script>
 <script src="lib/three.min.js"></script>
 <script>
 "use strict";
@@ -404,10 +404,10 @@ function groundTex(){if(!TEX.ground){TEX.ground=ctex(256,256,(g,w,h)=>{g.fillSty
 function buildWorld(){
  /* Harita 2: gerçek rota (OSM geometrisi + DEM profili); örnek aralığı eski yollarla aynı (≈2,2 m), böylece örnek sayısına bağlı bütün kurallar geçerli kalır */
  const GR=RG().rota&&window.ROTA&&ROTA.yol(RG().rota);TILED=!!GR;
- const curve=GR?new THREE.CatmullRomCurve3(GR.x.map((x,i)=>new THREE.Vector3(x,0,GR.z[i])),false,'centripetal'):new THREE.CatmullRomCurve3(RPTS.map(p=>new THREE.Vector3(p[0],0,p[1])),false,'catmullrom',0.5);
+ const GP=GR?(GR.bag||[]).map(p=>new THREE.Vector3(p[0],0,p[1])).concat(GR.x.map((x,i)=>new THREE.Vector3(x,0,GR.z[i]))):null;const curve=GR?new THREE.CatmullRomCurve3(GP,false,'centripetal'):new THREE.CatmullRomCurve3(RPTS.map(p=>new THREE.Vector3(p[0],0,p[1])),false,'catmullrom',0.5);
  if(GR)NS=Math.round(curve.getLength()/2.2)+1;else NS=700;
  RS=curve.getSpacedPoints(NS-1);ROADLEN=curve.getLength();ROADLENS[REG]=ROADLEN;SITE=RS[NS-1];
- RY=new Float32Array(NS);if(GR){const ss=new Float32Array(NS);for(let i=1;i<NS;i++)ss[i]=ss[i-1]+RS[i].distanceTo(RS[i-1]);const pr=ROTA.profil(RG().rota,ss);for(let i=0;i<NS;i++)RY[i]=lerp(pr[i],YARD_Y,yardMask(RS[i].x,RS[i].z))}else for(let i=0;i<NS;i++){const p=RS[i];RY[i]=lerp(natural(p.x,p.z),YARD_Y,yardMask(p.x,p.z))}
+ RY=new Float32Array(NS);if(GR){const ss=new Float32Array(NS);for(let i=1;i<NS;i++)ss[i]=ss[i-1]+RS[i].distanceTo(RS[i-1]);/* bağlantı yolu boyunca gerçek rotanın ilk yüksekliği */let s0=0;if(GR.bag){let bi=0,bd=1e9;for(let i=0;i<NS;i++){const d=(RS[i].x-GR.x[0])**2+(RS[i].z-GR.z[0])**2;if(d<bd){bd=d;bi=i}}s0=ss[bi]}const pr=ROTA.profil(RG().rota,ss.map(v=>Math.max(0,v-s0)));for(let i=0;i<NS;i++)RY[i]=lerp(pr[i],YARD_Y,yardMask(RS[i].x,RS[i].z))}else for(let i=0;i<NS;i++){const p=RS[i];RY[i]=lerp(natural(p.x,p.z),YARD_Y,yardMask(p.x,p.z))}
  if(!GR)for(let pass=0;pass<3;pass++){const tmp=RY.slice();for(let i=0;i<NS;i++){let s=0,n=0;for(let k=-22;k<=22;k++){const q=clamp(i+k,0,NS-1);s+=tmp[q];n++}RY[i]=s/n}}
  const ds=ROADLEN/(NS-1),gmax=(GR?ROTA.EGIM:0.065)*ds;
  for(let i=0;i<NS;i++){const ym=yardMask(RS[i].x,RS[i].z);if(ym>0)RY[i]=lerp(RY[i],YARD_Y,ym)}
@@ -688,7 +688,7 @@ function bultenLogic(dt){if(!G||phase!=='drive'||state!=='play')return;if(!windo
 
 function takoLogic(dt){if(mode!=='career'||!G.strapped||G.pst!=='yolda'&&G.pst!=='serbest')return false;const v=truck.v,sp=Math.abs(v.speed),i=roadIdx(v);
  if(G.molaT!=null){G.molaT+=dt;v.speed=0;if(G.molaT>3){G.molaT=null;G.drv=0;G.molaOk=true;G.deadline+=10;toast(T('t_molaOk'),'#8ff0a4',2.6);blip(523,784,.3);$('fade').classList.remove('on')}return true}
- if(sp>1)G.drv=(G.drv||0)+dt*TAKO_RATE;
+ if(sp>1)/* takograf: eski kısaltılmış haritalarda 1 sn = 1 dk; gerçek ölçekli haritada gerçek süre (1 sn = 1 sn) */G.drv=(G.drv||0)+dt*TAKO_RATE*(TILED?1/60:1);
  const M=PORTOPS.mola;const nearM=M&&M.ring&&cepteMi(v,M.ring.position,7,M.ri);
  if(nearM&&sp<.6&&(G.drv||0)>30){if(!(actFn&&(actFn.mola||actFn.yakit))){const fn=()=>{G.molaT=0;setAct(null);$('fade').classList.add('on');toast(T('t_mola'),'#bfe4ff',2.6);blip(300,420,.5)};fn.mola=1;fn.blade=1;setAct(T('a_mola'),fn)}}
  else if(actFn&&actFn.mola)setAct(null);
@@ -975,7 +975,7 @@ function buildTrees(){const N=MOBILE?900:1500;const crown=new THREE.InstancedMes
  crown.count=c1;crown2.count=c2;trunk.count=ct;for(const m of[crown,crown2,trunk]){m.castShadow=true;m.receiveShadow=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;scene.add(m)}}
 function sideAt(i,off){const a=RS[Math.max(0,i-1)],b=RS[Math.min(NS-1,i+1)];let tx=b.x-a.x,tz=b.z-a.z;const l=Math.hypot(tx,tz);tx/=l;tz/=l;return{x:RS[i].x-tz*off,z:RS[i].z+tx*off,ang:Math.atan2(tx,tz)}}
 function buildRoadside(){
- [70,260,470,600].forEach((i,bi)=>{const p=sideAt(i,-15);const h=getH(p.x,p.z);const g=new THREE.Group();g.position.set(p.x,h,p.z);g.rotation.y=p.ang+Math.PI;scene.add(g);obsC(p.x,p.z,1.2);
+ (TILED?Array.from({length:Math.max(1,Math.floor((NS-300)/1100))},(_,k)=>70+k*1100):[70,260,470,600]).forEach((i,bi)=>{const p=sideAt(i,-15);const h=getH(p.x,p.z);const g=new THREE.Group();g.position.set(p.x,h,p.z);g.rotation.y=p.ang+Math.PI;scene.add(g);obsC(p.x,p.z,1.2);
   addBox(.35,6,.35,MAT.steel,-3,3,0,g);addBox(.35,6,.35,MAT.steel,3,3,0,g);addBox(9.4,4.9,.3,MAT.dark2,0,7.6,0,g);
   const c=document.createElement('canvas');c.width=512;c.height=256;const tx=new THREE.CanvasTexture(c);const m=new THREE.MeshBasicMaterial({map:tx});
   const f=new THREE.Mesh(new THREE.PlaneGeometry(9,4.5),m);f.position.set(0,7.6,-.16);f.rotation.y=Math.PI;g.add(f);const f2=f.clone();f2.position.z=.16;f2.rotation.y=0;g.add(f2);
@@ -986,7 +986,8 @@ function buildRoadside(){
  addBox(8,12,3,sm,0,6,-11.6,kg);addBox(3.4,6,.4,MAT.dark,0,4.5,-13.1,kg);
  const arch=new THREE.Mesh(new THREE.CylinderGeometry(1.7,1.7,.42,16,1,false,0,Math.PI),MAT.dark);arch.rotation.set(Math.PI/2,0,Math.PI/2);arch.position.set(0,7.5,-13.1);kg.add(arch);
  const sg=new THREE.Mesh(new THREE.PlaneGeometry(6,2.2),new THREE.MeshBasicMaterial({map:signTex('Kervansaray')}));sg.position.set(0,10.6,-13.15);sg.rotation.y=Math.PI;kg.add(sg);}
- for(const[i,txt]of[[40,L==='tr'?'Rüzgâr Sahası 2 km':'Wind Farm 2 km'],[380,REG==='trakya'?'Şarköy · Ganos →':REG==='sivas'?'Sivas →':REG==='ege'?(L==='tr'?'Bergama →':'Bergama →'):(L==='tr'?'Rüzgâr Sahası →':'Wind Farm →')]]){const p=sideAt(i,7.8);const g=new THREE.Group();g.position.set(p.x,getH(p.x,p.z),p.z);g.rotation.y=p.ang+Math.PI;scene.add(g);addBox(.15,3.4,.15,MAT.steel,0,1.7,0,g);const pl=new THREE.Mesh(new THREE.PlaneGeometry(3.2,1.2),new THREE.MeshBasicMaterial({map:signTex(txt),side:THREE.DoubleSide}));pl.position.y=3.6;g.add(pl)}
+ for(const[i,txt]of TILED?(()=>{/* gerçek rota: gerçek uzaklıklar (bölgenin kasabası: 9 km'den sonraki ilk kent kesimi; geçit: en yüksek nokta) */const km=(a,b)=>Math.max(1,Math.round((b-a)*ROADLEN/(NS-1)/1000));let pk=0;for(let q=0;q<NS;q++)if(RY[q]>RY[pk])pk=q;let bl=-1;if(window.KENT)for(let q=Math.round(9000/2.2);q<NS;q++)if(KENT[q]){bl=q;break}const R=RES[REG][L];
+ const ks=RG().kasaba;return[[40,(bl>0&&ks?[ks+' '+km(40,bl)+' km']:[]).concat([R+' '+km(40,NS-1)+' km'])],[Math.max(60,pk-700),[RG().to[L]+' '+km(pk-700,pk)+' km',R+' '+km(pk-700,NS-1)+' km']]]})():[[40,L==='tr'?'Rüzgâr Sahası 2 km':'Wind Farm 2 km'],[380,REG==='trakya'?'Şarköy · Ganos →':REG==='sivas'?'Sivas →':REG==='ege'?(L==='tr'?'Bergama →':'Bergama →'):(L==='tr'?'Rüzgâr Sahası →':'Wind Farm →')]]){const p=sideAt(i,7.8);const g=new THREE.Group();g.position.set(p.x,getH(p.x,p.z),p.z);g.rotation.y=p.ang+Math.PI;scene.add(g);const tl=[].concat(txt);addBox(.15,3.4+(tl.length-1)*1.3,.15,MAT.steel,0,(3.4+(tl.length-1)*1.3)/2,0,g);tl.forEach((t,k)=>{const pl=new THREE.Mesh(new THREE.PlaneGeometry(3.2,1.2),new THREE.MeshBasicMaterial({map:signTex(t),side:THREE.DoubleSide}));pl.position.y=3.6+(tl.length-1-k)*1.3;g.add(pl)})}
 }
 try{document.fonts&&document.fonts.ready.then(()=>{for(const b of world.boards)b.cur=-1})}catch(e){}
 function updBoards(t){const n=PANOLAR.length,tur=Math.floor(t/7);for(const b of world.boards){const k=((b.i*5+tur*3)%n+n)%n;if(k!==b.cur){b.cur=k;drawPano(b.c.getContext('2d'),512,256,PANOLAR[k]);b.tx.needsUpdate=true}}}

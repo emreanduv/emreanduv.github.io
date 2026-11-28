@@ -8,7 +8,7 @@ Object.assign(REGIONS,{
   amp:70,rid:14,climb:.04,coastW:24,sea:0x1d6c8c,fee:1.08,olive:1,cols:{g1:'#8a9a4e',g2:'#5d7036',dry:'#b9a66a',rock:'#9a8f7c'}},
  hatay:{name:{tr:'Hatay',en:'Hatay'},from:{tr:'İskenderun Limanı',en:'İskenderun Port'},to:{tr:'Belen Geçidi',en:'Belen Pass'},
   rp:[[0,40],[0,-60],[40,-160],[120,-220],[190,-300],[180,-410],[110,-500],[150,-610],[250,-660],[330,-760],[300,-880],[360,-990],[470,-1040],[540,-1160],[560,-1300]],
-  rota:'hatay',amp:120,rid:24,climb:.075,coastW:26,sea:0x1b6f93,fee:1.16,citrus:1,cols:{g1:'#7f9448',g2:'#506a30',dry:'#b49c63',rock:'#8f8576'}},
+  rota:'hatay',kasaba:'Belen',amp:120,rid:24,climb:.075,coastW:26,sea:0x1b6f93,fee:1.16,citrus:1,cols:{g1:'#7f9448',g2:'#506a30',dry:'#b49c63',rock:'#8f8576'}},
  karadeniz:{name:{tr:'Karadeniz',en:'Black Sea'},from:{tr:'Trabzon Limanı',en:'Trabzon Port'},to:{tr:'Çaykara Yaylası',en:'Çaykara Plateau'},
   rp:[[0,40],[0,-70],[30,-180],[-20,-300],[40,-410],[140,-460],[200,-560],[150,-680],[200,-800],[300,-860],[360,-980],[320,-1100],[400,-1200],[500,-1260],[540,-1400]],
   amp:130,rid:22,climb:.08,coastW:20,sea:0x1d4c66,fee:1.22,snow:1,snowLine:115,tea:1,fog:1,cols:{g1:'#4f7d3a',g2:'#2f5a26',dry:'#7d8a55',rock:'#6f6d68'}},
