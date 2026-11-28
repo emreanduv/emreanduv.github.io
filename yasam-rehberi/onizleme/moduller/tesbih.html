@@ -1,0 +1,1500 @@
+<!doctype html><html lang="tr"><head><script src="../ses-kurtarici.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="../css/modul.css"><script src="../dil-en.js"></script>
+<script src="../dil.js"></script>
+<script src="../js/modul-kopru.js"></script>
+<style>body{margin:0}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Yaşam Rehberi Tesbih</title>
+<style>
+/* Layout: FM2010 menajer-modu — lacivert üst bant, krem paneller, yeşil Devam düğmesi; tek ekran sayaç + yan paneller */
+:root {
+  --navy: #1d2b45;
+  --navy-2: #2c3f63;
+  --cream: #efe8d6;
+  --cream-2: #e4dbc3;
+  --paper: #f8f4e9;
+  --ink: #23262b;
+  --muted: #6c6656;
+  --line: #c9bd9c;
+  --go: #3f8a3a;
+  --go-2: #2f6e2b;
+  --gold: #c9a227;
+  --bead: #8a6a3c;
+  --bead-on: #3f8a3a;
+  --f-head: "PT Sans Narrow", "Arial Narrow", Tahoma, sans-serif;
+  --f-body: "PT Sans", Tahoma, Verdana, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  background: var(--navy);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--navy); }
+
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: linear-gradient(var(--navy-2), var(--navy));
+  border-bottom: 2px solid var(--gold);
+  color: #fff;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; align-items: center; gap: 12px;
+}
+.top h1 { font-family: var(--f-head); font-weight: 700; font-size: 22px; margin: 0; letter-spacing: .02em; text-transform: uppercase; }
+.top .sub { font-size: 12px; opacity: .75; letter-spacing: .06em; text-transform: uppercase; }
+.top .spacer { flex: 1; }
+.snd { font: 600 13px var(--f-head); letter-spacing: .06em; text-transform: uppercase; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.35); padding: 4px 10px; border-radius: 3px; cursor: pointer; }
+.snd[aria-pressed="false"] { opacity: .55; }
+.snd:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.date { font-family: var(--f-head); font-size: 15px; background: rgba(255,255,255,.1); padding: 4px 10px; border-radius: 3px; font-variant-numeric: tabular-nums; }
+
+.wrap {
+  max-width: 1000px; margin: 0 auto;
+  padding-block: 14px 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 12px;
+  grid-template-columns: 260px minmax(0, 1fr) 260px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: minmax(0,1fr); }
+  .counter-panel { order: -1; }
+}
+
+.panel { background: var(--cream); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+.panel > header {
+  background: var(--cream-2); border-bottom: 1px solid var(--line);
+  font-family: var(--f-head); font-weight: 600; font-size: 14px; letter-spacing: .08em; text-transform: uppercase;
+  padding: 7px 12px; color: var(--navy); display: flex; justify-content: space-between; align-items: center;
+}
+.panel .body { padding: 10px 12px; }
+
+/* Zikir listesi */
+.zlist { list-style: none; margin: 0; padding: 0; }
+.zlist button {
+  width: 100%; text-align: left; border: 0; background: transparent; cursor: pointer;
+  display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: center;
+  padding: 9px 12px; font: inherit; color: var(--ink); border-bottom: 1px solid var(--line);
+}
+.zlist li:nth-child(even) button { background: var(--paper); }
+.zlist button[aria-current="true"] { background: var(--navy-2) !important; color: #fff; }
+.zlist .t { font-weight: 600; }
+.zlist .m { font-size: 12px; color: var(--muted); }
+.zlist button[aria-current="true"] .m { color: #cfd6e4; }
+.zlist .n { font-family: var(--f-head); font-size: 15px; font-variant-numeric: tabular-nums; }
+.zlist button:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+
+.mode { display: flex; gap: 0; margin: 10px 12px; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+.mode button { flex: 1; border: 0; padding: 7px; font: 600 13px var(--f-head); letter-spacing: .06em; text-transform: uppercase; background: var(--paper); color: var(--muted); cursor: pointer; }
+.mode button[aria-pressed="true"] { background: var(--navy); color: #fff; }
+
+/* Sayaç */
+.counter-panel .body { display: grid; gap: 12px; justify-items: center; padding: 14px 12px 16px; }
+.zname { text-align: center; }
+.zname .ar { font-size: 26px; font-family: "Amiri", "Traditional Arabic", "Scheherazade New", serif; direction: rtl; color: var(--navy); line-height: 1.4; }
+.zname .tr { font-family: var(--f-head); font-weight: 700; font-size: 26px; text-transform: uppercase; letter-spacing: .03em; }
+.zname .an { font-size: 13px; color: var(--muted); }
+
+.ring {
+  position: relative; width: min(78vw, 330px); aspect-ratio: 1; max-width: 100%;
+  border: 0; padding: 0; background: transparent; cursor: pointer; border-radius: 50%;
+  touch-action: manipulation; user-select: none;
+}
+.ring svg { width: 100%; height: 100%; display: block; }
+.ring:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+.ring .center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+.ring .big { font-family: var(--f-head); font-weight: 700; font-size: 84px; line-height: 1; color: var(--navy); font-variant-numeric: tabular-nums; }
+.ring .of { font-family: var(--f-head); font-size: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ring .hint { font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: .06em; text-transform: uppercase; }
+.ring.pulse .big { animation: pop .18s ease-out; }
+@keyframes pop { from { transform: scale(1.08); } to { transform: scale(1); } }
+.ring.done .big { color: var(--go); }
+
+.seq { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.seq span { font: 600 12px var(--f-head); letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; background: var(--paper); border: 1px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; }
+.seq span.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.seq span.ok { background: var(--go); color: #fff; border-color: var(--go); }
+
+.controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.btn {
+  font: 600 14px var(--f-head); letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  padding: 8px 14px; border-radius: 3px; cursor: pointer;
+}
+.btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.btn.go { background: linear-gradient(var(--go), var(--go-2)); color: #fff; border-color: var(--go-2); }
+.btn.warn { color: #8c2f22; }
+.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; font-size: 13px; background: var(--paper); border: 1px solid var(--line); padding: 8px 10px; border-radius: 3px; }
+
+.targets { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.targets button { font: 600 13px var(--f-head); min-width: 44px; padding: 5px 8px; border: 1px solid var(--line); background: var(--paper); border-radius: 3px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.targets button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
+#tgtGir { display: inline-flex; gap: 4px; } #tgtGir[hidden] { display: none; }
+#tgtSayi { width: 96px; font: 600 14px var(--f-head); padding: 5px 6px; border: 1px solid var(--line); border-radius: 3px; background: #fff; color: var(--ink); }
+
+/* Gelen kutusu / istatistik */
+.stat { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 10px; font-size: 14px; }
+.stat dt { color: var(--muted); }
+.stat dd { margin: 0; font-family: var(--f-head); font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; text-align: right; }
+.bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; align-items: end; height: 80px; margin-top: 10px; }
+.bars div { background: var(--navy-2); border-radius: 2px 2px 0 0; min-height: 2px; }
+.bars div.today { background: var(--go); }
+.barlbl { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; font: 500 11px var(--f-head); color: var(--muted); text-align: center; text-transform: uppercase; }
+
+.inbox { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
+.inbox li { padding: 7px 12px; border-bottom: 1px solid var(--line); font-size: 13px; display: grid; grid-template-columns: auto minmax(0,1fr); gap: 8px; }
+.inbox li:nth-child(even) { background: var(--paper); }
+.inbox time { font-family: var(--f-head); color: var(--muted); font-variant-numeric: tabular-nums; }
+.inbox .empty { color: var(--muted); display: block; }
+
+.ayet { display: flex; flex-wrap: wrap; gap: 6px; }
+.ayet button { font: 600 13px var(--f-head); letter-spacing: .04em; padding: 5px 9px; border: 1px solid var(--navy-2); color: var(--navy-2); background: var(--paper); border-radius: 3px; cursor: pointer; }
+.ayet-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.add { display: grid; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.add input { font: inherit; padding: 7px 8px; border: 1px solid var(--line); background: var(--paper); border-radius: 3px; min-width: 0; }
+.add .row { display: grid; grid-template-columns: minmax(0,1fr) 70px auto; gap: 6px; }
+
+.foot { text-align: center; color: #cfd6e4; font-size: 12px; letter-spacing: .06em; padding-bottom: 18px; }
+.badge { display: inline-block; font: 700 13px var(--f-head); letter-spacing: .08em; text-transform: uppercase; background: var(--gold); color: var(--navy); padding: 3px 8px; border-radius: 2px; margin-right: 6px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--navy); color: #fff; border: 1px solid var(--gold); padding: 9px 14px; border-radius: 3px; font: 600 14px var(--f-head); letter-spacing: .05em; text-transform: uppercase; z-index: 20; max-width: calc(100% - 32px); }
+
+.goal { display: grid; gap: 6px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.goalRow { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.goalRow strong, .goalTxt { margin-left: auto; font: 600 16px var(--f-head); color: var(--ink); font-variant-numeric: tabular-nums; }
+.goalRow select { font: 600 13px var(--f-head); border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 3px 4px; }
+.goalBar { height: 8px; background: var(--paper); border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.goalBar div { height: 100%; background: linear-gradient(90deg, var(--go-2), var(--go)); width: 0; transition: width .2s; }
+
+.zlist.long { max-height: 460px; overflow: auto; }
+.mode button { padding: 7px 4px; }
+
+.vakitTop { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.vakitTop select { font: 600 13px var(--f-head); border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 3px 4px; }
+.vakitTop #citySel { margin-left: auto; }
+.vakitTop .small { font-size: 12px; }
+.vakitTop input { accent-color: var(--go); width: 16px; height: 16px; }
+.vakit { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.vakit li { display: grid; grid-template-columns: 64px minmax(0,1fr) auto; gap: 8px; align-items: center; padding: 6px 12px; font-size: 14px; }
+.vakit li:nth-child(even) { background: var(--paper); }
+.vakit li.past { color: var(--muted); }
+.vakit li.next { background: var(--navy-2) !important; color: #fff; }
+.vakit time { font: 600 16px var(--f-head); font-variant-numeric: tabular-nums; }
+.vakit .chk { font: 600 12px var(--f-head); letter-spacing: .05em; text-transform: uppercase; color: var(--go); }
+.vakit li.next .chk { color: #a8e0a3; }
+#vakitNext { font-variant-numeric: tabular-nums; text-transform: none; letter-spacing: .02em; }
+
+.atolye { list-style: none; margin: 0; padding: 0; }
+.atolye li { border-bottom: 1px solid var(--line); }
+.atolye li:nth-child(even) { background: var(--paper); }
+.atolye button { width: 100%; display: grid; grid-template-columns: 72px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 8px 12px; border: 0; background: transparent; font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
+.atolye button:disabled { cursor: default; }
+.atolye button:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+.atolye li.sel { background: var(--navy-2) !important; }
+.atolye li.sel button { color: #fff; }
+.atolye li.locked svg { opacity: .35; filter: grayscale(.7); }
+.atolye .an { font-weight: 600; }
+.atolye .cond { font-size: 12px; color: var(--muted); }
+.atolye li.sel .cond { color: #cfd6e4; }
+.atolye .st { font: 600 12px var(--f-head); letter-spacing: .05em; text-transform: uppercase; font-variant-numeric: tabular-nums; color: var(--muted); }
+.atolye .st.own { color: var(--go); }
+.atolye li.sel .st { color: #a8e0a3; }
+.atolye .prog { height: 4px; background: var(--cream-2); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.atolye .prog div { height: 100%; background: var(--gold); }
+
+#beads circle { transform-box: fill-box; transform-origin: center; }
+#beads circle.drop { animation: drop .28s ease-out; }
+@keyframes drop { 0% { transform: translateY(-5px) scale(1.35); } 60% { transform: translateY(1px) scale(.95); } 100% { transform: none; } }
+.hijri { font-size: 12px; opacity: .8; display: block; text-align: right; }
+
+body.focus.night { background: #0a0f1a; }
+body.focus.night::before { background: #0a0f1a; }
+body.focus.night #paperC { fill: #141b2b; stroke: #22304a; }
+body.focus.night .ring .big { color: #e8dcb5; }
+body.focus.night .ring .of, body.focus.night .ring .hint { color: #7d889c; }
+body.focus.night .zname .tr { color: #d9d2bd; }
+
+.subhead { display: flex; justify-content: space-between; background: var(--cream-2); border-block: 1px solid var(--line); padding: 6px 12px; font: 600 13px var(--f-head); letter-spacing: .08em; text-transform: uppercase; color: var(--navy); margin-top: -1px; }
+.designs .emptyD { padding: 10px 12px; font-size: 13px; color: var(--muted); }
+.designs li.sel .dacts .mini { color: #fff; border-color: rgba(255,255,255,.35); background: transparent; }
+.dacts { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 9px 94px; }
+.mini { font: 600 12px var(--f-head); letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 3px; cursor: pointer; }
+.mini.warn { color: #8c2f22; }
+.atolye .dacts button.mini { width: auto; display: inline-block; padding: 3px 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 600 12px var(--f-head); }
+.atolye .dacts button.mini.warn { color: #8c2f22; }
+.atolye li.sel .dacts button.mini { background: transparent; color: #fff; border-color: rgba(255,255,255,.4); }
+.dbar { padding: 10px 12px 0; }
+.lbl { font: 600 12px var(--f-head); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.row2 { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { font: 600 13px var(--f-head); padding: 5px 9px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 3px; cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
+.chips button:focus-visible, .mini:focus-visible, .x:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.modal { position: fixed; inset: 0; z-index: 30; background: rgba(10, 15, 26, .78); overflow: auto;
+  padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.sheet { max-width: 820px; margin: 0 auto; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+.sheet > header { background: linear-gradient(var(--navy-2), var(--navy)); color: #fff; border-bottom: 2px solid var(--gold); font-size: 15px; }
+.x { font: 600 13px var(--f-head); letter-spacing: .06em; text-transform: uppercase; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.35); border-radius: 3px; padding: 3px 9px; cursor: pointer; }
+.dgrid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; padding: 14px; }
+@media (max-width: 700px) { .dgrid { grid-template-columns: minmax(0, 1fr); } }
+.dprev { display: grid; gap: 10px; justify-items: center; align-content: start; }
+.dprev svg { width: 100%; max-width: 300px; aspect-ratio: 1; }
+.dcode { display: flex; gap: 8px; align-items: baseline; justify-content: center; font-size: 13px; color: var(--muted); }
+.dcode strong { font: 700 20px var(--f-head); letter-spacing: .08em; color: var(--navy); background: var(--paper); border: 1px dashed var(--line); padding: 2px 10px; border-radius: 3px; user-select: all; }
+.dLocked { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+.dform { display: grid; gap: 7px; align-content: start; min-width: 0; }
+.dform input { font: inherit; padding: 8px; border: 1px solid var(--line); background: var(--paper); border-radius: 3px; min-width: 0; }
+.dform .lbl { margin-top: 6px; }
+.controls.left { justify-content: flex-start; margin-top: 10px; }
+
+.ustacard { max-width: 560px; background: var(--paper); }
+.ustacard .body { display: grid; gap: 12px; padding: 16px; }
+.uTitle { font: 700 26px var(--f-head); text-transform: uppercase; letter-spacing: .03em; color: var(--navy); border-bottom: 2px solid var(--gold); padding-bottom: 6px; }
+.uStrandWrap { overflow-x: auto; background: var(--cream); border: 1px solid var(--line); border-radius: 3px; padding: 6px; }
+.uStrandWrap svg { display: block; width: 100%; min-width: 300px; height: auto; }
+.uSpec { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 0; margin: 0; border: 1px solid var(--line); font-size: 14px; }
+.uSpec dt, .uSpec dd { margin: 0; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.uSpec dt { font: 600 13px var(--f-head); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--cream); }
+.uSpec dt:nth-last-child(2), .uSpec dd:last-child { border-bottom: 0; }
+.uNote { margin: 0; font-size: 12px; color: var(--muted); }
+.uSign { margin: 0; font-size: 12px; color: var(--muted); }
+body.modal-open { overflow: hidden; }
+
+.exitFocus { display: none; }
+body.focus .top, body.focus .wrap > :not(.counter-panel), body.focus .foot,
+body.focus .counter-panel > header, body.focus .targets, body.focus #controls { display: none !important; }
+body.focus .wrap { grid-template-columns: minmax(0,1fr); max-width: 560px; min-height: 100%; align-content: center; }
+body.focus .counter-panel { background: transparent; border: 0; }
+body.focus .counter-panel .body { min-height: calc(100vh - 60px); align-content: center; cursor: pointer; }
+body.focus .zname .tr { color: #fff; }
+body.focus .zname .ar { color: var(--gold); }
+body.focus .zname .an { color: #cfd6e4; }
+body.focus .ring { width: min(88vw, 62vh, 460px); }
+body.focus .exitFocus { display: inline-block; }
+
+@media (prefers-reduced-motion: reduce) { .ring.pulse .big { animation: none; } }
+
+/* Yaşam Rehberi renkleri: koyu zemin, yeşil bant, altın çizgi, krem paneller */
+:root { --navy: #2f3e4c; --navy-2: #1d4d36; --cream: #efe8d4; --cream-2: #e7dfc8; --paper: #fffdf6; --line: #c8bc9a;
+  --ink: #1f2328; --muted: #5e5645; --go: #2e7d46; --go-2: #1f5a31; --gold: #c9a227; }
+body, body::before { background: #1e2226; }
+.top { background: #1d4d36; border-bottom: 3px solid var(--gold); }
+.foot { font-style: italic; color: #d4a017; font-size: 13px; letter-spacing: 0; }
+.uSign { font-style: italic; color: #8a6d12; }
+.gomulu .top { position: static; padding-block: 10px; padding-left: 16px; padding-right: 16px; }
+.gomulu .wrap { padding-left: 16px; padding-right: 16px; }
+.gomulu body.focus .counter-panel .body { min-height: calc(100vh - 60px); }
+.targets button, .mats button { color: var(--ink); }
+input, select, textarea { font-size: 16px !important; }
+.targets button[aria-pressed="true"] { color: #fff; }
+</style>
+
+<div class="top">
+  <div>
+    <h1>Tesbih</h1>
+    <div class="sub">Yaşam Rehberi · Zikir</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="snd" id="snd" aria-pressed="true">Ses: Açık</button>
+  <div class="date" id="today"></div>
+</div>
+
+<main class="wrap">
+  <section class="panel" aria-labelledby="h-list">
+    <header id="h-list"><span>Zikirler</span><span id="listCount"></span></header>
+    <div class="mode" role="group" aria-label="Mod">
+      <button id="mTesbihat" aria-pressed="true">Namaz tesbihatı</button>
+      <button id="mEsma" aria-pressed="false">Esmâ</button>
+      <button id="mSerbest" aria-pressed="false">Serbest</button>
+    </div>
+    <ul class="zlist" id="zlist"></ul>
+    <form class="add" id="addForm">
+      <label for="addName" style="font:600 12px var(--f-head);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Kendi zikrini ekle</label>
+      <div class="row">
+        <input id="addName" placeholder="Örn. Hasbünallah" maxlength="40" required>
+        <input id="addTarget" type="number" min="1" max="10000" value="100" aria-label="Hedef">
+        <button class="btn" type="submit">Ekle</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel counter-panel" aria-labelledby="h-count">
+    <header id="h-count"><span>Sayaç</span><span id="lapInfo"></span></header>
+    <div class="body">
+      <div class="seq" id="seq"></div>
+      <div class="zname">
+        <div class="ar" id="zAr"></div>
+        <div class="tr" id="zTr"></div>
+        <div class="an" id="zAn"></div>
+      </div>
+      <button class="ring" id="ring" aria-label="Say">
+        <svg viewBox="0 0 300 300" aria-hidden="true">
+          <circle cx="150" cy="150" r="138" fill="none" stroke="var(--cream-2)" stroke-width="6"></circle>
+          <circle id="arc" cx="150" cy="150" r="138" fill="none" stroke="var(--gold)" stroke-width="6" stroke-linecap="round" transform="rotate(-90 150 150)"></circle>
+          <defs>
+            <radialGradient id="g-kuka" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#a0714a"/><stop offset=".45" stop-color="#5a3a22"/><stop offset="1" stop-color="#24160b"/></radialGradient>
+            <radialGradient id="g-kehribar" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ffe6a3"/><stop offset=".45" stop-color="#f0a92f"/><stop offset="1" stop-color="#9a520c"/></radialGradient>
+            <radialGradient id="g-oltu" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#8a8a90"/><stop offset=".35" stop-color="#2b2b2f"/><stop offset="1" stop-color="#050506"/></radialGradient>
+            <radialGradient id="g-silver" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#b9bcc4"/><stop offset="1" stop-color="#5d616b"/></radialGradient>
+          </defs>
+          <radialGradient id="g-kagit" cx="45%" cy="38%" r="70%"><stop offset="0" stop-color="#fffdf6"/><stop offset=".8" stop-color="#f6efdc"/><stop offset="1" stop-color="#e6d9b6"/></radialGradient>
+          <circle id="paperC" cx="150" cy="150" r="96" fill="url(#g-kagit)" stroke="#c9a227" stroke-width="1.6"></circle>
+          <circle cx="150" cy="150" r="91" fill="none" stroke="#c9a227" stroke-width=".7" stroke-dasharray="1.5 3" opacity=".9"></circle>
+          <g class="t-beads" id="beads"></g>
+          <g class="t-duraks"></g>
+          <g>
+            <path class="t-tassel" d="M150 50 L150 62 M147 52 L143 65 M153 52 L157 65 M149 52 L147 64 M151 52 L153 64" stroke-width="1.6" stroke-linecap="round" fill="none"></path>
+            <ellipse class="t-pul" cx="150" cy="47" rx="7" ry="3"></ellipse>
+            <path class="t-imame" d=""></path>
+          </g>
+        </svg>
+        <div class="center">
+          <div class="big" id="big">0</div>
+          <div class="of" id="of">/ 33</div>
+          <div class="hint"><span id="matName"></span> · Dokun</div>
+        </div>
+      </button>
+      <div class="targets mats" id="matRow" role="group" aria-label="Tesbih"></div>
+      <div class="targets" id="perGroup" role="group" aria-label="İsim başına" hidden>
+        Her isim:
+        <button data-per="1">1 kez</button>
+        <button data-per="33">33 kez</button>
+      </div>
+      <div class="targets" id="tgtGroup" role="group" aria-label="Hedef">
+        Hedef:
+        <button data-t="33">33</button>
+        <button data-t="99">99</button>
+        <button data-t="100">100</button>
+        <button data-t="1000">1000</button>
+        <button id="tgtOzel" aria-label="Özel hedef yaz">Özel</button>
+        <span id="tgtGir" hidden><input id="tgtSayi" type="number" min="1" max="1000000" inputmode="numeric" aria-label="Özel hedef" placeholder="ör. 500"><button id="tgtTamam">Tamam</button></span>
+      </div>
+      <div class="controls" id="controls">
+        <button class="btn" id="undo">−1 Geri al</button>
+        <button class="btn warn" id="reset">Sıfırla</button>
+        <button class="btn" id="focusBtn">Odak modu</button>
+        <button class="btn go" id="next">Devam ›</button>
+      </div>
+      <button class="btn exitFocus" id="exitFocus">‹ Odaktan çık</button>
+      <div class="confirm" id="confirm" hidden>
+        Bu zikrin sayısı sıfırlansın mı?
+        <button class="btn warn" id="yesReset">Sıfırla</button>
+        <button class="btn" id="noReset">Vazgeç</button>
+      </div>
+    </div>
+  </section>
+
+  <div style="display:grid;gap:12px;min-width:0">
+    <section class="panel" aria-labelledby="h-stat">
+      <header id="h-stat"><span>Bugün</span><span id="todayTotal"></span></header>
+      <div class="body">
+        <div class="goal">
+          <div class="goalRow">
+            <label for="goalSel">Günlük hedef</label>
+            <select id="goalSel">
+              <option value="33">33</option><option value="100">100</option><option value="300">300</option><option value="500">500</option><option value="1000">1000</option>
+            </select>
+            <span class="goalTxt" id="goalTxt"></span>
+          </div>
+          <div class="goalBar"><div id="goalFill"></div></div>
+          <div class="goalRow"><span>Seri</span><strong id="streak"></strong></div>
+        </div>
+        <dl class="stat" id="stat"></dl>
+        <div class="bars" id="bars" aria-label="Son 7 gün"></div>
+        <div class="barlbl" id="barlbl"></div>
+      </div>
+    </section>
+    <section class="panel" aria-labelledby="h-atolye">
+      <header id="h-atolye"><span>Tesbih atölyesi</span><span id="atolyeCount"></span></header>
+      <ul class="atolye" id="atolye"></ul>
+      <div class="subhead"><span>Tasarımların</span><span id="designCount"></span></div>
+      <ul class="atolye designs" id="designs"></ul>
+      <div class="dbar"><button class="btn go" id="newDesign">+ Yeni tasarım</button></div>
+      <form class="add" id="importForm">
+        <label for="importCode" class="lbl">Arkadaşından gelen kod</label>
+        <div class="row2">
+          <input id="importCode" placeholder="Örn. TSB-1A2-B Yıldız" maxlength="60" autocomplete="off">
+          <button class="btn" type="submit">İçe al</button>
+        </div>
+      </form>
+    </section>
+    <section class="panel" aria-labelledby="h-vakit">
+      <header id="h-vakit"><span>Namaz vakitleri</span><span id="vakitNext"></span></header>
+      <div class="vakitTop">
+        <label for="citySel">Şehir</label>
+        <select id="citySel"></select>
+      </div>
+      <ul class="vakit" id="vakitList"></ul>
+      <div class="vakitTop">
+        <input type="checkbox" id="remindChk">
+        <label for="remindChk">Tesbihat hatırlatıcısı</label>
+        <select id="remindAfter" aria-label="Vakitten sonra">
+          <option value="10">10 dk</option><option value="15">15 dk</option><option value="20">20 dk</option><option value="30">30 dk</option><option value="45">45 dk</option>
+        </select>
+        <span class="small">sonra</span>
+      </div>
+      <div class="ayet-note" id="vakitNote" style="padding:0 12px 10px"></div>
+    </section>
+    <section class="panel" aria-labelledby="h-ayet">
+      <header id="h-ayet"><span>Meallerde oku</span></header>
+      <div class="body">
+        <div class="ayet">
+          <button data-a="Ra'd 13:28">Ra'd 28</button>
+          <button data-a="Ahzâb 33:41">Ahzâb 41</button>
+          <button data-a="Bakara 2:152">Bakara 152</button>
+          <button data-a="A'râf 7:205">A'râf 205</button>
+        </div>
+        <div class="ayet-note">Dokununca ayet, meallerin yan yana olduğu ekranda açılır.</div>
+      </div>
+    </section>
+    <section class="panel" aria-labelledby="h-inbox">
+      <header id="h-inbox"><span>Gelen kutusu</span></header>
+      <ul class="inbox" id="inbox"></ul>
+    </section>
+  </div>
+</main>
+
+<div class="foot">Bir Mr. Anduv! yapımıdır.</div>
+<div class="modal" id="designer" hidden role="dialog" aria-modal="true" aria-labelledby="h-design">
+  <section class="panel sheet">
+    <header><span id="h-design">Tesbih tasarla</span><button class="x" id="dClose" type="button">Kapat ✕</button></header>
+    <div class="dgrid">
+      <div class="dprev">
+        <svg id="dSvg" viewBox="0 0 300 300" aria-hidden="true">
+          <circle cx="150" cy="150" r="96" fill="var(--paper)" stroke="var(--line)" stroke-width="1"></circle>
+          <g class="t-beads"></g>
+          <g class="t-duraks"></g>
+          <g>
+            <path class="t-tassel" d="M150 50 L150 62 M147 52 L143 65 M153 52 L157 65 M149 52 L147 64 M151 52 L153 64" stroke-width="1.6" stroke-linecap="round" fill="none"></path>
+            <ellipse class="t-pul" cx="150" cy="47" rx="7" ry="3"></ellipse>
+            <path class="t-imame" d=""></path>
+          </g>
+        </svg>
+        <div class="dcode"><span>Tasarım kodu</span><strong id="dCode"></strong></div>
+        <p class="dLocked" id="dLocked" hidden>Bu malzeme sende hediye olarak var; atölyende henüz açılmadı.</p>
+      </div>
+      <div class="dform">
+        <label class="lbl" for="dName">Tesbihin adı</label>
+        <input id="dName" maxlength="24" placeholder="Örn. Dedemin tesbihi" autocomplete="off">
+        <div class="lbl">Malzeme</div><div class="chips" id="dMat"></div>
+        <div class="lbl">Tane sayısı</div><div class="chips" id="dCount"></div>
+        <div class="lbl">Tane şekli</div><div class="chips" id="dShape"></div>
+        <div class="lbl">Tane çapı</div><div class="chips" id="dSize"></div>
+        <div class="lbl">Durak taneleri</div><div class="chips" id="dDurak"></div>
+        <div class="lbl">İmame</div><div class="chips" id="dImame"></div>
+        <div class="lbl">Püskül</div><div class="chips" id="dPuskul"></div>
+        <div class="controls left">
+          <button class="btn go" id="dSave" type="button">Kaydet ve kullan</button>
+          <button class="btn" id="dUsta" type="button">Usta kartı</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="modal" id="usta" hidden role="dialog" aria-modal="true" aria-labelledby="h-usta">
+  <section class="panel sheet ustacard">
+    <header><span id="h-usta">Usta kartı</span><button class="x" id="uClose" type="button">Kapat ✕</button></header>
+    <div class="body">
+      <div class="uTitle" id="uTitle"></div>
+      <div class="uStrandWrap"><svg id="uStrand" viewBox="0 0 340 44" aria-hidden="true"></svg></div>
+      <dl class="uSpec" id="uSpec"></dl>
+      <div class="dcode"><span>Kod</span><strong id="uCode"></strong></div>
+      <div class="controls left"><button class="btn go" id="uCopy" type="button">Ölçüleri kopyala</button></div>
+      <p class="uNote">Bu kartı bir tesbih ustasına göster ya da gönder; ölçüler yaklaşıktır, son kararı usta verir.</p>
+      <p class="uSign">Bir Mr. Anduv! yapımıdır.</p>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  var BASE = [
+    { id: "subhan", ar: "سُبْحَانَ اللّٰهِ", tr: "Sübhânallah", an: "Allah her türlü eksiklikten uzaktır", t: 33, seq: true },
+    { id: "hamd", ar: "اَلْحَمْدُ لِلّٰهِ", tr: "Elhamdülillah", an: "Hamd Allah'adır", t: 33, seq: true },
+    { id: "ekber", ar: "اَللّٰهُ أَكْبَرُ", tr: "Allâhu Ekber", an: "Allah en büyüktür", t: 34, seq: true },
+    { id: "tevhid", ar: "لَا إِلٰهَ إِلَّا اللّٰهُ", tr: "Lâ ilâhe illallah", an: "Allah'tan başka ilah yoktur", t: 100 },
+    { id: "istigfar", ar: "أَسْتَغْفِرُ اللّٰهَ", tr: "Estağfirullah", an: "Allah'tan bağışlanma dilerim", t: 100 },
+    { id: "salavat", ar: "اَللّٰهُمَّ صَلِّ عَلٰى مُحَمَّدٍ", tr: "Salavat", an: "Allah'ım, Muhammed'e rahmet eyle", t: 100 }
+  ];
+  var KEY = "mrAnduvTesbih.v1";
+  var dayKey = function (d) { d = d || new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
+  var S = { custom: [], counts: {}, targets: {}, history: {}, inbox: [], mode: "tesbihat", cur: "subhan" };
+  try { var raw = YRK.oku(KEY); if (raw) Object.assign(S, JSON.parse(raw)); } catch (e) {}
+  function save() { try { YRK.yaz(KEY, JSON.stringify(S)); } catch (e) {} }
+  // Eski sürümde hedefi aşmış tesbihat sayılarını hedefe indir (ör. 231/34 → 34/34)
+  BASE.forEach(function (x) { if (x.seq && (S.counts[x.id] || 0) > (S.targets[x.id] || x.t)) S.counts[x.id] = S.targets[x.id] || x.t; });
+
+  // Esmâü'l-Hüsnâ — isim ve kısa anlamı
+  var ESMA = [
+    ["Allah", "Bütün güzel isimleri kendinde toplayan tek ilah"], ["Er-Rahmân", "Dünyada bütün yaratılmışlara merhamet eden"],
+    ["Er-Rahîm", "Ahirette müminlere merhamet eden"], ["El-Melik", "Bütün varlığın gerçek sahibi ve hükümdarı"],
+    ["El-Kuddûs", "Her türlü eksiklikten arınmış"], ["Es-Selâm", "Esenlik veren, kullarını selamete çıkaran"],
+    ["El-Mü'min", "Güven veren, vaadine sadık"], ["El-Müheymin", "Her şeyi gözetip koruyan"],
+    ["El-Azîz", "İzzet sahibi, yenilmeyen"], ["El-Cebbâr", "Dilediğini yaptırmaya gücü yeten, kırıkları onaran"],
+    ["El-Mütekebbir", "Büyüklükte eşi olmayan"], ["El-Hâlık", "Yoktan yaratan"],
+    ["El-Bâri", "Her şeyi kusursuz ve uyumlu yaratan"], ["El-Musavvir", "Her varlığa bir şekil veren"],
+    ["El-Gaffâr", "Günahları çokça bağışlayan"], ["El-Kahhâr", "Her şeye galip gelen"],
+    ["El-Vehhâb", "Karşılıksız bağışta bulunan"], ["Er-Rezzâk", "Rızık veren"],
+    ["El-Fettâh", "Hayır kapılarını açan"], ["El-Alîm", "Her şeyi bilen"],
+    ["El-Kâbıd", "Dilediğine darlık veren"], ["El-Bâsıt", "Dilediğine genişlik veren"],
+    ["El-Hâfıd", "Dilediğini alçaltan"], ["Er-Râfi", "Dilediğini yükselten"],
+    ["El-Muiz", "İzzet veren"], ["El-Müzil", "Zillete düşüren"],
+    ["Es-Semî", "Her şeyi işiten"], ["El-Basîr", "Her şeyi gören"],
+    ["El-Hakem", "Hükmeden, hakkı yerine getiren"], ["El-Adl", "Mutlak adalet sahibi"],
+    ["El-Latîf", "Lütuf sahibi, en ince işleri bilen"], ["El-Habîr", "Her şeyin iç yüzünden haberdar"],
+    ["El-Halîm", "Cezada acele etmeyen, yumuşak davranan"], ["El-Azîm", "Pek yüce"],
+    ["El-Gafûr", "Bağışlaması bol"], ["Eş-Şekûr", "Az amele çok sevap veren"],
+    ["El-Aliyy", "Yüceler yücesi"], ["El-Kebîr", "Büyüklüğü sınırsız"],
+    ["El-Hafîz", "Her şeyi koruyan"], ["El-Mukît", "Her yaratılmışın gıdasını veren"],
+    ["El-Hasîb", "Hesaba çeken, kuluna yeten"], ["El-Celîl", "Celal ve azamet sahibi"],
+    ["El-Kerîm", "Cömert, ikramı bol"], ["Er-Rakîb", "Her an gözeten"],
+    ["El-Mucîb", "Duaları kabul eden"], ["El-Vâsi", "İlmi ve rahmeti her şeyi kuşatan"],
+    ["El-Hakîm", "Her işi hikmetli"], ["El-Vedûd", "Kullarını seven, sevilmeye layık"],
+    ["El-Mecîd", "Şanı yüce"], ["El-Bâis", "Ölüleri dirilten"],
+    ["Eş-Şehîd", "Her şeye şahit"], ["El-Hakk", "Varlığı gerçek ve değişmez"],
+    ["El-Vekîl", "Kendisine güvenilip dayanılan"], ["El-Kaviyy", "Pek güçlü"],
+    ["El-Metîn", "Sarsılmaz kudret sahibi"], ["El-Veliyy", "Müminlerin dostu ve yardımcısı"],
+    ["El-Hamîd", "Övülmeye layık"], ["El-Muhsî", "Her şeyin sayısını bilen"],
+    ["El-Mübdi", "İlk defa yaratan"], ["El-Muîd", "Yeniden yaratan"],
+    ["El-Muhyî", "Hayat veren"], ["El-Mümît", "Ölümü yaratan"],
+    ["El-Hayy", "Ezelî ve ebedî diri"], ["El-Kayyûm", "Her şeyi ayakta tutan"],
+    ["El-Vâcid", "İstediğini bulan, hiçbir şeye muhtaç olmayan"], ["El-Mâcid", "Kerem ve şanı bol"],
+    ["El-Vâhid", "Tek, eşsiz"], ["Es-Samed", "Hiçbir şeye muhtaç olmayan, her şeyin O'na muhtaç olduğu"],
+    ["El-Kâdir", "Gücü her şeye yeten"], ["El-Muktedir", "Kudret sahiplerinin üstünde kudret sahibi"],
+    ["El-Mukaddim", "Dilediğini öne alan"], ["El-Muahhir", "Dilediğini geriye bırakan"],
+    ["El-Evvel", "Başlangıcı olmayan"], ["El-Âhir", "Sonu olmayan"],
+    ["Ez-Zâhir", "Varlığı apaçık"], ["El-Bâtın", "Mahiyeti gizli"],
+    ["El-Vâlî", "Bütün kâinatı yöneten"], ["El-Müteâlî", "Yüceliği her şeyin üstünde"],
+    ["El-Berr", "İyiliği bol"], ["Et-Tevvâb", "Tövbeleri kabul eden"],
+    ["El-Müntakim", "Suçluları adaletle cezalandıran"], ["El-Afüvv", "Affı çok"],
+    ["Er-Raûf", "Çok şefkatli"], ["Mâlikü'l-Mülk", "Mülkün ebedî sahibi"],
+    ["Zü'l-Celâli ve'l-İkrâm", "Celal ve ikram sahibi"], ["El-Muksit", "Her işi adaletle yapan"],
+    ["El-Câmi", "Dilediğini dilediği yerde toplayan"], ["El-Ganiyy", "Hiçbir şeye muhtaç olmayan"],
+    ["El-Mugnî", "Dilediğini zengin eden"], ["El-Mâni", "Dilemediği şeye engel olan"],
+    ["Ed-Dârr", "Zarar verenleri de yaratan"], ["En-Nâfi", "Fayda verenleri yaratan"],
+    ["En-Nûr", "Âlemleri nurlandıran"], ["El-Hâdî", "Hidayet veren"],
+    ["El-Bedî", "Eşsiz ve örneksiz yaratan"], ["El-Bâkî", "Varlığı sonsuz"],
+    ["El-Vâris", "Her şeyin asıl sahibi olarak kalan"], ["Er-Reşîd", "Doğru yolu gösteren"],
+    ["Es-Sabûr", "Çok sabırlı"]
+  ];
+  function esmaObj() {
+    var per = S.esmaPer || 1, n = S.counts.esma || 0, idx = Math.min(ESMA.length - 1, Math.floor(n / per));
+    return { id: "esma", tr: ESMA[idx][0], an: ESMA[idx][1], t: ESMA.length * per, idx: idx, per: per, esma: true };
+  }
+  function label(id) {
+    if (id === "esma") return "Esmâü'l-Hüsnâ";
+    var z = all().find(function (q) { return q.id === id; });
+    return z ? z.tr : id;
+  }
+
+  function all() { return BASE.concat(S.custom); }
+  function cur() {
+    if (S.mode === "esma") return esmaObj();
+    return all().find(function (z) { return z.id === S.cur; }) || BASE[0];
+  }
+  function tgt(z) { return z.esma ? z.t : (S.targets[z.id] || z.t); }
+  function cnt(z) { return S.counts[z.id] || 0; }
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---- Tesbih çizim motoru (sayaç ve tasarım ekranı ortak kullanır) ----
+  var NB = 33, beads = $("beads"), ns = "http://www.w3.org/2000/svg";
+  var GAP = 30 * Math.PI / 180; // üstte imame boşluğu
+  var MAT_KEYS = ["kuka", "kehribar", "oltu", "zeytin", "akik", "sedef", "yesim", "gumus"];
+  var COUNTS = [33, 99], SHAPES = ["Yuvarlak", "Arpa", "Kesme"], SIZES = [6, 8, 10, 12];
+  var IMAMES = ["Klasik", "Lale", "Minare"], IMAME_MM = [32, 36, 44];
+  var PUSKUL = [["Altın", "#c9a227"], ["Gümüş", "#c4c7cf"], ["Kırmızı", "#b3261e"], ["Yeşil", "#2f7d3a"], ["Lacivert", "#25307a"], ["Siyah", "#1a1a1a"]];
+  var DURAK = ["Yok", "Gümüş", "Kehribar", "Aynı malzeme"];
+  var IMAME_PATH = [
+    "M143.5 18.5 A6.5 6.5 0 0 1 156.5 18.5 L156.5 39.5 A6.5 6.5 0 0 1 143.5 39.5 Z",
+    "M150 7 C153 7 154 11 152.5 13.5 C160 18 160.5 30 155.5 38 Q153 44 150 45 Q147 44 144.5 38 C139.5 30 140 18 147.5 13.5 C146 11 147 7 150 7 Z",
+    "M150 3 L153.5 14 L154.5 40 Q154.5 45 150 45 Q145.5 45 145.5 40 L146.5 14 Z"
+  ];
+  function el(tag, attrs) { var e = document.createElementNS(ns, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function matFill(i) { return "url(#g-" + MAT_KEYS[i] + ")"; }
+  function durakFill(sp) { return sp.durak === 1 ? "url(#g-silver)" : sp.durak === 2 ? matFill(1) : matFill(sp.mat); }
+  function beadEl(sp, x, y, a, s) {
+    var deg = a / Math.PI * 180 + 90;
+    if (sp.shape === 1) return el("ellipse", { cx: x, cy: y, rx: s * 1.18, ry: s * .8, transform: "rotate(" + deg + " " + x + " " + y + ")" });
+    if (sp.shape === 2) {
+      var pts = [];
+      for (var k = 0; k < 8; k++) { var b = k * Math.PI / 4 + Math.PI / 8 + a; pts.push((x + Math.cos(b) * s * 1.04).toFixed(2) + "," + (y + Math.sin(b) * s * 1.04).toFixed(2)); }
+      return el("polygon", { points: pts.join(" ") });
+    }
+    return el("circle", { cx: x, cy: y, r: s });
+  }
+  function drawTesbih(svg, sp, lit) {
+    var gB = svg.querySelector(".t-beads"), gD = svg.querySelector(".t-duraks");
+    var key = [sp.mat, sp.shape, sp.size, sp.imame, sp.puskul, sp.durak].join(".");
+    if (!svg._suslu) {   // ip, parıltı katmanı, gölge (bir kez)
+      var defs = svg.querySelector("defs") || svg.insertBefore(el("defs", {}), svg.firstChild);
+      if (!svg.querySelector("#tg-golge")) {
+        var f = el("filter", { id: "tg-golge-" + svg.id, x: "-30%", y: "-30%", width: "160%", height: "160%" });
+        f.appendChild(el("feDropShadow", { dx: "0", dy: "1.6", stdDeviation: "1.3", "flood-color": "#1a0f05", "flood-opacity": ".45" }));
+        defs.appendChild(f);
+      }
+      gB.setAttribute("filter", "url(#tg-golge-" + svg.id + ")"); gD.setAttribute("filter", "url(#tg-golge-" + svg.id + ")");
+      var ip = el("circle", { cx: 150, cy: 150, r: 117, fill: "none", stroke: "#3a2a18", "stroke-width": "1.3", "stroke-dasharray": "2 1.4", opacity: ".55" });
+      gB.parentNode.insertBefore(ip, gB);
+      var par = el("g", { "class": "t-parilti", "pointer-events": "none" }); gD.parentNode.insertBefore(par, gD.nextSibling);
+      svg._par = par; svg._suslu = true;
+    }
+    if (svg._key !== key) {
+      gB.innerHTML = ""; gD.innerHTML = ""; svg._par.innerHTML = "";
+      var hasD = sp.durak > 0, slots = NB + (hasD ? 2 : 0), dS = hasD ? [11, 23] : [];
+      var s = [.72, .86, .98, 1.08][sp.size] * 8.2;
+      for (var i = 0; i < slots; i++) {
+        var a = -Math.PI / 2 + GAP / 2 + i * (2 * Math.PI - GAP) / (slots - 1);
+        var x = +(150 + Math.cos(a) * 117).toFixed(2), y = +(150 + Math.sin(a) * 117).toFixed(2);
+        if (dS.indexOf(i) >= 0) {
+          gD.appendChild(el("ellipse", { cx: x, cy: y, rx: 8.5, ry: 5, fill: durakFill(sp), transform: "rotate(" + (a / Math.PI * 180 + 90) + " " + x + " " + y + ")" }));
+        } else {
+          var b = beadEl(sp, x, y, a, s); b.setAttribute("fill", matFill(sp.mat)); gB.appendChild(b);
+          // cilalı tanenin ışık lekesi (sol üst)
+          svg._par.appendChild(el("ellipse", { cx: (x - s * .32).toFixed(2), cy: (y - s * .38).toFixed(2), rx: (s * .34).toFixed(2), ry: (s * .22).toFixed(2), fill: "#fff", opacity: sp.mat === 2 ? ".55" : ".42", transform: "rotate(-35 " + (x - s * .32).toFixed(2) + " " + (y - s * .38).toFixed(2) + ")" }));
+        }
+      }
+      var im = svg.querySelector(".t-imame"); im.setAttribute("d", IMAME_PATH[sp.imame]); im.setAttribute("fill", matFill(sp.mat));
+      svg.querySelector(".t-pul").setAttribute("fill", sp.durak === 1 ? "url(#g-silver)" : matFill(sp.mat));
+      svg.querySelector(".t-tassel").setAttribute("stroke", PUSKUL[sp.puskul][1]);
+      svg._key = key;
+    }
+    var kids = gB.children;
+    // çekilen taneler: tam parlak ve altın kenar; kalanlar hafif soluk (yine de malzemesi görünür)
+    for (var j = 0; j < kids.length; j++) {
+      kids[j].setAttribute("opacity", j < lit ? "1" : ".72");
+      if (j < lit) { kids[j].setAttribute("stroke", "#e9c766"); kids[j].setAttribute("stroke-width", "1.1"); } else kids[j].removeAttribute("stroke");
+    }
+  }
+
+  // ---- Tasarım kodu: TSB-XXX-K (sunucusuz paylaşım) ----
+  function encodeSpec(sp) {
+    var v = sp.mat; v = v * 2 + sp.count; v = v * 3 + sp.shape; v = v * 4 + sp.size; v = v * 3 + sp.imame; v = v * 6 + sp.puskul; v = v * 4 + sp.durak;
+    var s = v.toString(36).toUpperCase(); while (s.length < 3) s = "0" + s;
+    var ck = 0; for (var i = 0; i < s.length; i++) ck = (ck * 7 + s.charCodeAt(i)) % 36;
+    return "TSB-" + s + "-" + ck.toString(36).toUpperCase();
+  }
+  function decodeSpec(str) {
+    var m = /TSB-([0-9A-Z]{3})-([0-9A-Z])/i.exec(str || ""); if (!m) return null;
+    var s = m[1].toUpperCase(), ck = 0;
+    for (var i = 0; i < 3; i++) ck = (ck * 7 + s.charCodeAt(i)) % 36;
+    if (ck.toString(36).toUpperCase() !== m[2].toUpperCase()) return null;
+    var v = parseInt(s, 36); if (!(v < 13824)) return null;
+    var sp = {}; sp.durak = v % 4; v = Math.floor(v / 4); sp.puskul = v % 6; v = Math.floor(v / 6); sp.imame = v % 3; v = Math.floor(v / 3);
+    sp.size = v % 4; v = Math.floor(v / 4); sp.shape = v % 3; v = Math.floor(v / 3); sp.count = v % 2; sp.mat = Math.floor(v / 2);
+    if (sp.mat > 7) return null;
+    sp.name = str.slice(m.index + m[0].length).replace(/^[\s·:-]+/, "").trim().slice(0, 24);
+    return sp;
+  }
+  var arc = $("arc"), C = 2 * Math.PI * 138;
+  arc.setAttribute("stroke-dasharray", C);
+
+  var d = new Date();
+  $("today").textContent = d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+  try {
+    var hj = new Intl.DateTimeFormat("tr-TR-u-ca-islamic-umalqura", { day: "numeric", month: "long", year: "numeric" }).format(d);
+    var sp = document.createElement("span"); sp.className = "hijri"; sp.textContent = hj.replace(/Hicri\s*/i, "").replace(/\s*AH\s*$/i, "");
+    $("today").appendChild(sp);
+  } catch (e) {}
+
+  function render() {
+    var z = cur(), n = cnt(z), t = tgt(z);
+    $("zAr").textContent = z.ar || "";
+    $("zTr").textContent = z.tr;
+    $("zAn").textContent = z.an || "";
+    $("big").textContent = n;
+    $("of").textContent = "/ " + t;
+    var inLap = n === 0 ? 0 : (n % NB === 0 ? NB : n % NB);
+    if (n >= t && t <= NB) inLap = t;
+    var spec = activeSpec();
+    drawTesbih($("ring").querySelector("svg"), spec, inLap);
+    $("matName").textContent = spec.name || MATS[MAT_KEYS[spec.mat]].ad;
+
+    // Günlük hedef ve seri
+    var goal = S.goal || 100;
+    $("goalSel").value = String(goal);
+    var hT = S.history[dayKey()] || {};
+    var tot = Object.keys(hT).reduce(function (s, k) { return s + hT[k]; }, 0);
+    $("goalFill").style.width = Math.min(100, tot / goal * 100) + "%";
+    $("goalTxt").textContent = tot + " / " + goal;
+    $("streak").textContent = streakDays() + " gün";
+    renderAtolye();
+    var nt = currentVakit();
+    document.body.classList.toggle("night", !!nt && (nt.id === "yatsi" || nt.id === "aksam" && nowH() > 19));
+    arc.setAttribute("stroke-dashoffset", C * (1 - Math.min(n / t, 1)));
+    $("ring").classList.toggle("done", n >= t);
+    $("lapInfo").textContent = t > NB ? "Tur " + (Math.floor(n / NB) + (n % NB ? 1 : 0) || 1) : "";
+    $("ring").setAttribute("aria-label", z.tr + ", " + n + " / " + t + ". Saymak için dokun.");
+
+    // Esmâ modu: isim sırası ve isim başına tekrar
+    $("tgtGroup").hidden = !!z.esma;
+    $("perGroup").hidden = !z.esma;
+    if (z.esma) {
+      $("zAr").textContent = "";
+      $("lapInfo").textContent = "İsim " + (z.idx + 1) + " / " + ESMA.length;
+      if (z.per === 1) { $("big").textContent = Math.min(n, ESMA.length); $("of").textContent = "/ " + ESMA.length; }
+      else { $("big").textContent = n - z.idx * z.per; $("of").textContent = "/ " + z.per; }
+      document.querySelectorAll("#perGroup button").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(+b.dataset.per === z.per));
+      });
+    }
+
+    var hazir = false;
+    document.querySelectorAll(".targets button[data-t]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(+b.dataset.t === t)); if (+b.dataset.t === t) hazir = true;
+    });
+    $("tgtOzel").setAttribute("aria-pressed", String(!hazir && t > 0));
+    $("tgtOzel").textContent = !hazir && t > 0 ? "Özel: " + t.toLocaleString("tr-TR") : "Özel";
+
+    // Sıra (tesbihat)
+    var seq = $("seq"); seq.innerHTML = "";
+    seq.hidden = S.mode !== "tesbihat";
+    if (S.mode === "tesbihat") {
+      BASE.filter(function (x) { return x.seq; }).forEach(function (x) {
+        var s = document.createElement("span");
+        s.textContent = x.tr + " " + cnt(x) + "/" + tgt(x);
+        if (cnt(x) >= tgt(x)) s.className = "ok"; else if (x.id === z.id) s.className = "on";
+        seq.appendChild(s);
+      });
+    }
+    $("next").hidden = !(S.mode === "tesbihat" && z.seq && n >= t);
+
+    // Liste
+    var list = $("zlist"); list.innerHTML = "";
+    list.classList.toggle("long", !!z.esma);
+    if (z.esma) {
+      $("listCount").textContent = ESMA.length;
+      ESMA.forEach(function (e, i) {
+        var li = document.createElement("li"), b = document.createElement("button");
+        b.setAttribute("aria-current", String(i === z.idx));
+        b.innerHTML = '<span><div class="t"></div><div class="m"></div></span><span class="n"></span>';
+        b.querySelector(".t").textContent = (i + 1) + ". " + e[0];
+        b.querySelector(".m").textContent = e[1];
+        b.querySelector(".n").textContent = i < z.idx || n >= t ? "✓" : "";
+        b.onclick = function () { S.counts.esma = i * z.per; save(); render(); };
+        li.appendChild(b); list.appendChild(li);
+      });
+      if (S._scrollEsma !== z.idx) {
+        S._scrollEsma = z.idx;
+        var curEl = list.children[z.idx];
+        if (curEl) list.scrollTop = Math.max(0, curEl.offsetTop - list.offsetTop - 80);
+      }
+    }
+    var items = z.esma ? [] : S.mode === "tesbihat" ? BASE.filter(function (x) { return x.seq; }) : all();
+    if (!z.esma) $("listCount").textContent = items.length;
+    items.forEach(function (x) {
+      var li = document.createElement("li"), b = document.createElement("button");
+      b.setAttribute("aria-current", String(x.id === z.id));
+      b.innerHTML = '<span><div class="t"></div><div class="m"></div></span><span class="n"></span>';
+      b.querySelector(".t").textContent = x.tr;
+      b.querySelector(".m").textContent = x.an || "Kendi zikrin";
+      b.querySelector(".n").textContent = cnt(x) + "/" + tgt(x);
+      b.onclick = function () { S.cur = x.id; save(); render(); };
+      li.appendChild(b); list.appendChild(li);
+    });
+
+    $("mTesbihat").setAttribute("aria-pressed", String(S.mode === "tesbihat"));
+    $("mSerbest").setAttribute("aria-pressed", String(S.mode === "serbest"));
+    $("mEsma").setAttribute("aria-pressed", String(S.mode === "esma"));
+    renderVakit();
+
+    // İstatistik
+    var h = S.history[dayKey()] || {};
+    var total = Object.keys(h).reduce(function (s, k) { return s + h[k]; }, 0);
+    $("todayTotal").textContent = total;
+    var dl = $("stat"); dl.innerHTML = "";
+    var rows = Object.keys(h).filter(function (k) { return h[k] > 0; });
+    if (!rows.length) { dl.innerHTML = "<dt>Bugün henüz zikir yok</dt><dd>0</dd>"; }
+    rows.forEach(function (k) {
+      var dt = document.createElement("dt"); dt.textContent = label(k);
+      var dd = document.createElement("dd"); dd.textContent = h[k];
+      dl.appendChild(dt); dl.appendChild(dd);
+    });
+    var bars = $("bars"), lbl = $("barlbl"); bars.innerHTML = ""; lbl.innerHTML = "";
+    var days = [], max = 1;
+    for (var j = 6; j >= 0; j--) {
+      var dd2 = new Date(); dd2.setDate(dd2.getDate() - j);
+      var hh = S.history[dayKey(dd2)] || {};
+      var tt = Object.keys(hh).reduce(function (s, k) { return s + hh[k]; }, 0);
+      days.push({ d: dd2, t: tt, today: j === 0 }); max = Math.max(max, tt);
+    }
+    days.forEach(function (x) {
+      var b = document.createElement("div");
+      b.style.height = (x.t / max * 100) + "%";
+      b.title = x.t + " zikir";
+      if (x.today) b.className = "today";
+      bars.appendChild(b);
+      var l = document.createElement("span");
+      l.textContent = x.d.toLocaleDateString("tr-TR", { weekday: "short" });
+      lbl.appendChild(l);
+    });
+
+    // Gelen kutusu
+    var ib = $("inbox"); ib.innerHTML = "";
+    if (!S.inbox.length) ib.innerHTML = '<li><span class="empty">Hedefe ulaştığında burada not düşülür.</span></li>';
+    S.inbox.slice(0, 20).forEach(function (m) {
+      var li = document.createElement("li");
+      var tm = document.createElement("time"); tm.textContent = m.time;
+      var sp = document.createElement("span"); sp.textContent = m.text;
+      li.appendChild(tm); li.appendChild(sp); ib.appendChild(li);
+    });
+  }
+
+  // Ses: dosya yok, tarayıcıda üretiliyor (tamamen ücretsiz)
+  // Ses seviyesi: 0 Kapalı, 1 Kısık, 2 Normal, 3 Yüksek
+  var VOLS = [0, 0.3, 0.7, 1.3], VNAMES = ["Kapalı", "Kısık", "Normal", "Yüksek"];
+  if (S.vol === undefined) S.vol = S.sound === false ? 0 : 2;
+  var ac = null, master = null;
+  function dest(c) {
+    if (!master) { master = c.createGain(); master.connect(c.destination); }
+    master.gain.value = VOLS[S.vol] || 0;
+    return master;
+  }
+  function actx() {
+    if (!ac) { var A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ac = new A(); }
+    if (ac.state === "suspended") ac.resume();
+    return ac;
+  }
+  function tone(f, dur, type, vol, when) {
+    var c = actx(); if (!c) return;
+    var t0 = c.currentTime + (when || 0);
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(f, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.3, t0 + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(dest(c)); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  // Gerçek tesbih: sert iki boncuğun çarpışması ("tak") + düşen tanenin dizideki diğerine ikinci, hafif vuruşu + ipte kısa hışırtı.
+  // Her malzeme kendi rezonans frekanslarıyla çınlar (modal sentez).
+  var MATS = {
+    kuka:     { ad: "Kuka",       f: [1250, 2350, 3600], q: 14, g: [1, .55, .3], d: "Hindistan cevizi kabuğundan, tok ve sıcak" },
+    kehribar: { ad: "Kehribar",   f: [2600, 4300, 6100], q: 20, g: [1, .6, .35], d: "Reçine taşı; hafif, parlak çıtırtı" },
+    oltu:     { ad: "Oltu taşı",  f: [3400, 5700, 8300], q: 34, g: [1, .7, .45], d: "Erzurum'un siyah taşı; sert ve net" },
+    zeytin:   { ad: "Zeytin çekirdeği", f: [900, 1700, 2600], q: 9, g: [1, .5, .25], col: ["#c9b08c", "#6e5a40", "#2e2418"], d: "Kuru, alçak, ahşaptan da yumuşak",
+                lock: { type: "total", n: 500, txt: "Toplam 500 zikir" } },
+    akik:     { ad: "Akik", f: [3000, 5100, 7600], q: 28, g: [1, .65, .4], col: ["#ffb39a", "#b8341f", "#4a0e08"], d: "Kızıl kuvars taşı; berrak tıkırtı",
+                lock: { type: "tesbihat", n: 5, txt: "5 namaz tesbihatı tamamla" } },
+    sedef:    { ad: "Sedef", f: [3900, 6300, 9100], q: 22, g: [1, .7, .5], col: ["#ffffff", "#e6e1ec", "#9a94a8"], d: "İnci kabuğu; ince ve parlak",
+                lock: { type: "esma", n: 1, txt: "Esmâü'l-Hüsnâ'yı bir kez tamamla" } },
+    yesim:    { ad: "Yeşim", f: [2700, 4500, 6900], q: 48, g: [1, .6, .45], col: ["#d4f5d4", "#4f9a63", "#173d24"], d: "Çinlayan yeşil taş; uzun tını",
+                lock: { type: "streak", n: 7, txt: "7 günlük seri" } },
+    gumus:    { ad: "Gümüş işlemeli kuka", f: [1250, 2350, 3600, 8200], q: 16, g: [1, .55, .3, .4], col: ["#f2f2f5", "#8a6a4a", "#24160b"], d: "Kuka gövde, gümüş kakma; tok vuruşa ince bir tını",
+                lock: { type: "streak", n: 40, txt: "40 günlük seri (erbain)" } }
+  };
+  // Eksik gradyanları oluştur
+  (function () {
+    var defs = document.querySelector(".ring svg defs");
+    Object.keys(MATS).forEach(function (k) {
+      if (document.getElementById("g-" + k) || !MATS[k].col) return;
+      var g = document.createElementNS(ns, "radialGradient");
+      g.setAttribute("id", "g-" + k); g.setAttribute("cx", "35%"); g.setAttribute("cy", "30%"); g.setAttribute("r", "75%");
+      [0, .45, 1].forEach(function (o, i) {
+        var s = document.createElementNS(ns, "stop"); s.setAttribute("offset", o); s.setAttribute("stop-color", MATS[k].col[i]); g.appendChild(s);
+      });
+      defs.appendChild(g);
+    });
+  })();
+
+  // Atölye: tesbihler emekle kazanılır
+  if (!S.unlocked) S.unlocked = ["kuka", "kehribar", "oltu"];
+  S.stats = S.stats || { tesbihat: 0, esma: 0 };
+  function totalAll() {
+    var s = 0;
+    Object.keys(S.history).forEach(function (d) { var h = S.history[d]; Object.keys(h).forEach(function (k) { s += h[k]; }); });
+    return s;
+  }
+  function streakDays() {
+    var goal = S.goal || 100, st = 0;
+    for (var k = 0; k < 3650; k++) {
+      var dd = new Date(); dd.setDate(dd.getDate() - k);
+      var h = S.history[dayKey(dd)] || {};
+      var t = Object.keys(h).reduce(function (s, x) { return s + h[x]; }, 0);
+      if (t >= goal) st++; else if (k === 0) continue; else break;
+    }
+    return st;
+  }
+  function lockProgress(m) {
+    var L = m.lock; if (!L) return null;
+    var v = L.type === "total" ? totalAll() : L.type === "tesbihat" ? S.stats.tesbihat : L.type === "esma" ? S.stats.esma : streakDays();
+    return { v: Math.min(v, L.n), n: L.n };
+  }
+  function checkUnlocks() {
+    Object.keys(MATS).forEach(function (k) {
+      if (S.unlocked.indexOf(k) >= 0) return;
+      var p = lockProgress(MATS[k]);
+      if (p && p.v >= p.n) {
+        S.unlocked.push(k);
+        note("Ustadan hediye: " + MATS[k].ad + " tesbih atölyene eklendi.");
+        setTimeout(function () { toast("Yeni tesbih: " + MATS[k].ad); sfx("all"); }, 900);
+      }
+    });
+  }
+  function miniBeads(k) {
+    var s = '<svg viewBox="0 0 72 20" width="72" height="20" aria-hidden="true">';
+    for (var i = 0; i < 5; i++) s += '<circle cx="' + (8 + i * 14) + '" cy="10" r="6.5" fill="url(#g-' + k + ')"></circle>';
+    return s + "</svg>";
+  }
+  function renderAtolye() {
+    var row = $("matRow"); row.innerHTML = "Tesbih:";
+    S.unlocked.forEach(function (k) {
+      var b = document.createElement("button"); b.textContent = MATS[k].ad; b.dataset.m = k;
+      b.setAttribute("aria-pressed", String(k === S.mat && !S.activeDesign));
+      b.onclick = function () { pickMat(k); };
+      row.appendChild(b);
+    });
+    var ad = activeDesign();
+    if (ad) {
+      var b2 = document.createElement("button"); b2.textContent = ad.name || "Tasarımım"; b2.setAttribute("aria-pressed", "true");
+      row.appendChild(b2);
+    }
+    renderDesigns();
+    var ul = $("atolye"); ul.innerHTML = "";
+    $("atolyeCount").textContent = S.unlocked.length + " / " + Object.keys(MATS).length;
+    Object.keys(MATS).forEach(function (k) {
+      var m = MATS[k], own = S.unlocked.indexOf(k) >= 0, li = document.createElement("li");
+      if (!own) li.className = "locked"; if (k === S.mat && !S.activeDesign) li.className = "sel";
+      var b = document.createElement("button"); b.disabled = !own;
+      var p = lockProgress(m);
+      b.innerHTML = miniBeads(k) + '<span><div class="an"></div><div class="cond"></div>' + (!own && p ? '<div class="prog"><div style="width:' + (p.v / p.n * 100) + '%"></div></div>' : "") + '</span><span class="st"></span>';
+      b.querySelector(".an").textContent = m.ad;
+      b.querySelector(".cond").textContent = own ? m.d : m.lock.txt;
+      var st = b.querySelector(".st");
+      if (own) { st.textContent = k === S.mat && !S.activeDesign ? "Elinde" : "Atölyede"; st.className = "st own"; }
+      else st.textContent = p.v + " / " + p.n;
+      if (own) b.onclick = function () { pickMat(k); };
+      li.appendChild(b); ul.appendChild(li);
+    });
+  }
+  function pickMat(k) { S.mat = k; S.activeDesign = null; save(); render(); preview(); }
+  function preview() { var o = S.vol; if (!S.vol) S.vol = 2; sfx("tick"); S.vol = o; }
+  if (!MATS[S.mat]) S.mat = "kuka";
+
+  // ---- Tasarımlar ----
+  S.designs = S.designs || [];
+  function activeDesign() { return S.activeDesign ? S.designs.find(function (x) { return x.id === S.activeDesign; }) : null; }
+  function activeSpec() {
+    if (designerOpen && draft) return draft;
+    return activeDesign() || { mat: Math.max(0, MAT_KEYS.indexOf(S.mat)), count: 0, shape: 0, size: 1, imame: 0, puskul: 0, durak: 0 };
+  }
+  var designerOpen = false, draft = null, delArm = null;
+  function miniSpec(sp) {
+    var s = '<svg viewBox="0 0 72 20" width="72" height="20" aria-hidden="true">', r = [5, 5.8, 6.4, 6.9][sp.size];
+    for (var i = 0; i < 5; i++) {
+      var x = 8 + i * 14, f = (sp.durak && i === 2) ? durakFill(sp) : matFill(sp.mat);
+      if (sp.durak && i === 2) s += '<ellipse cx="' + x + '" cy="10" rx="7" ry="4" fill="' + f + '"></ellipse>';
+      else if (sp.shape === 1) s += '<ellipse cx="' + x + '" cy="10" rx="' + (r * 1.15) + '" ry="' + (r * .8) + '" fill="' + f + '"></ellipse>';
+      else if (sp.shape === 2) s += '<rect x="' + (x - r) + '" y="' + (10 - r) + '" width="' + (2 * r) + '" height="' + (2 * r) + '" rx="2" transform="rotate(45 ' + x + ' 10)" fill="' + f + '"></rect>';
+      else s += '<circle cx="' + x + '" cy="10" r="' + r + '" fill="' + f + '"></circle>';
+    }
+    return s + "</svg>";
+  }
+  function renderDesigns() {
+    var ul = $("designs"); ul.innerHTML = "";
+    $("designCount").textContent = S.designs.length ? S.designs.length + " tasarım" : "";
+    if (!S.designs.length) {
+      ul.innerHTML = '<li class="emptyD">Kendi tesbihini tasarla ya da arkadaşından gelen kodu içe al.</li>';
+      return;
+    }
+    S.designs.forEach(function (d) {
+      var li = document.createElement("li"); if (d.id === S.activeDesign) li.className = "sel";
+      var b = document.createElement("button");
+      b.innerHTML = miniSpec(d) + '<span><div class="an"></div><div class="cond"></div></span><span class="st own"></span>';
+      b.querySelector(".an").textContent = d.name || "Adsız tesbih";
+      b.querySelector(".cond").textContent = encodeSpec(d) + " · " + COUNTS[d.count] + " tane · " + MATS[MAT_KEYS[d.mat]].ad + (d.gift ? " · Hediye" : "");
+      b.querySelector(".st").textContent = d.id === S.activeDesign ? "Elinde" : "Kullan";
+      b.onclick = function () { S.activeDesign = d.id; save(); render(); preview(); };
+      var acts = document.createElement("div"); acts.className = "dacts";
+      [["Düzenle", function () { openDesigner(d); }],
+       ["Kodu kopyala", function () { shareCode(d); }],
+       ["Usta kartı", function () { openUsta(d); }],
+       [delArm === d.id ? "Emin misin? Sil" : "Sil", function () {
+          if (delArm !== d.id) { delArm = d.id; renderDesigns(); return; }
+          S.designs = S.designs.filter(function (x) { return x.id !== d.id; });
+          if (S.activeDesign === d.id) S.activeDesign = null;
+          delArm = null; save(); render(); toast("Tasarım silindi");
+        }]].forEach(function (a) {
+        var x = document.createElement("button"); x.className = "mini" + (a[0].indexOf("Sil") >= 0 ? " warn" : ""); x.textContent = a[0];
+        x.onclick = a[1]; acts.appendChild(x);
+      });
+      li.appendChild(b); li.appendChild(acts); ul.appendChild(li);
+    });
+  }
+  function shareText(d) { return encodeSpec(d) + (d.name ? " " + d.name : ""); }
+  function shareCode(d) {
+    var txt = shareText(d);
+    try {
+      navigator.clipboard.writeText(txt).then(function () { toast("Kopyalandı: " + txt); }, function () { toast(txt); });
+    } catch (e) { toast(txt); }
+  }
+
+  // Tasarım ekranı
+  function chips(id, opts, val, onPick) {
+    var box = $(id); box.innerHTML = "";
+    opts.forEach(function (o) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = o[1];
+      b.setAttribute("aria-pressed", String(o[0] === val));
+      b.onclick = function () { onPick(o[0]); renderDesigner(); preview(); };
+      box.appendChild(b);
+    });
+  }
+  function renderDesigner() {
+    var d = draft;
+    var mats = MAT_KEYS.map(function (k, i) { return [i, MATS[k].ad, k]; }).filter(function (o) { return S.unlocked.indexOf(o[2]) >= 0 || o[0] === d.mat; });
+    chips("dMat", mats, d.mat, function (v) { d.mat = v; });
+    chips("dCount", COUNTS.map(function (c, i) { return [i, c + " tane"]; }), d.count, function (v) { d.count = v; });
+    chips("dShape", SHAPES.map(function (c, i) { return [i, c]; }), d.shape, function (v) { d.shape = v; });
+    chips("dSize", SIZES.map(function (c, i) { return [i, c + " mm"]; }), d.size, function (v) { d.size = v; });
+    chips("dImame", IMAMES.map(function (c, i) { return [i, c]; }), d.imame, function (v) { d.imame = v; });
+    chips("dPuskul", PUSKUL.map(function (c, i) { return [i, c[0]]; }), d.puskul, function (v) { d.puskul = v; });
+    chips("dDurak", DURAK.map(function (c, i) { return [i, c]; }), d.durak, function (v) { d.durak = v; });
+    drawTesbih($("dSvg"), d, NB);
+    $("dCode").textContent = encodeSpec(d);
+    $("dLocked").hidden = S.unlocked.indexOf(MAT_KEYS[d.mat]) >= 0;
+  }
+  function openDesigner(d) {
+    draft = d ? JSON.parse(JSON.stringify(d)) : { id: null, name: "", mat: Math.max(0, MAT_KEYS.indexOf(S.mat)), count: 0, shape: 0, size: 1, imame: 0, puskul: 0, durak: 1 };
+    designerOpen = true;
+    $("dName").value = draft.name || "";
+    $("designer").hidden = false; document.body.classList.add("modal-open");
+    renderDesigner();
+    setTimeout(function () { $("dName").focus(); }, 50);
+  }
+  function closeDesigner() { designerOpen = false; draft = null; $("designer").hidden = true; document.body.classList.remove("modal-open"); render(); }
+  $("newDesign").onclick = function () { openDesigner(null); };
+  $("dClose").onclick = closeDesigner;
+  $("dName").addEventListener("input", function () { if (draft) draft.name = this.value.slice(0, 24); });
+  $("dSave").onclick = function () {
+    var d = draft; d.name = $("dName").value.trim().slice(0, 24) || "Adsız tesbih";
+    if (!d.id) { d.id = "d" + Date.now(); S.designs.unshift(d); note("Yeni tasarım: " + d.name + " (" + encodeSpec(d) + ")"); }
+    else { S.designs = S.designs.map(function (x) { return x.id === d.id ? d : x; }); }
+    S.activeDesign = d.id; save();
+    closeDesigner(); toast(d.name + " elinde");
+  };
+  $("dUsta").onclick = function () { draft.name = $("dName").value.trim().slice(0, 24); openUsta(draft); };
+  $("importForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var sp = decodeSpec($("importCode").value.trim());
+    if (!sp) { toast("Kod okunamadı. TSB-XXX-X biçiminde olmalı."); return; }
+    sp.id = "d" + Date.now(); sp.gift = true; if (!sp.name) sp.name = "Hediye tesbih";
+    S.designs.unshift(sp); S.activeDesign = sp.id;
+    note("Hediye tesbih geldi: " + sp.name + " (" + encodeSpec(sp) + ")");
+    $("importCode").value = ""; save(); render(); toast(sp.name + " elinde"); preview();
+  });
+
+  // Usta kartı
+  var MAT_USTA = { kuka: "Kuka (Hindistan cevizi kabuğu)", kehribar: "Kehribar (sıkma kabul edilmez, damla tercih)", oltu: "Oltu taşı (Erzurum)", zeytin: "Zeytin çekirdeği", akik: "Akik (kızıl)", sedef: "Sedef", yesim: "Yeşim (nefrit)", gumus: "Kuka, gümüş kakma işlemeli" };
+  var ustaText = "";
+  function openUsta(d) {
+    var n = COUNTS[d.count], dk = d.durak ? 2 : 0, mm = SIZES[d.size];
+    var dizi = Math.round(((n + dk) * mm * (d.shape === 1 ? 1.25 : 1) + 6) / 10);
+    var top = dizi / 2 + (IMAME_MM[d.imame] + 50) / 10;
+    var rows = [
+      ["Malzeme", MAT_USTA[MAT_KEYS[d.mat]]],
+      ["Tane", n + " tane" + (dk ? " + 2 durak (" + (n === 33 ? "11. ve 22. taneden sonra" : "33. ve 66. taneden sonra") + ")" : "")],
+      ["Tane çapı", mm + " mm" + (d.shape === 1 ? " (arpa: boy ≈ " + Math.round(mm * 1.25) + " mm)" : "")],
+      ["Şekil", SHAPES[d.shape] + (d.shape === 2 ? " (8 yüzlü kesim)" : "")],
+      ["Durak", DURAK[d.durak]],
+      ["İmame", IMAMES[d.imame] + ", boy ≈ " + IMAME_MM[d.imame] + " mm, pul dahil"],
+      ["Püskül", PUSKUL[d.puskul][0] + ", ≈ 5 cm"],
+      ["Dizi uzunluğu", "≈ " + dizi + " cm (imame hariç)"],
+      ["Asılı boy", "≈ " + Math.round(top) + " cm (püskül dahil)"],
+      ["İp", "Çift kat ipek veya polyester, ≈ " + Math.round(dizi + 15) + " cm"]
+    ];
+    $("uTitle").textContent = d.name || "Adsız tesbih";
+    var dl = $("uSpec"); dl.innerHTML = "";
+    rows.forEach(function (r) {
+      var dt = document.createElement("dt"); dt.textContent = r[0];
+      var dd = document.createElement("dd"); dd.textContent = r[1];
+      dl.appendChild(dt); dl.appendChild(dd);
+    });
+    $("uCode").textContent = shareText(d);
+    // Dizi çizimi: imame + birkaç tane + durak
+    var sv = $("uStrand"); sv.innerHTML = "";
+    var r = [6, 7.5, 9, 10.5][d.size], x = 16;
+    sv.appendChild(el("line", { x1: 0, y1: 22, x2: 340, y2: 22, stroke: "var(--muted)", "stroke-width": 1 }));
+    for (var i = 0; x < 225; i++) {
+      var isD = d.durak && i === 6, w = isD ? 9 : (d.shape === 1 ? r * 1.2 : r);
+      x += w;
+      var b = isD ? el("ellipse", { cx: x, cy: 22, rx: 9, ry: 5.5, fill: durakFill(d) })
+        : d.shape === 1 ? el("ellipse", { cx: x, cy: 22, rx: r * 1.2, ry: r * .82, fill: matFill(d.mat) })
+        : d.shape === 2 ? el("rect", { x: x - r * .85, y: 22 - r * .85, width: r * 1.7, height: r * 1.7, rx: 2, transform: "rotate(45 " + x + " 22)", fill: matFill(d.mat) })
+        : el("circle", { cx: x, cy: 22, r: r, fill: matFill(d.mat) });
+      sv.appendChild(b); x += w + 1.5;
+    }
+    var imG = el("g", { transform: "translate(" + (x + 2) + " 22) rotate(90) translate(-150 -45)" });
+    imG.appendChild(el("path", { d: IMAME_PATH[d.imame], fill: matFill(d.mat) }));
+    sv.appendChild(imG);
+    var tx = x + 2 + 45;
+    sv.appendChild(el("path", { d: "M" + tx + " 22 l18 -6 M" + tx + " 22 l20 0 M" + tx + " 22 l18 6", stroke: PUSKUL[d.puskul][1], "stroke-width": 2, "stroke-linecap": "round" }));
+    ustaText = ["USTA KARTI · " + (d.name || "Adsız tesbih"), "Kod: " + shareText(d)].concat(rows.map(function (r) { return r[0] + ": " + r[1]; })).concat(["Bir Mr. Anduv! yapımıdır."]).join("\n");
+    $("usta").hidden = false; document.body.classList.add("modal-open");
+  }
+  $("uClose").onclick = function () { $("usta").hidden = true; if ($("designer").hidden) document.body.classList.remove("modal-open"); };
+  $("uCopy").onclick = function () {
+    try { navigator.clipboard.writeText(ustaText).then(function () { toast("Ölçüler kopyalandı"); }, function () { toast("Kopyalanamadı, metni elle seç"); }); }
+    catch (e) { toast("Kopyalanamadı, metni elle seç"); }
+  };
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (!$("usta").hidden) $("uClose").click(); else if (designerOpen) closeDesigner();
+  });
+
+  var impulse = null;
+  function clack(when, vol, pitch) {
+    var c = actx(); if (!c) return;
+    var asp = activeSpec(), m = MATS[MAT_KEYS[asp.mat]];
+    var shapeP = [1, .94, 1.07][asp.shape], sizeP = [1.15, 1, .9, .82][asp.size];
+    if (!impulse) {
+      var len = Math.floor(c.sampleRate * 0.004);
+      impulse = c.createBuffer(1, len, c.sampleRate);
+      var d = impulse.getChannelData(0);
+      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+    }
+    var t0 = c.currentTime + (when || 0);
+    var src = c.createBufferSource(); src.buffer = impulse;
+    var out = c.createGain(); out.gain.value = vol; out.connect(dest(c));
+    var p = (pitch || (0.96 + Math.random() * 0.08)) * shapeP * sizeP;
+    m.f.forEach(function (f, i) {
+      var bp = c.createBiquadFilter(); bp.type = "bandpass";
+      bp.frequency.value = f * p; bp.Q.value = m.q;
+      var g = c.createGain(); g.gain.value = m.g[i] * (m.q / 6);
+      src.connect(bp); bp.connect(g); g.connect(out);
+    });
+    var dir = c.createGain(); dir.gain.value = 0.25; src.connect(dir); dir.connect(out);
+    src.start(t0);
+  }
+  function rustle(when, vol) {
+    var c = actx(); if (!c) return;
+    var len = Math.floor(c.sampleRate * 0.05), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / len);
+    var s = c.createBufferSource(), hp = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = b; hp.type = "highpass"; hp.frequency.value = 5000; g.gain.value = vol;
+    s.connect(hp); hp.connect(g); g.connect(dest(c)); s.start(c.currentTime + (when || 0));
+  }
+  function bead() {
+    rustle(0, 0.05);
+    clack(0.012, 0.9);
+    clack(0.012 + 0.016 + Math.random() * 0.014, 0.35);
+  }
+  function sfx(kind) {
+    if (!S.vol) return;
+    try {
+      if (kind === "tick") bead();
+      else if (kind === "lap") { rustle(0, 0.06); clack(0.012, 1, 0.78); clack(0.04, 0.5, 0.8); clack(0.062, 0.25); }
+      else if (kind === "done") { rustle(0, 0.1); [0, .05, .085, .11, .13, .16].forEach(function (w, i) { clack(0.01 + w, 0.9 - i * 0.12, 0.75 + Math.random() * 0.3); }); }
+      else if (kind === "all") { rustle(0, 0.12); for (var i = 0; i < 12; i++) clack(0.01 + i * 0.03 + Math.random() * 0.02, 0.8 - i * 0.05, 0.7 + Math.random() * 0.4); tone(392, 1.6, "sine", 0.06, 0.45); }
+      else if (kind === "undo") clack(0, 0.4, 0.7);
+    } catch (e) {}
+  }
+  if (S.unlocked.indexOf(S.mat) < 0) S.mat = "kuka";
+  function sndBtn() { var b = $("snd"); b.setAttribute("aria-pressed", String(S.vol > 0)); b.textContent = "Ses: " + VNAMES[S.vol]; }
+  $("snd").onclick = function () { S.vol = (S.vol + 1) % 4; save(); sndBtn(); if (S.vol) sfx("tick"); };
+
+  // Odak modu: tüm ekran sayaç, boş yere dokunmak da sayar
+  function setFocus(on) {
+    document.body.classList.toggle("focus", on);
+    S.focus = on; save();
+  }
+  $("focusBtn").onclick = function () { setFocus(true); };
+  $("exitFocus").onclick = function (e) { e.stopPropagation(); setFocus(false); };
+  document.querySelector(".counter-panel .body").addEventListener("click", function (e) {
+    if (!document.body.classList.contains("focus")) return;
+    if (e.target.closest("button")) return;
+    count(1);
+  });
+  if (S.focus) document.body.classList.add("focus");
+
+  // Günlük hedef
+  $("goalSel").addEventListener("change", function () { S.goal = +this.value; save(); render(); });
+  sndBtn();
+
+  // Titreşim: iPhone ve Android uygulamasında Capacitor Haptics (iPhone tarayıcı titreşimini desteklemez),
+  // tarayıcıda navigator.vibrate. Modül iframe içinde açıldığı için eklenti üst pencereden alınır.
+  function haptics() {
+    try { return (window.parent && window.parent.Capacitor || window.Capacitor || {}).Plugins.Haptics || null; } catch (e) { return null; }
+  }
+  function vib(p) {
+    var H = haptics();
+    try {
+      if (H) {
+        if (Array.isArray(p)) H.notification({ type: "SUCCESS" });   // tur / hedef tamam
+        else if (p >= 60) H.impact({ style: "MEDIUM" });              // 33'lük tur
+        else H.impact({ style: "LIGHT" });                            // her çekiş
+      } else if (navigator.vibrate) navigator.vibrate(p);
+    } catch (e) {}
+  }
+  var toastT;
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 2200);
+  }
+  function note(text) {
+    var n = new Date();
+    S.inbox.unshift({ time: n.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }), text: text });
+    S.inbox = S.inbox.slice(0, 50);
+  }
+
+  // Namaz tesbihatında hedef dolunca sayı aşılmaz: dokunuş sıradaki zikre geçer,
+  // üçü de bitince yeni tesbihat 1'den başlar (33 · 33 · 34 düzeni hiç bozulmaz).
+  function tesbihatIlerle() {
+    var z = cur();
+    if (S.mode !== "tesbihat" || !z.seq || cnt(z) < tgt(z)) return;
+    var seq = BASE.filter(function (x) { return x.seq; });
+    var nxt = seq.find(function (x) { return cnt(x) < tgt(x); });
+    if (!nxt) { seq.forEach(function (x) { S.counts[x.id] = 0; }); nxt = seq[0]; toast("Yeni tesbihat"); }
+    S.cur = nxt.id;
+  }
+  function count(delta) {
+    if (delta > 0) tesbihatIlerle();
+    var z = cur(), t = tgt(z), n = cnt(z) + delta;
+    if (n < 0) return;
+    if (delta < 0) sfx("undo");
+    S.counts[z.id] = n;
+    var k = dayKey(); S.history[k] = S.history[k] || {};
+    S.history[k][z.id] = Math.max(0, (S.history[k][z.id] || 0) + delta);
+    if (delta > 0) {
+      if (z.esma && n === t) {
+        vib([180, 80, 180]); sfx("all");
+        note("Esmâü'l-Hüsnâ tamamlandı (" + ESMA.length + " isim).");
+        S.stats.esma++;
+        toast("Esmâü'l-Hüsnâ tamamlandı");
+      } else if (z.esma && n % z.per === 0) {
+        vib(z.per > 1 ? 60 : 12); sfx(z.per > 1 ? "lap" : "tick");
+      } else if (n === t) {
+        vib([180, 80, 180]);
+        note(z.tr + " " + t + " tamamlandı.");
+        toast(z.tr + " · " + t + " tamam");
+        var allDone = S.mode === "tesbihat" && BASE.filter(function (x) { return x.seq; }).every(function (x) { return cnt(x) >= tgt(x); });
+        sfx(allDone ? "all" : "done");
+        if (allDone) {
+          S.stats.tesbihat++;
+          var vk = currentVakit();
+          if (vk) {
+            S.vakitDone = S.vakitDone || {};
+            var dk = dayKey(); S.vakitDone[dk] = S.vakitDone[dk] || {};
+            S.vakitDone[dk][vk.id] = true;
+          }
+          note((vk ? vk.ad + " namazı " : "Namaz ") + "tesbihatı tamamlandı. Kabul olsun.");
+          toast("Tesbihat tamamlandı");
+        }
+      } else if (n % NB === 0) { vib(60); sfx("lap"); } else { vib(12); sfx("tick"); }
+      var r = $("ring"); r.classList.remove("pulse"); void r.offsetWidth; r.classList.add("pulse");
+      checkUnlocks();
+    }
+    save(); render();
+    if (delta > 0) {
+      var nn = cnt(cur()), lit = nn % NB === 0 ? NB - 1 : nn % NB - 1;
+      var bd = beads.children[lit];
+      if (bd) { bd.classList.remove("drop"); void bd.getBBox(); bd.classList.add("drop"); }
+    }
+  }
+
+  $("ring").addEventListener("click", function () { count(1); });
+  document.addEventListener("keydown", function (e) {
+    if (e.target.tagName === "INPUT" || document.body.classList.contains("modal-open")) return;
+    if (e.code === "Space" || e.code === "Enter") {
+      if (e.target === $("ring") || e.target === document.body) { e.preventDefault(); count(1); }
+    }
+    if (e.code === "Backspace") { e.preventDefault(); count(-1); }
+  });
+  $("undo").onclick = function () { count(-1); };
+  $("reset").onclick = function () { $("confirm").hidden = false; $("controls").hidden = true; };
+  $("noReset").onclick = function () { $("confirm").hidden = true; $("controls").hidden = false; };
+  $("yesReset").onclick = function () {
+    S.counts[cur().id] = 0; save();
+    $("confirm").hidden = true; $("controls").hidden = false; render(); toast("Sıfırlandı");
+  };
+  $("next").onclick = function () {
+    var seq = BASE.filter(function (x) { return x.seq; });
+    var nxt = seq.find(function (x) { return cnt(x) < tgt(x); });
+    if (nxt) { S.cur = nxt.id; }
+    else { seq.forEach(function (x) { S.counts[x.id] = 0; }); S.cur = seq[0].id; toast("Yeni tesbihat"); }
+    save(); render();
+  };
+  document.querySelectorAll(".targets button[data-t]").forEach(function (b) {
+    b.onclick = function () { S.targets[cur().id] = +b.dataset.t; save(); render(); };
+  });
+  // Özel hedef: 1 – 1.000.000 arası istediğin sayı (ör. 500, 70.000)
+  $("tgtOzel").onclick = function () { $("tgtOzel").hidden = true; $("tgtGir").hidden = false; $("tgtSayi").value = ""; $("tgtSayi").focus(); };
+  function ozelKaydet() {
+    var n = Math.round(+$("tgtSayi").value);
+    $("tgtGir").hidden = true; $("tgtOzel").hidden = false;
+    if (n >= 1 && n <= 1000000) { S.targets[cur().id] = n; save(); render(); toast("Hedef: " + n.toLocaleString("tr-TR")); }
+  }
+  $("tgtTamam").onclick = ozelKaydet;
+  $("tgtSayi").onkeydown = function (e) { if (e.key === "Enter") ozelKaydet(); if (e.key === "Escape") { $("tgtGir").hidden = true; $("tgtOzel").hidden = false; } };
+  $("mTesbihat").onclick = function () {
+    S.mode = "tesbihat";
+    if (!cur().seq) S.cur = "subhan";
+    save(); render();
+  };
+  $("mSerbest").onclick = function () { S.mode = "serbest"; if (!all().some(function (x) { return x.id === S.cur; })) S.cur = "subhan"; save(); render(); };
+  $("mEsma").onclick = function () { S.mode = "esma"; save(); render(); };
+  document.querySelectorAll("#perGroup button").forEach(function (b) {
+    b.onclick = function () {
+      var z = esmaObj(); S.esmaPer = +b.dataset.per; S.counts.esma = z.idx * S.esmaPer; save(); render();
+    };
+  });
+
+  // ---- Namaz vakitleri (cihazda hesaplanır, internet gerekmez) ----
+  var CITIES = {
+    "İstanbul": [41.01, 28.98], "Ankara": [39.93, 32.86], "İzmir": [38.42, 27.14], "Bursa": [40.19, 29.06],
+    "Antalya": [36.90, 30.70], "Konya": [37.87, 32.48], "Adana": [37.00, 35.32], "Gaziantep": [37.07, 37.38],
+    "Kayseri": [38.73, 35.49], "Samsun": [41.29, 36.33], "Trabzon": [41.00, 39.72], "Erzurum": [39.90, 41.27],
+    "Diyarbakır": [37.91, 40.24], "Van": [38.50, 43.38], "Edirne": [41.68, 26.56]
+  };
+  var VAKITS = [
+    { id: "imsak", ad: "İmsak", namaz: "Sabah" }, { id: "gunes", ad: "Güneş" }, { id: "ogle", ad: "Öğle", namaz: "Öğle" },
+    { id: "ikindi", ad: "İkindi", namaz: "İkindi" }, { id: "aksam", ad: "Akşam", namaz: "Akşam" }, { id: "yatsi", ad: "Yatsı", namaz: "Yatsı" }
+  ];
+  var R = Math.PI / 180;
+  function prayerTimes(date, lat, lng) {
+    var tz = 3; // Türkiye UTC+3
+    var y = date.getFullYear(), mo = date.getMonth() + 1, dd = date.getDate();
+    if (mo <= 2) { y -= 1; mo += 12; }
+    var A = Math.floor(y / 100), B = 2 - A + Math.floor(A / 4);
+    var jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (mo + 1)) + dd + B - 1524.5 - lng / 360 + 0.5;
+    var D = jd - 2451545.0;
+    var g = (357.529 + 0.98560028 * D) % 360, q = (280.459 + 0.98564736 * D) % 360;
+    var L = (q + 1.915 * Math.sin(g * R) + 0.020 * Math.sin(2 * g * R)) % 360;
+    var e = 23.439 - 0.00000036 * D;
+    var RA = Math.atan2(Math.cos(e * R) * Math.sin(L * R), Math.cos(L * R)) / R / 15;
+    RA = ((RA % 24) + 24) % 24;
+    var dec = Math.asin(Math.sin(e * R) * Math.sin(L * R)) / R;
+    var eqt = q / 15 - RA; eqt = ((eqt + 12) % 24 + 24) % 24 - 12;
+    var noon = 12 + tz - lng / 15 - eqt;
+    function T(angle) {
+      var v = (-Math.sin(angle * R) - Math.sin(dec * R) * Math.sin(lat * R)) / (Math.cos(dec * R) * Math.cos(lat * R));
+      return Math.acos(Math.max(-1, Math.min(1, v))) / R / 15;
+    }
+    var asrAlt = Math.atan(1 / (1 + Math.tan(Math.abs(lat - dec) * R))) / R;
+    var asr = Math.acos(Math.max(-1, Math.min(1, (Math.sin(asrAlt * R) - Math.sin(dec * R) * Math.sin(lat * R)) / (Math.cos(dec * R) * Math.cos(lat * R))))) / R / 15;
+    // Diyanet'e yakın olması için küçük temkin payları (dakika)
+    return {
+      imsak: noon - T(18), gunes: noon - T(0.833) - 7 / 60, ogle: noon + 5 / 60,
+      ikindi: noon + asr + 4 / 60, aksam: noon + T(0.833) + 7 / 60, yatsi: noon + T(17)
+    };
+  }
+  function hm(h) { var m = Math.round(h * 60); return String(Math.floor(m / 60) % 24).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); }
+  // Uygulama içinde: vakitler Namaz sekmesiyle aynı hesaptan (Diyanet yöntemi, bulunduğun yer) gelir
+  function todayTimes() {
+    var v = YRK.vakit(new Date());
+    if (v) { var o = {}; VAKITS.forEach(function (x) { var d = v[x.id]; o[x.id] = d.getHours() + d.getMinutes() / 60; }); return o; }
+    var c = CITIES[S.city] || CITIES["İstanbul"]; return prayerTimes(new Date(), c[0], c[1]);
+  }
+  function nowH() { var n = new Date(); return n.getHours() + n.getMinutes() / 60 + n.getSeconds() / 3600; }
+  function currentVakit() {
+    var tt = todayTimes(), h = nowH(), last = null;
+    VAKITS.forEach(function (v) { if (v.namaz && tt[v.id] <= h) last = { id: v.id, ad: v.namaz }; });
+    if (!last && h < tt.imsak) last = { id: "yatsi", ad: "Yatsı" };
+    return last;
+  }
+  if (!S.city) S.city = "İstanbul";
+  if (S.remind === undefined) S.remind = !YRK.gomulu;   // uygulamada bildirim izni kullanıcı açınca istenir
+  if (!S.remindAfter) S.remindAfter = 20;
+  var citySel = $("citySel");
+  Object.keys(CITIES).forEach(function (k) { var o = document.createElement("option"); o.value = k; o.textContent = k; citySel.appendChild(o); });
+  citySel.addEventListener("change", function () { S.city = this.value; save(); render(); });
+  function hatirlatKur() {
+    Promise.resolve(YRK.tesbihAyar(S.remind, S.remindAfter)).then(function (ok) {
+      if (ok === false) { S.remind = false; save(); render(); toast("Bildirim izni verilmedi"); }
+    });
+  }
+  $("remindChk").addEventListener("change", function () { S.remind = this.checked; save(); render(); hatirlatKur(); });
+  $("remindAfter").addEventListener("change", function () { S.remindAfter = +this.value; save(); render(); hatirlatKur(); });
+  var YK = YRK.konum();
+  if (YK) { citySel.hidden = true; document.querySelector('label[for="citySel"]').textContent = "Konum: " + YK.ad; }
+
+  function renderVakit() {
+    if (!$("vakitList")) return;
+    var tt = todayTimes(), h = nowH(), nextV = null;
+    VAKITS.forEach(function (v) { if (!nextV && tt[v.id] > h) nextV = v; });
+    var done = (S.vakitDone || {})[dayKey()] || {};
+    var ul = $("vakitList"); ul.innerHTML = "";
+    VAKITS.forEach(function (v) {
+      var li = document.createElement("li");
+      if (nextV && v.id === nextV.id) li.className = "next";
+      else if (tt[v.id] <= h) li.className = "past";
+      var a = document.createElement("span"); a.textContent = v.ad;
+      var s = document.createElement("span"); s.className = "chk"; s.textContent = v.namaz && done[v.id] ? "Tesbihat ✓" : "";
+      var t = document.createElement("time"); t.textContent = hm(tt[v.id]);
+      li.appendChild(a); li.appendChild(s); li.appendChild(t); ul.appendChild(li);
+    });
+    if (nextV) {
+      var left = Math.max(0, Math.round((tt[nextV.id] - h) * 60));
+      $("vakitNext").textContent = nextV.ad + " · " + (left >= 60 ? Math.floor(left / 60) + " sa " : "") + (left % 60) + " dk";
+    } else $("vakitNext").textContent = "İmsak yarın";
+    citySel.value = S.city;
+    var vn = $("vakitNote");
+    if (vn) vn.textContent = YK ? "Vakitler Namaz sekmesindekiyle aynı hesaptır (Diyanet yöntemi). Hatırlatma, uygulama kapalıyken de bildirim olarak gelir."
+      : YRK.gomulu ? "Konumunu Namaz sekmesinden verirsen vakitler bulunduğun yere göre hesaplanır; şimdilik seçili şehre göre." : "Vakitler yaklaşıktır.";
+    $("remindChk").checked = !!S.remind;
+    $("remindAfter").value = String(S.remindAfter);
+  }
+
+  function checkRemind() {
+    if (S.remind) {
+      var tt = todayTimes(), h = nowH(), dk = dayKey();
+      S.reminded = S.reminded || {};
+      if (S.reminded.day !== dk) S.reminded = { day: dk };
+      VAKITS.forEach(function (v) {
+        if (!v.namaz || S.reminded[v.id]) return;
+        var at = tt[v.id] + S.remindAfter / 60;
+        if (h >= at && h < at + 1) {
+          S.reminded[v.id] = true;
+          var seq = BASE.filter(function (x) { return x.seq; });
+          if (seq.every(function (x) { return cnt(x) >= tgt(x); })) seq.forEach(function (x) { S.counts[x.id] = 0; });
+          S.mode = "tesbihat"; S.cur = (seq.find(function (x) { return cnt(x) < tgt(x); }) || seq[0]).id;
+          note(v.namaz + " namazı sonrası tesbihat vakti.");
+          toast(v.namaz + " sonrası tesbihat vakti");
+          sfx("lap"); vib([120, 60, 120]);
+          save();
+        } else if (h >= at + 1) {
+          S.reminded[v.id] = true; save();
+        }
+      });
+    }
+    render();
+  }
+  setInterval(checkRemind, 20000);
+  $("addForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = $("addName").value.trim(); if (!name) return;
+    var t = Math.max(1, Math.min(10000, +$("addTarget").value || 100));
+    var z = { id: "c" + Date.now(), tr: name, an: "", t: t };
+    S.custom.push(z); S.mode = "serbest"; S.cur = z.id;
+    $("addName").value = "";
+    save(); render(); toast(name + " eklendi");
+  });
+  document.querySelectorAll(".ayet button").forEach(function (b) {
+    b.onclick = function () {
+      var m = /(\d+):(\d+)/.exec(b.dataset.a);
+      if (YRK.gomulu && m) YRK.git("#/ayet/" + m[1] + "/" + m[2]); else toast(b.dataset.a);
+    };
+  });
+
+  // Ekran açık kalsın
+  function wake() { try { navigator.wakeLock && navigator.wakeLock.request("screen").catch(function () {}); } catch (e) {} }
+  wake(); document.addEventListener("visibilitychange", function () { if (!document.hidden) wake(); });
+
+  checkRemind();
+  if (YRK.gomulu) hatirlatKur();
+})();
+  // Kur'an içeriği kapalıyken "Meallerde oku" bölümü gösterilmez
+  try { if (YRK.gomulu && !YRK.kuran) { var p = document.querySelector('[aria-labelledby="h-ayet"]'); if (p) p.remove(); } } catch (e) {}
+</script>
+
+</body></html>

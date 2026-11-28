@@ -1,0 +1,1624 @@
+<!doctype html>
+<html lang="tr">
+<head><script src="ses-kurtarici.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1e2e21"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="ikon-192.png">
+<title>Hisar: Kara Gece</title>
+<style>
+:root{--cream:#f2ecd6;--cream2:#e6dcbc;--ink:#1d2a1f;--accent:#c8a23a;--red:#a8322a;--green:#3f7a3a;--muted:#6b6650;--line:#b9ad84}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;background:#0d120e;overflow:hidden;font-family:Tahoma,Verdana,"Segoe UI",sans-serif;color:var(--ink);touch-action:none}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#game{position:relative;flex:none;width:960px;height:540px;background:#0b1410;overflow:hidden}
+canvas.full{position:absolute;left:0;top:0}
+.screen{position:absolute;inset:0;display:none}
+.screen.on{display:block}
+.topbar{position:absolute;left:0;right:0;top:0;height:46px;background:linear-gradient(#3e5844,#1e2e21);border-bottom:2px solid var(--accent);display:flex;align-items:center;padding:0 16px;color:var(--cream);gap:12px;z-index:2}
+.topbar .title{font-weight:bold;font-size:19px;letter-spacing:.5px}
+.topbar .sub{font-size:12px;opacity:.75}
+.topbar .sp{flex:1}
+.badge{background:var(--accent);color:#1a1a10;font-weight:bold;padding:4px 10px;border-radius:3px;font-size:13px}
+.gold{font-weight:bold;color:#f5d36b;font-size:15px}
+.panel{background:var(--cream);border:1px solid var(--line);box-shadow:0 2px 0 #8a7f5c,0 6px 18px rgba(0,0,0,.35)}
+.panel>h3{margin:0;background:linear-gradient(#4a6450,#2c3e2f);color:var(--cream);font-size:14px;padding:8px 10px;border-bottom:2px solid var(--accent)}
+.btn{display:inline-block;background:linear-gradient(#5f9152,#3a6232);color:#fff;border:1px solid #23401f;border-radius:3px;padding:10px 18px;font-weight:bold;font-size:16px;cursor:pointer;text-align:center;font-family:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.btn:active{transform:translateY(1px)}
+.btn.gray{background:linear-gradient(#8a8570,#5f5a48);border-color:#3d3a2e}
+.btn.red{background:linear-gradient(#b84a3c,#7c2a21);border-color:#4d1812}
+.btn.dis{opacity:.45;pointer-events:none}
+.footbar{position:absolute;left:0;right:0;bottom:0;height:62px;background:linear-gradient(#2c3e2f,#16221a);border-top:2px solid var(--accent);display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 16px}
+.footbar .hint{color:var(--cream);opacity:.8;font-size:13px;margin-right:auto}
+/* menu */
+.menuBtns{padding:14px;display:flex;flex-direction:column;gap:10px}
+.menuBtns .btn{width:100%}
+.inbox{display:flex;height:calc(100% - 35px)}
+.ilist{width:205px;border-right:1px solid var(--line);overflow:auto;background:#ebe3c8}
+.iitem{padding:7px 9px;border-bottom:1px solid #d4c9a4;font-size:12px;cursor:pointer;color:#3d3a2e}
+.iitem b{display:block;font-size:12px;color:var(--ink)}
+.iitem.sel{background:#c9d8b8}
+.iitem.new b::after{content:" ●";color:var(--red)}
+.ibody{flex:1;padding:10px 13px;font-size:13px;line-height:1.5;overflow:auto}
+.ibody .from{font-size:11px;color:var(--muted);margin-bottom:4px}
+.ibody .subj{font-weight:bold;font-size:15px;margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:6px}
+/* levels */
+.rnav{position:absolute;left:22px;right:22px;top:56px;height:44px;display:flex;gap:8px;align-items:stretch}
+.rarr{width:56px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px}
+.rhead{flex:1;display:flex;align-items:center;gap:10px;padding:0 12px;font-weight:bold;font-size:16px;white-space:nowrap}
+.rhead small{font-weight:normal;color:var(--muted);font-size:12px}
+.rbar{flex:1;height:8px;background:#d4c9a4;border:1px solid #b9ad84;position:relative;min-width:60px}
+.rbar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(#5f9152,#3a6232)}
+#bCur{padding:0 14px;display:flex;align-items:center;font-size:14px}
+.lvgrid{position:absolute;left:22px;right:22px;top:108px;display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.lv{height:58px;cursor:pointer;position:relative}
+.lv .n{font-size:20px;font-weight:bold;color:#2c3e2f;text-align:center;margin-top:8px}
+.lv .s{text-align:center;color:#c8a23a;font-size:12px;letter-spacing:1px;text-shadow:0 1px 0 #7a6420}
+.lv .s .off{color:#cfc6a6;text-shadow:none}
+.lv .tg{position:absolute;right:3px;top:1px;font-size:11px;color:var(--red);font-weight:bold}
+.lv .mi{position:absolute;left:3px;top:1px;font-size:11px}
+.lv.boss{background:#ecd9c6}
+.lv.cur{outline:3px solid var(--accent);outline-offset:-1px}
+.lv.lock{opacity:.45;cursor:default}
+.lv.lock .n{font-size:14px;margin-top:12px;color:#6b6650}
+.xr-only{display:none!important}.xr-ok .xr-only{display:inline-block!important}
+.modl{margin-top:8px;padding:6px 8px;background:#ebe3c8;border:1px solid #d4c9a4;font-size:13px}
+.lvst{font-size:24px;color:#c8a23a;letter-spacing:4px;text-shadow:0 1px 0 #7a6420}
+.lvst .off{color:#cfc6a6;text-shadow:none}
+/* upgrades */
+.ut{width:100%;border-collapse:collapse;font-size:13px}
+.ut td{padding:6px 10px;border-bottom:1px solid #d4c9a4;vertical-align:middle}
+.ut tr:nth-child(even){background:#ebe3c8}
+.ut .unm{font-weight:bold;font-size:14px}
+.ut .ud{color:var(--muted);font-size:12px}
+.ulv{width:150px;font-size:12px;color:var(--muted)}
+.ulv b{font-size:16px;color:var(--ink)}
+.ubar{height:8px;background:#fffbea;border:1px solid #6b6650;margin-top:4px;position:relative}
+.ubar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(#5f9152,#3a6232)}
+.rk{padding:4px 8px;overflow:auto;height:calc(100% - 35px)}
+.rki{padding:5px 2px;border-bottom:1px solid #d4c9a4;font-size:11px;color:var(--muted);line-height:1.35}
+.rki b{display:block;font-size:13px;color:#8a8570}
+.rki.on b{color:var(--green)}
+.rki.on{color:var(--ink)}
+.ut .btn{padding:7px 12px;font-size:13px;min-width:120px}
+.help{padding:12px 16px;font-size:13.5px;line-height:1.55}
+.help b{color:#2c3e2f}
+/* battle */
+#cv{position:absolute;left:0;top:0}
+#hud{position:absolute;left:0;top:430px;width:960px;height:110px;background:linear-gradient(#3a5240,#1a2a1c);border-top:2px solid var(--accent);display:flex;align-items:center;gap:8px;padding:0 10px}
+.hbtn{width:50px;height:88px;background:var(--cream);border:1px solid #8a7f5c;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#2c3e2f;cursor:pointer}
+.hbtn:active,.hbtn.down{background:#c9d8b8}
+#foodBox{width:84px;color:var(--cream);text-align:center;line-height:1.2}
+#foodBox .v{font-size:26px;font-weight:bold;color:#f5d36b}
+#foodBox .l{font-size:11px;opacity:.8}
+.ubtn{position:relative;width:82px;height:92px;background:var(--cream);border:1px solid #8a7f5c;border-radius:4px;overflow:hidden;cursor:pointer}
+.ubtn canvas{position:absolute;left:0;top:12px}
+.ubtn .nm{position:absolute;top:2px;left:5px;font-size:11px;font-weight:bold;z-index:1}
+.ubtn .key{position:absolute;top:2px;right:5px;font-size:10px;color:var(--muted);z-index:1}
+.ubtn .cost{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-weight:bold;font-size:13px;z-index:1}
+.ubtn .cdv{position:absolute;left:0;right:0;bottom:0;background:rgba(20,30,20,.55);height:0;z-index:2}
+.ubtn.poor .cost{color:var(--red)}
+.ubtn.locked{filter:grayscale(1);opacity:.45}
+.ubtn.locked .cost{font-size:10px}
+.ubtn:active{background:#c9d8b8}
+#fireBtn{position:relative;width:118px;height:92px;background:var(--cream);border:1px solid #8a7f5c;border-radius:4px;overflow:hidden;cursor:pointer;text-align:center}
+#fireBtn .fill{position:absolute;left:0;bottom:0;right:0;background:linear-gradient(#ffb347,#c8401f);opacity:.85;height:0}
+#fireBtn .t{position:relative;z-index:1;font-weight:bold;font-size:13px;margin-top:18px}
+#fireBtn .i{position:relative;z-index:1;font-size:26px}
+#fireBtn.ready{box-shadow:0 0 12px #ffb347}
+.pwBtn{position:relative;width:86px;height:92px;background:var(--cream);border:1px solid #8a7f5c;border-radius:4px;overflow:hidden;cursor:pointer;text-align:center}
+.pwBtn .fill{position:absolute;left:0;bottom:0;right:0;background:linear-gradient(#ffb347,#c8401f);opacity:.8;height:0}
+.pwBtn .t{position:relative;z-index:1;font-weight:bold;font-size:11px;margin-top:6px;line-height:1.15;padding:0 3px}
+.pwBtn .i{position:relative;z-index:1;font-size:26px;margin-top:2px}
+.pwBtn .c{position:relative;z-index:1;font-size:11px;font-weight:bold;color:#5a4a2a}
+.pwBtn.ready{box-shadow:0 0 12px #ffb347}.pwBtn.ready .c{color:#a8322a}
+.res.prep{width:900px}.prep .body{padding:6px 14px 4px;font-size:13px}.prep .acts{padding-bottom:10px}
+.prep .row{display:flex;gap:6px;flex-wrap:nowrap;align-items:center;margin:3px 0 5px}
+.prep .lbl{font-weight:bold;color:#2c3e2f;margin-top:2px}
+.prep .lbl small{font-weight:normal;color:var(--muted)}
+.pcard{position:relative;width:64px;height:76px;flex:none;background:#fff8e4;border:2px solid #d4c9a4;border-radius:4px;cursor:pointer;overflow:hidden}
+.pcard canvas{position:absolute;left:0;top:10px}
+.pcard .nm{position:absolute;top:1px;left:0;right:0;text-align:center;font-size:10px;font-weight:bold;z-index:1}
+.pcard .cs{position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:10px;font-weight:bold;z-index:1;color:#5a4a2a}
+.pcard.on{border-color:#3f7a3a;background:#e4f0d4;box-shadow:0 0 0 2px #3f7a3a inset}
+.pcard.lock{filter:grayscale(1);opacity:.45;cursor:default}
+.pcard.uq::after{content:'★';position:absolute;right:3px;top:12px;color:#c8a23a;font-size:12px}
+.pchip{padding:6px 7px;background:#fff8e4;border:2px solid #d4c9a4;border-radius:4px;cursor:pointer;font-weight:bold;font-size:12px;white-space:nowrap;flex:none}
+.pchip.on{border-color:#c8401f;background:#fde3c8}.pchip.lock{opacity:.45;filter:grayscale(1);cursor:default}
+.pfoe{width:48px;height:52px;background:#2a2433;border-radius:4px;position:relative;flex:none;cursor:pointer}
+.pfoe canvas{position:absolute;left:0;top:0}.pfoe.boss{box-shadow:0 0 0 2px #a8322a}
+.pinfo{min-height:18px;color:#3a3a2a;font-size:12px;background:#ebe3c8;border:1px solid #d4c9a4;padding:4px 8px}
+#topHud{position:absolute;left:10px;top:8px;right:10px;display:flex;gap:8px;align-items:center;pointer-events:none}
+#topHud>*{pointer-events:auto}
+.chip{background:rgba(242,236,214,.92);border:1px solid var(--line);padding:5px 10px;font-size:13px;font-weight:bold;border-radius:3px}
+.chip.dark{background:rgba(30,46,33,.9);color:var(--cream);border-color:var(--accent)}
+.sbtn{background:rgba(242,236,214,.95);border:1px solid #8a7f5c;border-radius:3px;font-weight:bold;font-size:15px;padding:5px 12px;cursor:pointer;font-family:inherit}
+.overlay{position:absolute;inset:0;background:rgba(5,10,6,.6);display:none;align-items:center;justify-content:center;z-index:5}
+.overlay.on{display:flex}
+.res{width:540px}
+.res .body{padding:14px 18px;font-size:14px;line-height:1.5}
+.res .big{font-size:26px;font-weight:bold;margin:2px 0 6px}
+.res .stars{font-size:34px;color:#c8a23a;letter-spacing:6px;text-shadow:0 1px 0 #7a6420}
+.res .stars .off{color:#cfc6a6;text-shadow:none}
+.res table{width:100%;border-collapse:collapse;margin-top:6px}
+.res td{padding:5px 4px;border-bottom:1px solid #d4c9a4}
+.res td:last-child{text-align:right;font-weight:bold}
+.res .acts{display:flex;gap:10px;justify-content:flex-end;padding:0 18px 16px}
+/* rehber, ayarlar, puan, paylaş (test ekibinin önerileri) */
+#rhKart{position:absolute;left:50%;top:54px;transform:translateX(-50%);width:560px;z-index:8;display:none}
+#rhKart.on{display:block}
+#rhKart .body{padding:10px 14px 4px;font-size:14px;line-height:1.5}
+#rhKart .acts{display:flex;gap:10px;justify-content:flex-end;padding:6px 14px 12px}
+#rhKart .acts .btn,.ayar .btn,.puanK .btn{padding:7px 14px;font-size:14px}
+#rhKart h3 small{float:right;font-weight:normal;opacity:.8}
+.rhListe{height:calc(100% - 35px);overflow:auto;padding:8px 10px;touch-action:pan-y}
+.rhSat{border:1px solid #d4c9a4;background:#fffbea;padding:6px 9px;margin-bottom:6px;font-size:12.5px;line-height:1.45}
+.rhSat b{display:block;font-size:13px;color:#2c3e2f}
+.rhSat.yeni{border:2px solid var(--accent);background:#fbf1cf}
+.rhSat.yeni b::after{content:" · yeni";color:#8a6a10;font-weight:normal;font-size:11px}
+.ayar{width:100%;border-collapse:collapse;font-size:13px}
+.ayar td{padding:6px 10px;border-bottom:1px solid #d4c9a4;vertical-align:middle}
+.ayar tr:nth-child(even){background:#ebe3c8}
+.ayar td:last-child{text-align:right;width:190px}
+.ayar .btn{min-width:150px}
+.ayar .unm{font-weight:bold;font-size:14px}
+.ayar .ud{color:var(--muted);font-size:12px}
+.puanK{margin-top:10px;border:2px solid var(--accent);background:#fbf1cf;padding:8px 10px;font-size:13px}
+.puanK .row{display:flex;gap:8px;margin-top:6px;justify-content:flex-end}
+#ovAsk{z-index:20}
+#tost{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);background:rgba(30,46,33,.95);color:var(--cream);border:1px solid var(--accent);padding:8px 14px;font-size:13px;border-radius:3px;z-index:30;display:none;max-width:700px;text-align:center}
+#tost.on{display:block}
+#rotate{display:none;position:fixed;inset:0;background:#0d120e;color:var(--cream);align-items:center;justify-content:center;text-align:center;font-size:18px;z-index:99;padding:30px}
+@media (orientation:portrait) and (max-width:900px){#rotate{display:flex}}
+</style>
+</head>
+<body>
+<div id="rotate"><div><div style="font-size:54px">⟳</div>Hisar'ı savunmak için<br>telefonunu yan çevir.</div></div>
+<div id="wrap"><div id="game">
+
+  <!-- ANA MENÜ -->
+  <div id="scrMenu" class="screen on">
+    <canvas id="menuBg" class="full" width="960" height="540"></canvas>
+    <div class="topbar"><span class="title">HİSAR</span><span class="sub">Kara Gece</span><span class="sp"></span><span class="gold" id="mGold"></span><span class="badge">Komutan</span></div>
+    <div class="panel" style="position:absolute;left:24px;top:68px;width:560px;height:384px">
+      <h3>Gelen Kutusu</h3>
+      <div class="inbox"><div class="ilist" id="ilist"></div><div class="ibody" id="ibody"></div></div>
+    </div>
+    <div class="panel" style="position:absolute;right:24px;top:68px;width:330px">
+      <h3>Komuta Masası</h3>
+      <div class="menuBtns">
+        <div class="btn" id="bPlay">Devam ▸</div>
+        <div class="btn xr-only" id="bVR" style="background:linear-gradient(#a8822a,#6e521a);border-color:#4a3510">🥽 Masadaki Savaş</div>
+        <div class="btn gray" id="bCamp">Ordugâh</div>
+        <div class="btn gray" id="bHelp">Nasıl Oynanır</div>
+        <div class="btn gray" id="bSound">Ses: Açık</div>
+        <div class="btn gray" id="bShare">Arkadaşına öner</div>
+        <div class="btn gray" id="bSettings">Ayarlar</div>
+      </div>
+    </div>
+    <div class="footbar"><span class="hint">Kara Kule'yi yık, Hisar'ı ayakta tut. · <b>Bir Mr. Anduv! yapımıdır.</b></span><div class="btn" id="bPlay2">Devam</div></div>
+  </div>
+
+  <!-- BÖLÜMLER -->
+  <div id="scrLevels" class="screen">
+    <canvas class="full bgc" width="960" height="540"></canvas>
+    <div class="topbar"><span class="title">Sefer Haritası</span><span class="sub" id="lvSub"></span><span class="sp"></span><span class="gold lvGold"></span><span class="badge">Komutan</span></div>
+    <div class="rnav"><div class="btn gray rarr" id="rPrev">◀</div><div class="panel rhead" id="rHead"></div><div class="btn gray rarr" id="rNext">▶</div><div class="btn" id="bCur">Kaldığın Yer</div></div>
+    <div class="lvgrid" id="lvgrid"></div>
+    <div class="footbar"><span class="hint">Bir bölüm seç. Yıldızlar Hisar'ın ne kadar sağlam kaldığına göre verilir.</span><div class="btn gray" data-go="menu">Geri</div><div class="btn" id="bEndless" style="background:linear-gradient(#7a3a8a,#4a1f5a);border-color:#2a0f34">♾ Sonsuz Dalga</div><div class="btn" id="bCamp2">Ordugâh</div></div>
+    <div class="overlay" id="ovLv"><div class="panel res"><h3 id="lvT"></h3><div class="body" id="lvB"></div>
+      <div class="acts"><div class="btn gray" id="lvBack">Geri</div><div class="btn xr-only" id="lvVR">Masada Oyna 🥽</div><div class="btn" id="lvGo">Sefere Hazırlan ▸</div></div></div></div>
+    <div class="overlay" id="ovPrep"><div class="panel res prep"><h3 id="prT">Sefer Hazırlığı</h3><div class="body">
+      <div class="lbl">Gelecek düşmanlar</div><div class="row" id="prFoes"></div>
+      <div class="lbl">Ordun <small id="prUc"></small></div><div class="row" id="prUnits"></div>
+      <div class="lbl">Güçler <small id="prPc"></small></div><div class="row" id="prPows"></div>
+      <div class="pinfo" id="prInfo"></div></div>
+      <div class="acts"><div class="btn gray" id="prBack">Geri</div><div class="btn xr-only" id="prVR">Masada Oyna 🥽</div><div class="btn" id="prGo">Savaşa Başla ▸</div></div></div></div>
+  </div>
+
+  <!-- ORDUGÂH -->
+  <div id="scrCamp" class="screen">
+    <canvas class="full bgc" width="960" height="540"></canvas>
+    <div class="topbar"><span class="title">Ordugâh</span><span class="sub">Geliştirmeler kalıcıdır</span><span class="sp"></span><span class="gold lvGold"></span><span class="badge">Komutan</span></div>
+    <div class="panel" style="position:absolute;left:24px;top:62px;width:598px;bottom:74px;overflow:auto"><h3>Hazine ile Geliştir</h3><table class="ut" id="ut"></table></div>
+    <div class="panel" style="position:absolute;right:24px;top:62px;width:302px;bottom:74px"><h3>Rütbeler</h3><div class="rk" id="ranks"></div></div>
+    <div class="footbar"><span class="hint">Akçe: yaratıkların düşürdüğü ganimetten ve zaferlerden gelir.</span><div class="btn gray" data-go="menu">Ana Menü</div><div class="btn" data-go="levels">Sefere Çık</div></div>
+  </div>
+
+  <!-- YARDIM -->
+  <div id="scrHelp" class="screen">
+    <canvas class="full bgc" width="960" height="540"></canvas>
+    <div class="topbar"><span class="title">Nasıl Oynanır</span><span class="sp"></span><span class="badge">Komutan</span></div>
+    <div class="panel" style="position:absolute;left:24px;width:500px;top:62px;height:404px;overflow:auto"><h3>Divan'ın Talimatı</h3>
+      <div class="help">
+        <b>Amaç:</b> Sağdaki <b>Kara Kule</b>'yi yık, soldaki <b>Hisar</b>'ı ayakta tut.<br>
+        <b>Sefer Hazırlığı:</b> Her savaştan önce gelecek düşmanları görür, ordundan <b>6 birlik</b> ve <b>2 güç</b> seçersin.<br>
+        <b>Erzak:</b> Zamanla dolar; kartlara dokunarak birlik çıkar. ★ işaretli tekil kahramanlardan (Ozan, Hisar Beyi, Kızıl Bahadır) sahada aynı anda bir tane olur. Meşaleci ve Silahtar savaşmaz; sahadayken okçuları ve sekbanları güçlendirir.<br>
+        <b>Alp Er:</b> ◀ ▶ ile yürüt. Yakındaki düşmana kılıç sallar, uzaktakine kendiliğinden ok atar. Düşerse bir süre sonra Hisar'dan yeniden çıkar.<br>
+        <b>Ganimet:</b> Düşen yaratık yere akçe bırakır; Alp Er üstünden geçince toplar. Zaferde yerde kalanın yarısını askerler toplar, yenilgide kaybolur.<br>
+        <b>Güçler:</b> Ocak dolunca seçtiğin iki gücü kullanırsın: Ateş Yağmuru, Ok Yağmuru, Mancınık Atışı, Sur Borusu, Alp'in Gürzü, Kurt Akını.<br>
+        <b>Sur:</b> Ordugâh'tan sur okçuları, mancınık ve hendek kurarsın; Hisar kendini de savunur.<br>
+        <b>Sefer:</b> 20 bölge, 1923 bölüm. Her 10 bölümde bir dev; bölge sonunda iki dev. 50. bölümden sonra <b>Sonsuz Dalga</b> açılır.<br>
+        <b>Ordugâh:</b> Akçeyle erzak, sur, birlik, Alp Er, güç ocağı, sur savunması ve Alp Er'in silahını kalıcı olarak geliştir.<br>
+        <b>Klavye:</b> 1–6 birlik · ← → Alp · Boşluk 1. güç · Q 2. güç · P mola
+      </div>
+    </div>
+    <div class="panel" style="position:absolute;left:540px;right:24px;top:62px;height:404px"><h3>Rehber · Bütün İpuçları</h3><div class="rhListe" id="rhListe"></div></div>
+    <div class="footbar"><span class="hint">Altın çerçeveliler henüz görmediğin ipuçları.</span><div class="btn gray" id="bRhBastan">Rehberi baştan göster</div><div class="btn" id="bHelpBack">Geri</div></div>
+  </div>
+
+  <!-- AYARLAR -->
+  <div id="scrSettings" class="screen">
+    <canvas class="full bgc" width="960" height="540"></canvas>
+    <div class="topbar"><span class="title">Ayarlar</span><span class="sp"></span><span class="badge">Komutan</span></div>
+    <div class="panel" style="position:absolute;left:24px;right:24px;top:58px"><h3>Komutanın Defteri</h3><table class="ayar" id="ayarT"></table></div>
+    <div class="footbar"><span class="hint" id="ayarSurum"></span><div class="btn" data-go="menu">Ana Menü</div></div>
+  </div>
+
+  <!-- SAVAŞ -->
+  <div id="scrBattle" class="screen">
+    <canvas id="cv" width="960" height="430"></canvas>
+    <div id="topHud">
+      <span class="chip dark" id="lvChip"></span>
+      <span class="chip" id="killChip">Leş 0 · 0 akçe</span>
+      <span style="flex:1"></span>
+      <button class="sbtn" id="bSpeed">×1</button>
+      <button class="sbtn" id="bPause">❚❚</button>
+    </div>
+    <div id="hud">
+      <div class="hbtn" id="hL">◀</div>
+      <div class="hbtn" id="hR">▶</div>
+      <div id="foodBox"><div class="l">ERZAK</div><div class="v" id="foodV">0</div><div class="l" id="foodR"></div></div>
+      <div id="ubtns" style="display:flex;gap:8px"></div>
+      <div class="pwBtn" id="pw0"><div class="fill"></div><div class="t"></div><div class="i"></div><div class="c"></div></div>
+      <div class="pwBtn" id="pw1"><div class="fill"></div><div class="t"></div><div class="i"></div><div class="c"></div></div>
+    </div>
+    <div class="overlay" id="ovPause"><div class="panel res"><h3>Mola</h3>
+      <div class="body"><div class="big">Ordu bekliyor</div>Savaş durduruldu.</div>
+      <div class="acts"><div class="btn red" id="bQuit">Bölümden Çık</div><div class="btn gray" id="bPauseHelp">Nasıl Oynanır</div><div class="btn" id="bResume">Devam</div></div></div></div>
+    <div class="overlay" id="ovRes"><div class="panel res"><h3>Gelen Kutusu · Hisar Divanı</h3>
+      <div class="body" id="resBody"></div>
+      <div class="acts" id="resActs"></div></div></div>
+  </div>
+
+  <!-- REHBER KARTI, SORU, BİLDİRİM -->
+  <div class="panel" id="rhKart"><h3><span id="rhB"></span><small>Rehber</small></h3><div class="body" id="rhM"></div>
+    <div class="acts"><div class="btn gray" id="bRhKapat">Rehberi kapat</div><div class="btn" id="bRhTamam">Anladım</div></div></div>
+  <div class="overlay" id="ovAsk"><div class="panel res"><h3 id="askB"></h3><div class="body" id="askM"></div><div class="acts" id="askActs"></div></div></div>
+  <div id="tost"></div>
+
+</div></div>
+
+<script>
+'use strict';
+/* ================= ÖLÇEKLEME ================= */
+const GAME=document.getElementById('game');
+function fit(){const s=Math.min(innerWidth/960,innerHeight/540);GAME.style.transform='scale('+s+')';}
+addEventListener('resize',fit);fit();
+
+/* ================= KAYIT ================= */
+const SKEY='hisar_kara_gece_v1';
+const DEF_UP={erzak:0,sur:0,guc:0,alp:0,ates:0,surok:0,mancinik:0,hendek:0,silah:0};
+let S={gold:0,unlocked:1,stars:[],up:Object.assign({},DEF_UP),sound:true,read:[],loadout:['sekban','okcu','kalkan','akinci','humbara','deli'],powers:['ates','ok'],best:0};
+try{const r=localStorage.getItem(SKEY);if(r){const o=JSON.parse(r);S=Object.assign(S,o);S.up=Object.assign({},DEF_UP,o.up||{});}}catch(e){}
+function save(){if(S.__silindi)return;try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){}}
+// 1.0 → 1.1 (40 → 999 bölüm): ilerleme korunur; 40'ı bitiren 41'den devam eder
+if(!S.v){if(S.finished&&S.unlocked<41)S.unlocked=41;S.finished=false;S.v=2;save();}
+// 1.1 → 1.2 (999 → 1923 bölüm): 999'u bitiren 1000'den devam eder
+if(S.v<3){if(S.finished&&S.unlocked<=999)S.unlocked=1000;S.finished=false;S.v=3;save();}
+
+/* ================= VERİ ================= */
+const GY=372;
+const LOOK={
+ sekban:{skin:'#d9a97a',cloth:'#a8322a',cloth2:'#e0c060',leg:'#3a2a1a',head:'kalpak',wpn:'kilic'},
+ okcu:{skin:'#d9a97a',cloth:'#2f6e8c',cloth2:'#c8a23a',leg:'#3a2a1a',head:'bork',wpn:'yay'},
+ kalkan:{skin:'#d9a97a',cloth:'#6e6a5a',cloth2:'#a8322a',leg:'#2a2a2a',head:'migfer',wpn:'kalkan'},
+ akinci:{skin:'#d9a97a',cloth:'#8c4a2f',cloth2:'#e0c060',leg:'#3a2a1a',head:'sarik',wpn:'mizrak',horse:'#6b4a2e'},
+ humbara:{skin:'#d9a97a',cloth:'#4b4b4b',cloth2:'#a8322a',leg:'#222',head:'bere',wpn:'humbara'},
+ deli:{skin:'#d9a97a',cloth:'#b07a3a',cloth2:'#3a2a1a',leg:'#3a2a1a',head:'deli',wpn:'balta',spots:true},
+ alp:{skin:'#d9a97a',cloth:'#b8902e',cloth2:'#7a1f1a',leg:'#2a1a10',head:'tolga',wpn:'kilic',cape:'#9a2a22'},
+ mizrak:{skin:'#d9a97a',cloth:'#3a6a3a',cloth2:'#c8a23a',leg:'#3a2a1a',head:'migfer',wpn:'mizrak'},
+ mesaleci:{skin:'#e0b088',cloth:'#8a5a2a',cloth2:'#e0c060',leg:'#3a2a1a',head:'bork',wpn:'mesale'},
+ silahtar:{skin:'#e0b088',cloth:'#5a4a7a',cloth2:'#e0c060',leg:'#3a2a1a',head:'kalpak',wpn:'kilic'},
+ ozan:{skin:'#d9a97a',cloth:'#e8e0c8',cloth2:'#6b4a2e',leg:'#5a4a3a',head:'sarik',wpn:'kopuz'},
+ bey:{skin:'#d9a97a',cloth:'#7a1f1a',cloth2:'#e0c060',leg:'#2a1a10',head:'tolga',wpn:'kilic',cape:'#1e4a2a'},
+ bahadir:{skin:'#d9a97a',cloth:'#a8221a',cloth2:'#e0c060',leg:'#2a1a10',head:'sarik',wpn:'gurz',horse:'#3a2418',cape:'#7a1010'},
+ bozkurt:{beast:true,cloth:'#8a8f98',cloth2:'#5a5f68',eye:'#ffe27a'},
+ gulyabani:{skin:'#7f9a5a',cloth:'#4a3a2a',cloth2:'#2a2018',leg:'#3a3020',head:'kulak',wpn:'pence',eye:'#ff4a2a',hunch:0.25},
+ albasti:{skin:'#c9a0a0',cloth:'#6a2a4a',cloth2:'#3a1020',leg:'#2a1020',head:'sac',wpn:'pence',eye:'#ff3a6a',hunch:0.15},
+ hortlak:{skin:'#b8c0d8',cloth:'#4a4a7a',cloth2:'#2a2a4a',head:'kukuleta',wpn:'asa',orb:'#b48aff',eye:'#8affff',float:true},
+ karakoncolos:{skin:'#3a2e2a',cloth:'#2a201c',cloth2:'#1a1410',leg:'#1a1410',head:'boynuz',wpn:'sopa',eye:'#ffcc33',hunch:0.2,hairy:true},
+ cadi:{skin:'#9aa88a',cloth:'#2a1a2a',cloth2:'#4a2a4a',leg:'#1a101a',head:'cadi',wpn:'asa',orb:'#7aff6a',eye:'#7aff6a',hunch:0.3},
+ kurtbasi:{skin:'#6a6a70',cloth:'#3a3030',cloth2:'#20181a',leg:'#2a2424',head:'kurt',wpn:'pence',eye:'#ffd23a',hunch:0.35,hairy:true},
+ demircin:{skin:'#5a6a7a',cloth:'#5a5e66',cloth2:'#2a2e36',leg:'#2a2e36',head:'demir',wpn:'cekic',eye:'#ff7a2a',plate:true},
+ atescini:{skin:'#e07a3a',cloth:'#a8321a',cloth2:'#ffb347',head:'alev',wpn:'yok',eye:'#fff2a0',float:true,glow:'#ff7a1f'},
+ muhafiz:{skin:'#4a3a4a',cloth:'#2a1a2a',cloth2:'#8a2a2a',leg:'#1a101a',head:'muhafiz',wpn:'mizrak',eye:'#ff3a3a',plate:true},
+ golge:{skin:'#0e0c12',cloth:'#141018',cloth2:'#241c2c',leg:'#0e0c12',head:'kel',wpn:'pence',eye:'#d06aff',hunch:0.2,glow:'#8a3aff'},
+ tepegoz:{skin:'#9a8a6a',cloth:'#5a3a2a',cloth2:'#3a2418',leg:'#4a3a2a',head:'tek',wpn:'sopa',eye:'#ff2a2a',hunch:0.1},
+ yelbegen:{skin:'#7a8a6a',cloth:'#4a5a3a',cloth2:'#2a3420',leg:'#3a4a2a',head:'iki',wpn:'sopa',eye:'#ff4a2a',hunch:0.12},
+ evren:{skin:'#3a6a4a',cloth:'#2a4a34',eye:'#ffcc33',dragon:true},
+ erlik:{skin:'#3a2030',cloth:'#1a0a14',cloth2:'#a8221a',leg:'#120810',head:'erlik',wpn:'kizil',eye:'#ff2a2a',cape:'#4a0a1a',glow:'#ff2a2a'},
+};
+const UNITS=[
+ {id:'sekban',ad:'Sekban',cost:15,cd:1.2,hp:60,atk:10,rate:0.9,range:22,spd:44,unlock:1},
+ {id:'okcu',ad:'Okçu',cost:25,cd:2,hp:40,atk:9,rate:1.3,range:170,spd:38,unlock:1,ranged:true},
+ {id:'kalkan',ad:'Kalkancı',cost:40,cd:4,hp:220,atk:7,rate:1.2,range:22,spd:30,unlock:3},
+ {id:'akinci',ad:'Akıncı',cost:60,cd:5,hp:140,atk:22,rate:1.0,range:28,spd:88,unlock:8,mounted:true},
+ {id:'humbara',ad:'Humbaracı',cost:90,cd:8,hp:70,atk:42,rate:3.0,range:240,spd:26,unlock:15,ranged:true,splash:60},
+ {id:'deli',ad:'Deli',cost:45,cd:3,hp:75,atk:30,rate:0.75,range:22,spd:72,unlock:25},
+ {id:'mizrak',ad:'Mızrakçı',cost:35,cd:2.5,hp:95,atk:15,rate:1.1,range:46,spd:36,unlock:5},
+ {id:'mesaleci',ad:'Meşaleci',cost:30,cd:6,hp:34,atk:0,rate:9,range:0,spd:40,unlock:12,support:'okcu',sc:0.8},
+ {id:'silahtar',ad:'Silahtar',cost:30,cd:6,hp:34,atk:0,rate:9,range:0,spd:40,unlock:20,support:'sekban',sc:0.8},
+ {id:'ozan',ad:'Ozan',cost:120,cd:18,hp:280,atk:0,rate:9,range:0,spd:24,unlock:35,unique:true,heal:true},
+ {id:'bey',ad:'Hisar Beyi',cost:160,cd:24,hp:720,atk:42,rate:1.1,range:30,spd:28,unlock:45,unique:true,escort:'okcu',sc:1.2},
+ {id:'bahadir',ad:'Kızıl Bahadır',cost:150,cd:22,hp:540,atk:56,rate:1.0,range:32,spd:70,unlock:60,unique:true,mounted:true},
+];
+const UNIT_D={sekban:'Ucuz ve hızlı çıkar; cepheyi tutar.',okcu:'Arkadan ok atar.',kalkan:'Çok dayanıklı, yavaş.',akinci:'Atlı; hızla düşmanın içine dalar.',humbara:'Uzağa gülle atar, kalabalığı dağıtır, zırhı deler.',deli:'Zırhsız ama çok sert vurur.',
+ mizrak:'Uzun mızrağıyla ön safın arkasından vurur.',mesaleci:'Savaşmaz. Sahadayken bütün okçular ateşli ok atar.',silahtar:'Savaşmaz. Sahadayken bütün sekbanlar keskin kılıç ve zırh kuşanır.',
+ ozan:'Tekil kahraman. Savaşmaz; kopuzuyla yakınındaki askerleri iyileştirir.',bey:'Tekil kahraman. Çok güçlü; yanında iki okçuyla gelir.',bahadir:'Tekil kahraman. Atlı, gürzüyle saflara dalar.'};
+const POWERS=[
+ {id:'ates',ad:'Ateş Yağmuru',ic:'🔥',cost:50,unlock:1,d:'Öndeki düşman kalabalığına ateş yağdırır; zırhı deler.'},
+ {id:'ok',ad:'Ok Yağmuru',ic:'🏹',cost:30,unlock:1,d:'Sur okçuları en öndeki düşmanlara ok yağdırır.'},
+ {id:'mancinik',ad:'Mancınık Atışı',ic:'🪨',cost:60,unlock:10,d:'Mancınıklar en güçlü düşmana üç dev taş atar.'},
+ {id:'boru',ad:'Sur Borusu',ic:'📯',cost:45,unlock:20,d:'Borular öter: ordun 8 sn %50 sert vurur, düşman yavaşlar.'},
+ {id:'gurz',ad:'Alp\'in Gürzü',ic:'⚡',cost:40,unlock:30,d:'Alp Er önündeki herkesi yere seren bir darbe indirir.'},
+ {id:'kurt',ad:'Kurt Akını',ic:'🐺',cost:80,unlock:40,d:'Bozkurtlar Hisar\'dan Kule\'ye koşar, yolundaki her düşmanı biçer.'},
+];
+const PW=id=>POWERS.find(x=>x.id===id);
+const FOES={
+ gulyabani:{id:'gulyabani',ad:'Gulyabani',hp:55,atk:9,rate:1.0,range:22,spd:36,gold:4},
+ albasti:{id:'albasti',ad:'Albastı',hp:42,atk:8,rate:0.7,range:20,spd:70,gold:5,sc:0.95},
+ hortlak:{id:'hortlak',ad:'Hortlak',hp:38,atk:8,rate:1.5,range:160,spd:34,gold:6,ranged:true},
+ karakoncolos:{id:'karakoncolos',ad:'Karakoncolos',hp:240,atk:14,rate:1.4,range:26,spd:26,gold:12,sc:1.35,r:6},
+ cadi:{id:'cadi',ad:'Cadı',hp:50,atk:15,rate:2.0,range:190,spd:32,gold:8,ranged:true},
+ kurtbasi:{id:'kurtbasi',ad:'Kurtbaşı',hp:80,atk:12,rate:0.8,range:22,spd:80,gold:8,sc:1.05},
+ demircin:{id:'demircin',ad:'Demir Cin',hp:260,atk:18,rate:1.5,range:28,spd:24,gold:15,sc:1.3,r:6,armor:0.45},
+ atescini:{id:'atescini',ad:'Ateş Cini',hp:70,atk:13,rate:2.2,range:180,spd:30,gold:12,ranged:true,splash:40},
+ muhafiz:{id:'muhafiz',ad:'Erlik Muhafızı',hp:200,atk:22,rate:1.1,range:34,spd:32,gold:16,sc:1.15,r:3,armor:0.25},
+ golge:{id:'golge',ad:'Gölge',hp:90,atk:20,rate:0.6,range:22,spd:85,gold:10},
+ tepegoz:{id:'tepegoz',ad:'Tepegöz',hp:600,atk:32,rate:2.0,range:42,spd:18,gold:80,sc:2.4,boss:true,r:18},
+ yelbegen:{id:'yelbegen',ad:'Yelbegen',hp:750,atk:36,rate:2.2,range:44,spd:17,gold:120,sc:2.6,boss:true,r:20},
+ evren:{id:'evren',ad:'Evren',hp:800,atk:26,rate:2.6,range:210,spd:16,gold:160,sc:1.6,boss:true,r:30,ranged:true,splash:80},
+ erlik:{id:'erlik',ad:'Erlik Han',hp:1300,atk:44,rate:2.0,range:46,spd:15,gold:300,sc:2.8,boss:true,r:20,summon:true},
+};
+/* ---- SEFER: 20 bölge × 100 bölüm = 1923 bölüm ---- */
+const NLV=1923,RSZ=100,PG=50,ENDLESS_AT=51;
+// st: görsel stil (0 köy,1 orman,2 dağ,3 kule) · tint: renk tonu · wx: hava · fav: sık görülen düşmanlar
+const REGIONS=[
+ {ad:'Köyler',st:0,fav:['gulyabani','albasti'],bosses:['tepegoz'],
+  first:['Köy Yolu','Değirmen','Kervansaray','Pınar Başı','Tepegöz İni','Sisli Geçit','Eski Mezarlık','Kuzgun Tepesi','Kanlı Dere','Kara Karakol'],
+  nouns:['Ambar','Harman','Çeşme','Ağıl','Köprü','Bağ','Mezra','Kuyu','Han','Ocak'],
+  lines:['Köylüler Hisar\'a sığındı. Yolu temizle, karakollara ilerle.','Gece uzun, erzağı boşa harcama. Öne kalkancı, arkaya okçu.','Düşman sürü halinde geliyor. Ateş Yağmuru\'nu kalabalığa sakla.']},
+ {ad:'Kara Orman',st:1,fav:['kurtbasi','cadi'],bosses:['tepegoz','yelbegen'],
+  first:['Orman Kapısı','Cadı Kulübesi','Yosunlu Taşlar','Kurt Sırtı','Dev Koruluğu','Çürük Köprü','Baykuş Yuvası','Kuru Göl','Kökler Arası','Yelbegen Yatağı'],
+  nouns:['Koru','Patika','Kütük','Yuva','Sazlık','Çalılık','Meşe','Kovuk','Açıklık','Kök'],
+  lines:['Ağaçların arasında gözler parlıyor. Safları sık tut.','Orman yolu dar, birliklerini sırayla sür.','Cadılar uzaktan vuruyor; akıncılarla hızlıca üstlerine git.']},
+ {ad:'Dağ Geçitleri',st:2,fav:['demircin','karakoncolos'],bosses:['yelbegen','evren'],
+  first:['Taş Merdiven','Demirci Ocağı','Kartal Kayası','Kızıl Yamaç','Yelbegen Mağarası','Karlı Geçit','Kükürt Vadisi','Buzul Köprü','Kül Tepesi','Evren\'in Yuvası'],
+  nouns:['Geçit','Yamaç','Kaya','Zirve','Mağara','Uçurum','Sırt','Boğaz','Taş Yolu','Patika'],
+  lines:['Geçitler dar ve dik. Demir Cinlere kılıç işlemez; gülle ve ateş kullan.','Dağın ardında yeni ovalar görünüyor. Durmak yok.','Ateş Cinleri kalabalığa ateş atar; birliklerini yığma.']},
+ {ad:'Kızıl Bozkır',st:0,tint:'#b4461e',wx:'sand',fav:['kurtbasi','albasti'],bosses:['yelbegen','tepegoz'],
+  nouns:['Bozkır','Kurgan','Tepe','Ova','Pınar','Obruk','Höyük','Düzlük','Kervan İzi','Yurt'],
+  lines:['Bozkırda rüzgâr kan kokuyor. Kurtbaşı sürüleri ufukta.','Açık arazide saklanacak yer yok; kalkancıların önde olsun.','Bozkırın sonunda sis çöküyor.']},
+ {ad:'Sisli Bataklık',st:1,tint:'#5a8a6a',wx:'rain',fav:['hortlak','cadi'],bosses:['yelbegen','evren'],
+  nouns:['Bataklık','Sazlık','Göl','Kamışlık','Su Yolu','Çamur','Ada','Gölet','Köprü','Bent'],
+  lines:['Bataklıkta hortlaklar kaynıyor. Okçularını bol tut.','Çamur adımları ağırlaştırıyor; akıncılarla hızlı vur.','Cadıların kazanı kaynıyor; büyücüleri önce düşür.']},
+ {ad:'Tuz Gölü',st:0,tint:'#c8cce0',fav:['albasti','atescini'],bosses:['evren','tepegoz'],
+  nouns:['Kıyı','Tuzla','Gölet','Kumsal','Yalı','Burun','Düz','Taşlık','Tuz Yolu','Ada'],
+  lines:['Tuz göz alıyor; düşman beyaz ufuktan çıkıp geliyor.','Göl kıyısı dar, birliklerini aralıklı sür.','Ateş Cinleri tuzun üstünde parlıyor.']},
+ {ad:'Kül Ovası',st:2,tint:'#6a6a6a',wx:'ash',fav:['atescini','demircin'],bosses:['evren','yelbegen'],
+  nouns:['Ova','Çukur','Köz Yolu','Duman','Ocak','Höyük','Tepe','Yanık Köy','Kor Vadisi','Sırt'],
+  lines:['Ova küle döndü. Gülleler ve ateş burada en iyi silahın.','Demir Cinler külün içinden çıkıyor.','Duman gözleri yakıyor; Alp Er önde olsun.']},
+ {ad:'Buzul Yaylası',st:2,tint:'#6aa0e0',wx:'snow',fav:['karakoncolos','kurtbasi'],bosses:['yelbegen','tepegoz'],
+  nouns:['Yayla','Buzul','Kar Yolu','Donuk Göl','Sırt','Zirve','Çadır','Geçit','Tepe','Buz Mağarası'],
+  lines:['Karakoncoloslar karın içinden çıkıyor. Ateşi onlara sakla.','Soğuk birlikleri yavaşlatmaz; ama erzak az gelir.','Buzulların ardında kurt ulumaları.']},
+ {ad:'Kurt Vadisi',st:1,tint:'#7a6a3a',fav:['kurtbasi','golge'],bosses:['tepegoz','evren'],
+  nouns:['Vadi','İn','Sürü Yolu','Kaya','Dere','Yamaç','Mağara','Pınar','Uçurum','Koru'],
+  lines:['Vadide kurtbaşı sürüleri dolaşıyor. Hızlı ve kalabalıklar.','Gölgeler kurtların arasına karışmış.','Vadi daralıyor; kalkancılarını öne al.']},
+ {ad:'Yıkık Şehir',st:3,tint:'#8a7a5a',fav:['muhafiz','hortlak'],bosses:['erlik','yelbegen'],
+  nouns:['Sur','Kapı','Çarşı','Saray','Kule','Meydan','Zindan','Hamam','Medrese','Sokak'],
+  lines:['Eski şehrin harabelerinde Erlik\'in muhafızları nöbette.','Sokaklar dar; humbaracılar burada altın değerinde.','Saray avlusunda Erlik\'in gölgesi dolaşıyor.']},
+ {ad:'Kervan Yolu',st:0,tint:'#d4a050',wx:'sand',fav:['albasti','atescini'],bosses:['yelbegen','evren'],
+  nouns:['Han','Kuyu','Vaha','Kum Tepesi','Geçit','Pazar','Çeşme','Durak','Yol Ağzı','Bedesten'],
+  lines:['Kervanlar yağmalanmış. Yolu yeniden açmalıyız.','Kum fırtınası yaklaşıyor; safları dağıtma.','Hanların ardında ateş cinleri pusuda.']},
+ {ad:'Yeraltı Mağaraları',st:2,tint:'#3a3a5a',fav:['golge','demircin'],bosses:['tepegoz','yelbegen'],
+  nouns:['Mağara','Dehliz','Tünel','Kuyu','Yeraltı Gölü','Maden','Oyuk','Sarnıç','Galeri','Derinlik'],
+  lines:['Mağaralarda gölgeler ışıktan kaçıyor; ama sana değil.','Dehlizler dar ve karanlık. Alp Er\'i yalnız bırakma.','Derinlerde demir sesleri: Demir Cinler.']},
+ {ad:'Ejder Sırtı',st:2,tint:'#b4462e',wx:'ember',fav:['atescini','muhafiz'],bosses:['evren','yelbegen'],
+  nouns:['Sırt','Yuva','Kaya','Zirve','Kül Tepesi','Uçurum','Pul Vadisi','Kanat Taşı','Ejder Yolu','Ocak'],
+  lines:['Ejderlerin yurdu. Evren\'in soyu burada kanat açıyor.','Gökten alev yağıyor; birliklerini yığma.','Sırtın tepesinde kızıl bir ışık.']},
+ {ad:'Ay Ormanı',st:1,tint:'#4a5ab4',fav:['hortlak','golge'],bosses:['yelbegen','evren'],
+  nouns:['Koru','Ay Gölü','Açıklık','Kovuk','Patika','Sırt','Pınar','Çember Taşı','Gümüş Dere','Meşe'],
+  lines:['Ay ışığında ağaçlar fısıldıyor. Hortlaklar uyanık.','Gümüş derenin ötesinde gölgeler toplanıyor.','Orman büyülü; Ateş Yağmuru\'nu doğru ana sakla.']},
+ {ad:'Kanlı Irmak',st:0,tint:'#a01e1e',wx:'rain',fav:['kurtbasi','muhafiz'],bosses:['evren','tepegoz'],
+  nouns:['Irmak','Köprü','Kıyı','Değirmen','Geçit','Ada','Sal Yolu','Delta','Bent','İskele'],
+  lines:['Irmak kızıl akıyor. Köprüleri tutmalıyız.','Muhafızlar ırmağın karşı kıyısında saf tutmuş.','Bendi yıkarlarsa ova sular altında kalır.']},
+ {ad:'Gölge Diyarı',st:3,tint:'#6a2aa0',fav:['golge','cadi'],bosses:['erlik','evren'],
+  nouns:['Diyar','Kapı','Sis Yolu','Meydan','Kule','Mezarlık','Avlu','Tapınak','Bahçe','Taht'],
+  lines:['Gölgeler diyarında ışık az. Gölgeler çok hızlı vurur.','Cadılar gölgeleri çağırıyor; önce cadıları düşür.','Erlik\'in tahtına bir adım daha yakınız.']},
+ {ad:'Demir Dağlar',st:2,tint:'#7a8aa0',wx:'snow',fav:['demircin','muhafiz'],bosses:['yelbegen','tepegoz'],
+  nouns:['Maden','Ocak','Örs','Dağ','Geçit','Döküm','Kale','Sırt','Mağara','Zirve'],
+  lines:['Demir Dağlar zırhlı yaratıklarla dolu. Humbaracı şart.','Örslerin sesi dağları inletiyor.','Zırh deler gülle; zırhı yutar kılıç. Unutma.']},
+ {ad:'Ateş Çölü',st:0,tint:'#e0801e',wx:'ember',fav:['atescini','albasti'],bosses:['evren','yelbegen'],
+  nouns:['Çöl','Kum Tepesi','Vaha','Kuyu','Serap','Kaya','Harabe','Kervan İzi','Kızgın Taş','Ufuk'],
+  lines:['Kum yanıyor, gökyüzü yanıyor. Ateş Cinleri her yerde.','Serapların arasından düşman çıkıyor; gözünü dört aç.','Çölün ötesinde Erlik\'in Eşiği.']},
+ {ad:'Erlik\'in Eşiği',st:3,tint:'#a01e46',wx:'ember',fav:['muhafiz','golge'],bosses:['erlik','evren'],
+  nouns:['Eşik','Kapı','Köprü','Uçurum','Sur','Zindan','Avlu','Kemik Yolu','Ateş Hendeği','Nöbet Yeri'],
+  lines:['Yeraltının kapısındayız. Erlik\'in muhafızları sayısız.','Kemik yolundan geri dönüş yok.','Kara Kule artık görünüyor.']},
+ {ad:'Kara Kule',st:3,fav:['muhafiz','golge','demircin'],bosses:['erlik','evren'],
+  first:['Kule Eteği','Kemik Bahçesi','Kara Sur','Gölge Yolu','Evren\'in Kanadı','Zindan Kapısı','Kanlı Avlu','Erlik Kapısı','Kule Merdiveni','Kule Burcu'],
+  nouns:['Kule','Sur','Avlu','Merdiven','Zindan','Kapı','Taht','Mahzen','Burç','Salon'],
+  lines:['Kule\'nin gölgesindeyiz. Her adım kanla ödenir.','Erlik\'in muhafızları zırhlı ve sabırlı. Humbaracılarını hazır tut.','Son surlar. Bu gece burada biter.']},
+];
+const ADJ=['Eski','Kara','Yanık','Sessiz','Kanlı','Kuzey','Güney','Derin','Yüksek','Issız','Taşlı','Dar','Gizli','Yıkık','Soğuk','Uzak','Dumanlı','Kayıp','Lanetli','Çorak'];
+const INTRO={gulyabani:0,albasti:1,hortlak:2,karakoncolos:6,cadi:12,kurtbasi:18,demircin:28,atescini:36,muhafiz:48,golge:60};
+const BOSS_FROM={tepegoz:0,yelbegen:59,evren:119,erlik:299};
+const WGT={gulyabani:3,albasti:2,hortlak:2,karakoncolos:1.5,cadi:2,kurtbasi:2,demircin:1.5,atescini:1.5,muhafiz:1.5,golge:2};
+const INTRO_TXT={
+ albasti:'Albastılar görüldü. Çok hızlıdırlar ama çabuk düşerler; okçuların arkasını boş bırakma.',
+ hortlak:'Hortlaklar uzaktan büyü atar. Okçuların menzili onlara yeter.',
+ karakoncolos:'Karakoncolos iri ve dayanıklıdır. Ateş Yağmuru\'nu ona sakla.',
+ cadi:'Cadılar uzaktan zehirli büyü atar ve canı yakar; onlara hızlı birlik sür.',
+ kurtbasi:'Kurtbaşılar sürü halinde ve çok hızlı. Kalkancıların önde dursun.',
+ demircin:'Demir Cinler geldi. Zırhları kılıç ve okun yarısını yutar; gülle ve Ateş Yağmuru tam işler.',
+ atescini:'Ateş Cinleri uzaktan alev topu atar ve topluca yakar. Birliklerini aralıklı sür.',
+ muhafiz:'Erlik Muhafızları göründü: zırhlı ve uzun mızraklı.',
+ golge:'Gölgeler sessiz ve ölümcül. Çok hızlı vurur; Alp Er\'i yalnız bırakma.',
+};
+const BOSS_TXT={tepegoz:'Tepegöz geliyor. Dev çıktığında safları sıklaştır, Alp Er\'i geri çek, ateşle karşıla.',
+ yelbegen:'Yelbegen, iki başlı dev! Vuruşu bütün safı biçer; birliklerini dalga dalga gönder.',
+ evren:'Evren, dağların ejderi! Uzaktan alev püskürtür; humbaracıların onu yere indirmeli.',
+ erlik:'Erlik Han\'ın kendisi! Yanına sürekli Gölge çağırır. Bütün gücünle saldır, Komutan.'};
+const UNIT_TXT={mizrak:'Mızrakçılar katıldı: ön safın arkasından vururlar.',mesaleci:'Meşaleci geldi: sahadayken okçular ateşli ok atar.',silahtar:'Silahtar geldi: sahadayken sekbanlar keskinleşir.',ozan:'Ozan katıldı: kopuzuyla yaralıları iyileştirir. Sahada bir tane olabilir.',bey:'Hisar Beyi sefere katıldı: yanında iki okçuyla gelir.',bahadir:'Kızıl Bahadır katıldı: atlı, gürzüyle saflara dalar.',kalkan:'Kalkancılar ordumuza katıldı.',akinci:'Akıncılar artık seninle: hızlı ve güçlü.',humbara:'Humbaracılar katıldı: kalabalığın ortasına gülle at.',deli:'Deliler katıldı: zırhsız ama korkusuz, çok sert vururlar.'};
+// Bölüm kuralları
+const MODS={
+ sis:{ad:'Sisli Gece',ic:'🌫',d:'Sis çöktü; düşmanı ancak yaklaşınca görürsün. Ganimet +%15.',gold:1.15,sc:0.98},
+ kitlik:{ad:'Kıtlık',ic:'🌾',d:'Ambarlar boş: erzak %15 yavaş gelir. Ganimet +%30.',gold:1.3,food:0.85,sc:0.84},
+ bereket:{ad:'Bereket',ic:'🍞',d:'Köylüler erzak getirdi: erzak %30 hızlı gelir. Nefes al, Komutan.',gold:0.9,food:1.3},
+ ruzgar:{ad:'Kara Rüzgâr',ic:'💨',d:'Rüzgâr düşmanın arkasında: yaratıklar %30 hızlı yürür. Ganimet +%15.',gold:1.15,spd:1.3,sc:0.93},
+ demir:{ad:'Demir Gece',ic:'🛡',d:'Bütün yaratıklar zırh kuşandı. Gülle ve ateş her zamankinden değerli. Ganimet +%20.',gold:1.2,armor:0.2,sc:0.92},
+ suru:{ad:'Sürü',ic:'🐺',d:'Düşman sürü halinde: daha kalabalık ama daha cılız. Ganimet +%10.',gold:1.1,iv:0.7,hp:0.8,wave:2,sc:0.86},
+ kizilay:{ad:'Kızıl Ay',ic:'🌑',d:'Kızıl ay yaratıkları azdırdı: vuruşları %20 sert. Ganimet +%30.',gold:1.3,atk:1.2,sc:0.88},
+ yaya:{ad:'Atlar Yorgun',ic:'🐎',d:'Atlar dinleniyor: bu bölümde Akıncı çıkaramazsın. Ganimet +%20.',gold:1.2,noUnit:'akinci',sc:0.93},
+ dev:{ad:'Dev Gecesi',ic:'☠',d:'Bölgenin son savaşı: iki dev birden geliyor!',gold:1.25},
+};
+const RND_MODS=['sis','kitlik','ruzgar','demir','suru','kizilay','yaya'];
+// Zorluk eğrisi (bot simülasyonuyla ayarlandı)
+const DIFF={a:0.085,sl:0.0067,late:1.2,k:1,gold:400,cm:2.5,cq:0.14,corr:[0.632,0.799,0.965,0.902,1.302,1.491,1.629,1.796,1.631,2.056,2.101,2.336,2.576,2.65,2.838,2.949,3.552,3.554,3.198,3.477],rageT:100,rageS:150,bk:1,bonus:5,st:1};
+// Düşman gücü, oyuncunun beklenen gelişimini (geliştirmeler + rütbeler) izler; üstüne hafif bir artış biner.
+function diffRaw(i){if(i<40)return 1+DIFF.a*i;
+  const j=(i-39)*(DIFF.st||1);
+  const rank=(i>=150?1.1:1)*(i>=550?1.15:1)*(i>=850?1.2:1)*(i>=1400?1.15:1)*(i>=1700?1.2:1);
+  return (1+DIFF.a*39)*(1+DIFF.sl*j)*rank*(1+(DIFF.late-1)*j/960);}
+function corrAt(i){const c=DIFF.corr;if(!c)return 1;return c[Math.min(c.length-1,Math.floor(i/RSZ))];}
+const LEVELS=[];
+function endlessLevel(){const top=Math.max(0,Math.min(S.unlocked,NLV)-1),L0=LEVELS[top];
+  const bp=[];for(const b in BOSS_FROM)if(BOSS_FROM[b]<=top&&b!=='erlik')bp.push(b);
+  return {ad:'Sonsuz Dalga',region:L0.region,k:L0.k,iv:2.6,pool:L0.pool,gm:L0.gm,waves:L0.waves,sc:L0.sc*0.5,base:1,src:top,bossPool:bp.length?bp:['tepegoz']};}
+function buildLevels(){
+  LEVELS.length=0;
+  for(let i=0;i<NLV;i++){
+    const r=Math.floor(i/RSZ),k=i%RSZ,R=REGIONS[r],rng=srand(1013+i*7919);
+    const pool={};
+    for(const id in INTRO){if(INTRO[id]>i)continue;const age=i-INTRO[id];let w=WGT[id];
+      if(id==='gulyabani'||id==='albasti'||id==='hortlak')w*=Math.max(0.3,1-age/60);
+      if(age<3&&INTRO[id]>0)w*=0.7;if(R.fav.indexOf(id)>=0)w*=1.8;pool[id]=w;}
+    let ad;
+    if(R.first&&k<10)ad=R.first[k];
+    else{const p=((k-(R.first?10:0))*13+r*7)%200;ad=ADJ[p%20]+' '+R.nouns[Math.floor(p/20)];}
+    if(i===NLV-1)ad='Kara Kule\'nin Kalbi';
+    // zorluk: bölge içinde testere dişi, yeni bölgenin ilk iki bölümü nefes
+    let saw=0.95+0.1*(k/(RSZ-1));if(r>0&&k<2)saw=0.86;if(k===RSZ-1)saw*=0.9;
+    let sc=diffRaw(i)*saw*(1+(DIFF.k-1)*Math.min(1,i/30))*corrAt(i);
+    const L={ad,region:r,k,iv:Math.max(1.9,3.4-0.035*Math.min(i,45)),pool,gm:1+i/DIFF.gold,
+      waves:2+Math.min(6,Math.floor(i/8))+Math.min(4,Math.floor(i/200))};
+    let brief='';
+    if(k%10===9){const bl=R.bosses.filter(b=>BOSS_FROM[b]<=i);const list=bl.length?bl:['tepegoz'];
+      L.boss=list[Math.floor(k/10)%list.length];L.bossEvery=k===RSZ-1?95:120;brief=BOSS_TXT[L.boss];
+      if(k===RSZ-1&&i>=RSZ-1){L.boss2=list[(Math.floor(k/10)+1)%list.length];if(L.boss2===L.boss&&list.length===1)L.boss2=L.boss;L.mod='dev';}}
+    if(i===NLV-1){L.boss='erlik';L.boss2='evren';L.mod='dev';brief='Kara Kule\'nin kalbindeyiz ve Erlik Han içeride. Bu gece biterse sabah gelir. '+BOSS_TXT.erlik;}
+    if(!L.mod){
+      if(r>0&&k===0)L.mod='bereket';
+      else if(i>=30&&k%10!==9&&rng()<0.32){let m=RND_MODS[Math.floor(rng()*RND_MODS.length)];if(m==='yaya'&&i<20)m='sis';L.mod=m;}
+    }
+    if(L.mod&&MODS[L.mod].sc)sc*=MODS[L.mod].sc;
+    L.sc=sc;
+    L.base=Math.round((400+55*Math.min(i,39))*Math.max(1,sc/(diffRaw(39)*DIFF.k))*(i<40?1:1.1)*DIFF.bk);
+    for(const id in INTRO)if(INTRO[id]===i&&INTRO_TXT[id])brief=INTRO_TXT[id]+(brief?' '+brief:'');
+    UNITS.forEach(U=>{if(U.unlock===i+1&&UNIT_TXT[U.id])brief+=' '+UNIT_TXT[U.id];});
+    POWERS.forEach(P=>{if(P.unlock===i+1&&P.unlock>1)brief+=' Yeni güç: '+P.ad+'. '+P.d;});
+    if(i===ENDLESS_AT-1)brief+=' Sonsuz Dalga açıldı: Sefer Haritası\'ndan girebilirsin.';
+    if(!brief)brief=R.lines[k%3];
+    if(i===0)brief='Gulyabaniler köy yoluna indi. Sekban ve okçularla karşıla, Alp Er\'i öne sür. Kara Kule\'nin ilk karakolunu yık.';
+    if(k===0&&r>0)brief='Yeni bölge: '+R.ad+'. '+R.lines[0]+' '+brief.replace(R.lines[0],'').trim();
+    L.brief=brief.trim();LEVELS.push(L);
+  }
+}
+buildLevels();
+const UPS=[
+ {id:'erzak',ad:'Erzak Ambarı',desc:'Erzak üretimi artar',base:110},
+ {id:'sur',ad:'Hisar Surları',desc:'Hisar canı +%20',base:90},
+ {id:'guc',ad:'Talim Meydanı',desc:'Birliklerin gücü ve canı +%12',base:140},
+ {id:'alp',ad:'Alp Er\'in Kılıcı',desc:'Alp Er\'in gücü ve canı +%20',base:120},
+ {id:'ates',ad:'Güç Ocağı',desc:'Bütün güçlerin hasarı +%25, ocak hızlı dolar',base:130},
+ {id:'surok',ad:'Sur Okçuları',desc:'Surdaki okçular yaklaşan düşmana ok atar',base:150},
+ {id:'mancinik',ad:'Sur Mancınığı',desc:'Hisar\'dan uzağa taş atar, alan hasarı verir',base:210},
+ {id:'hendek',ad:'Hendek',desc:'Hisar\'a dayanan düşmanı geri iter ve yaralar',base:170},
+ {id:'silah',ad:'Silahhane',desc:'Alp Er\'in silahı: Kılıç → Gürz → Ejder Kılıcı',base:900,max:2},
+];
+const UPMAX=50;
+const upMax=u=>u.max||UPMAX;
+const upCost=(u,l)=>Math.round(u.base*(1+DIFF.cm*l+DIFF.cq*l*l));
+const SILAH=[{ad:'Kılıç',wpn:'kilic',m:1},{ad:'Gürz',wpn:'gurz',m:1.4},{ad:'Ejder Kılıcı',wpn:'ejder',m:1.9}];
+function upEff(id){const l=S.up[id]||0;
+  if(id==='erzak')return 1+0.15*Math.min(l,10)+0.05*Math.max(0,l-10);
+  if(id==='sur')return 1+0.2*l;
+  if(id==='guc')return 1+0.12*l;
+  if(id==='alp')return 1+0.2*l;
+  if(id==='atesD')return 1+0.25*(S.up.ates||0);
+  if(id==='atesM'){const a=S.up.ates||0;return 1+0.1*Math.min(a,10)+0.02*Math.max(0,a-10);}
+  if(id==='surok'||id==='mancinik'||id==='hendek')return l?1+0.15*(l-1):0;
+  return 1;}
+// Rütbeler: belirli bölümleri geçince kalıcı yetenekler
+const RANKS=[
+ {at:51,ad:'Kılıç Fırtınası',who:'Alp Er',d:'Alp Er bir vuruşta 5 düşmana kadar biçer (önce 3).'},
+ {at:151,ad:'Usta Askerler',who:'Ordu',d:'Bütün birliklerin gücü ve canı +%10.'},
+ {at:251,ad:'Şifacı Nara',who:'Alp Er',d:'Alp Er 8 saniyede bir yakınındaki askerleri %20 iyileştirir.'},
+ {at:401,ad:'Çifte Ocak',who:'Güç Ocağı',d:'Bütün güçler %20 daha az ocakla kullanılır.'},
+ {at:551,ad:'Gazi Askerler',who:'Ordu',d:'Bütün birliklerin gücü ve canı +%15 daha.'},
+ {at:701,ad:'Ölümsüz Alp',who:'Alp Er',d:'Alp Er düşünce 10 yerine 5 saniyede döner.'},
+ {at:851,ad:'Efsane Ordu',who:'Ordu',d:'Bütün birliklerin gücü ve canı +%20 daha.'},
+ {at:1101,ad:'Tunç Surlar',who:'Hisar',d:'Hisar\'ın canı +%30.'},
+ {at:1401,ad:'Bozkurt Sancağı',who:'Ordu',d:'Bütün birliklerin gücü ve canı +%15 daha.'},
+ {at:1701,ad:'Gök Ordusu',who:'Ordu',d:'Bütün birliklerin gücü ve canı +%20 daha.'},
+];
+function hasRank(at){return S.unlocked>=at;}
+function armyMul(){return (hasRank(151)?1.1:1)*(hasRank(551)?1.15:1)*(hasRank(851)?1.2:1)*(hasRank(1401)?1.15:1)*(hasRank(1701)?1.2:1);}
+
+/* ================= SES ================= */
+// Tüm sesler WebAudio ile anlık sentezlenir: dosya yok, internet yok.
+let AC=null,MASTER=null,NOISE=null,AMB=null,lastSnd={},voices=0;
+function audio(){
+  if(AC)return AC;
+  try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}
+  const comp=AC.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=6;comp.connect(AC.destination);
+  MASTER=AC.createGain();MASTER.gain.value=0.8;MASTER.connect(comp);
+  NOISE=AC.createBuffer(1,AC.sampleRate*1.5,AC.sampleRate);const d=NOISE.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  return AC;
+}
+function unlockAudio(){if(!S.sound)return;const a=audio();if(a&&a.state==='suspended')a.resume();}
+window.SesKurtarici&&SesKurtarici.yenidenKur(()=>{AC=null;AMB=null});
+['pointerdown','keydown','touchend'].forEach(ev=>addEventListener(ev,unlockAudio,{passive:true}));
+function ok(key,gap){
+  if(!S.sound||!audio()||AC.state!=='running')return false;
+  const now=performance.now();if(key){if(lastSnd[key]&&now-lastSnd[key]<(gap||60))return false;lastSnd[key]=now;}
+  return voices<28;
+}
+function env(g,t,a,peak,dec){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+a+dec);}
+function tone(type,f0,f1,dur,vol,delay,dest){
+  const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type=type;
+  o.frequency.setValueAtTime(f0,t);if(f1&&f1!==f0)o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  env(g,t,0.005,vol,dur);o.connect(g);g.connect(dest||MASTER);voices++;o.onended=()=>voices--;o.start(t);o.stop(t+dur+0.05);return o;
+}
+function noise(type,f0,f1,dur,vol,delay,q){
+  const t=AC.currentTime+(delay||0),s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();
+  s.buffer=NOISE;s.loop=true;f.type=type;f.Q.value=q||1;f.frequency.setValueAtTime(f0,t);if(f1&&f1!==f0)f.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  env(g,t,0.004,vol,dur);s.connect(f);f.connect(g);g.connect(MASTER);voices++;s.onended=()=>voices--;s.start(t,Math.random());s.stop(t+dur+0.05);
+}
+const SFX={
+  click(){if(!ok('click',40))return;tone('triangle',900,700,0.05,0.12);},
+  fail(){if(!ok('fail',150))return;tone('square',140,110,0.12,0.06);tone('square',105,90,0.12,0.05,0.06);},
+  coin(){if(!ok('coin',80))return;tone('triangle',1320,1320,0.09,0.12);tone('triangle',1760,1760,0.18,0.12,0.07);},
+  upgrade(){if(!ok('upg',100))return;[660,880,1100,1320].forEach((f,k)=>tone('triangle',f,f,0.14,0.11,k*0.06));noise('highpass',4000,8000,0.25,0.05,0.18);},
+  // birlik çıkarma: davul + piyade için kısa boru, atlı için nal sesi
+  spawn(id){if(!ok('spawn',70))return;
+    tone('sine',95,55,0.22,0.35);noise('lowpass',900,200,0.08,0.2);
+    if(id==='akinci'){[0.08,0.16,0.24].forEach(d=>{noise('bandpass',1800,1200,0.04,0.18,d,4);});}
+    else if(id==='humbara'){tone('square',220,220,0.06,0.04,0.05);}
+    else if(id==='deli'){tone('sawtooth',260,420,0.18,0.05,0.04);}
+    else tone('sawtooth',294,294,0.12,0.035,0.06);},
+  sword(){if(!ok('sword',55))return;noise('highpass',3500,6000,0.06,0.12);tone('triangle',1900+Math.random()*500,1500,0.12,0.06);tone('sine',3100+Math.random()*400,2800,0.09,0.03);},
+  armor(){if(!ok('armor',90))return;tone('square',820,760,0.07,0.05);tone('triangle',1240,1180,0.15,0.06);noise('bandpass',2500,2500,0.05,0.12,0,6);},
+  club(){if(!ok('club',70))return;tone('sine',110,55,0.16,0.3);noise('lowpass',700,180,0.12,0.25);},
+  claw(){if(!ok('claw',60))return;noise('bandpass',2600,900,0.1,0.18,0,3);},
+  bow(){if(!ok('bow',70))return;tone('triangle',240,170,0.09,0.12);noise('highpass',2000,5000,0.12,0.06,0.02);},
+  arrowHit(){if(!ok('ahit',50))return;noise('bandpass',1500,800,0.04,0.14,0,4);},
+  magic(c){if(!ok('magic',90))return;const f=c==='#7aff6a'?520:700;const o=tone('sine',f,f*2.2,0.25,0.07);tone('triangle',f*1.5,f*3,0.2,0.04,0.03);},
+  fireball(){if(!ok('fireball',110))return;noise('lowpass',400,2400,0.3,0.18);tone('sawtooth',90,60,0.3,0.04);},
+  cannon(){if(!ok('cannon',100))return;tone('sine',140,50,0.18,0.35);noise('lowpass',1500,300,0.12,0.25);},
+  boom(){if(!ok('boom',90))return;tone('sine',75,30,0.6,0.5);noise('lowpass',1800,120,0.7,0.45);noise('highpass',2500,2500,0.08,0.12);},
+  baseHit(){if(!ok('base',140))return;tone('sine',70,40,0.25,0.3);noise('lowpass',500,150,0.18,0.25);},
+  enemyDie(id){if(!ok('edie',70))return;
+    if(id==='hortlak'||id==='golge'){tone('sine',800,200,0.35,0.06);tone('sine',1200,300,0.35,0.03);return;}
+    if(id==='atescini'){noise('lowpass',3000,200,0.35,0.2);return;}
+    if(id==='demircin'||id==='muhafiz'){tone('triangle',600,300,0.3,0.08);noise('bandpass',1800,600,0.2,0.15,0,3);}
+    const base=id==='albasti'||id==='cadi'?420:id==='kurtbasi'?360:200;
+    tone('sawtooth',base,base*0.35,0.28,0.06);noise('lowpass',800,200,0.15,0.08);},
+  allyDie(){if(!ok('adie',120))return;tone('sawtooth',220,110,0.25,0.04);noise('lowpass',600,200,0.12,0.06);},
+  heroDown(){if(!ok('hdown',500))return;[392,330,262].forEach((f,k)=>tone('triangle',f,f*0.97,0.3,0.12,k*0.18));},
+  heroBack(){if(!ok('hback',500))return;tone('sawtooth',220,220,0.18,0.06);tone('sawtooth',330,330,0.35,0.07,0.16);tone('sine',110,60,0.2,0.3);},
+  heroSwing(){if(!ok('hswing',80))return;noise('bandpass',900,3200,0.12,0.16,0,2);},
+  // düşman borusu: dalga geliyor
+  wave(){if(!ok('wave',1000))return;const t=0.9;tone('sawtooth',110,104,t,0.09);tone('sawtooth',165,156,t,0.06);noise('lowpass',300,300,t,0.05);
+    [0,0.35,0.7].forEach(d=>tone('sine',80,45,0.2,0.35,0.95+d));},
+  bossRoar(){if(!ok('roar',1500))return;[0,0.3,0.6].forEach(d=>{tone('sine',70,38,0.28,0.5,d);noise('lowpass',400,100,0.2,0.2,d);});
+    tone('sawtooth',150,48,1.6,0.14,0.9);tone('sawtooth',113,40,1.6,0.1,0.9);noise('lowpass',900,150,1.5,0.3,0.9);},
+  bossDown(){if(!ok('bdown',800))return;tone('sawtooth',130,35,1.2,0.12);noise('lowpass',1200,80,1.4,0.4);tone('sine',60,28,1,0.5,0.1);},
+  summon(){if(!ok('summon',800))return;tone('sine',200,900,0.6,0.06);tone('sine',300,1350,0.6,0.04,0.05);noise('bandpass',600,2500,0.6,0.08,0,8);},
+  fireRain(){if(!ok('frain',300))return;noise('bandpass',300,3500,0.55,0.22,0,1.5);tone('sawtooth',80,160,0.5,0.05);},
+  fireImpact(){if(!ok('fimp',200))return;tone('sine',60,30,0.7,0.6);noise('lowpass',2500,100,0.9,0.5);noise('highpass',3000,1500,0.4,0.1,0.05);},
+  victory(){if(!ok('win',2000))return;const n=[[392,0],[523,0.18],[659,0.36],[784,0.54],[1046,0.8]];
+    n.forEach(([f,d])=>{tone('square',f,f,0.22,0.05,d);tone('triangle',f,f,0.3,0.1,d);});
+    [523,659,784].forEach(f=>tone('triangle',f,f,1.2,0.07,1.05));[0,0.4,0.8].forEach(d=>tone('sine',90,50,0.25,0.35,d));},
+  defeat(){if(!ok('lose',2000))return;[[330,0],[294,0.35],[262,0.7],[196,1.05]].forEach(([f,d])=>{tone('sawtooth',f,f*0.98,0.4,0.05,d);tone('triangle',f/2,f/2,0.45,0.08,d);});
+    tone('sine',55,35,1.6,0.4,1.1);},
+  towerFall(){if(!ok('tfall',2000))return;for(let k=0;k<5;k++){noise('lowpass',1200-k*150,100,0.5,0.35,k*0.15);tone('sine',70-k*6,30,0.4,0.3,k*0.15);}},
+  star(n){n=+n||0;if(!ok('star'+n,100))return;tone('triangle',880+n*220,880+n*220,0.2,0.1,0);tone('sine',1760+n*440,1760+n*440,0.25,0.05,0);},
+};
+// savaş ortamı: hafif rüzgâr ve uzaktan davul
+function ambience(on){
+  if(!audio())return;
+  if(on&&S.sound&&!AMB){
+    const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain(),l=AC.createOscillator(),lg=AC.createGain();
+    s.buffer=NOISE;s.loop=true;f.type='lowpass';f.frequency.value=420;f.Q.value=0.7;g.gain.value=0.035;
+    l.frequency.value=0.13;lg.gain.value=180;l.connect(lg);lg.connect(f.frequency);
+    s.connect(f);f.connect(g);g.connect(MASTER);s.start();l.start();AMB={s,l,g,drumT:0};
+  }else if((!on||!S.sound)&&AMB){try{AMB.g.gain.setTargetAtTime(0.0001,AC.currentTime,0.2);AMB.s.stop(AC.currentTime+0.6);AMB.l.stop(AC.currentTime+0.6);}catch(e){}AMB=null;}
+}
+function ambienceTick(dt){
+  if(!AMB||!B||B.paused||B.over||AC.state!=='running')return;
+  AMB.drumT-=dt;if(AMB.drumT<=0){AMB.drumT=2.4;const v=0.06+(REGIONS[B.L.region].st*0.02);tone('sine',62,42,0.3,v);tone('sine',62,42,0.25,v*0.7,0.3);}
+}
+document.addEventListener('visibilitychange',()=>{if(!AC)return;if(document.hidden)AC.suspend();else if(S.sound)AC.resume();});
+
+/* ================= ÇİZİM YARDIMCILARI ================= */
+function ln(c,a,b,x,y){c.beginPath();c.moveTo(a,b);c.lineTo(x,y);c.stroke();}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
+function circ(c,x,y,r){c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();}
+let T=0;
+
+function eyeDot(c,L,x,y,r){c.fillStyle=L.eye;c.shadowColor=L.eye;c.shadowBlur=5;circ(c,x,y,r||1.6);c.shadowBlur=0;}
+function drawHead(c,L){
+  const hx=1,hy=-30;
+  if(L.head==='sac'){c.fillStyle='#3a0a10';c.beginPath();c.moveTo(hx-5,hy-6);c.quadraticCurveTo(hx-18,hy+8,hx-11,hy+24);c.lineTo(hx-2,hy+4);c.closePath();c.fill();}
+  if(L.head==='kukuleta'){
+    c.fillStyle=L.cloth;circ(c,hx,hy,9.5);c.fillStyle='#0a0a18';circ(c,hx+2.5,hy+1,6);
+    c.fillStyle=L.eye;c.shadowColor=L.eye;c.shadowBlur=6;circ(c,hx+2,hy,1.4);circ(c,hx+5.5,hy,1.4);c.shadowBlur=0;return;
+  }
+  if(L.head==='alev'){
+    const f=Math.sin(T*14)*2;c.fillStyle='#ff7a1f';c.shadowColor='#ff7a1f';c.shadowBlur=14;
+    c.beginPath();c.moveTo(hx-8,hy+4);c.quadraticCurveTo(hx-10,hy-10,hx-3,hy-20+f);c.quadraticCurveTo(hx,hy-10,hx+3,hy-24-f);c.quadraticCurveTo(hx+10,hy-8,hx+8,hy+4);c.closePath();c.fill();
+    c.fillStyle='#ffd27a';circ(c,hx,hy-2,5.5);c.shadowBlur=0;c.fillStyle='#5a1a0a';circ(c,hx+3,hy-3,1.5);circ(c,hx-1,hy-3,1.5);return;
+  }
+  if(L.head==='iki'){
+    c.fillStyle=L.skin;circ(c,hx-5,hy-1,6);circ(c,hx+6,hy+1,6.5);
+    c.strokeStyle='#2a2a1a';c.lineWidth=1.4;ln(c,hx-8,hy-6,hx-2,hy-5);ln(c,hx+3,hy-4,hx+10,hy-3);
+    eyeDot(c,L,hx-2,hy-1,1.5);eyeDot(c,L,hx+9,hy+1,1.7);
+    c.fillStyle='#e8dcc0';c.fillRect(hx+5,hy+5,2,2);c.fillRect(hx+8,hy+5,2,2);return;
+  }
+  const r=L.head==='tek'?8.5:6.5;
+  if(L.head==='kulak'){c.fillStyle=L.skin;c.beginPath();c.moveTo(hx-3,hy-4);c.lineTo(hx-11,hy-15);c.lineTo(hx+1,hy-6);c.closePath();c.fill();}
+  if(L.head==='kurt'){c.fillStyle=L.skin;c.beginPath();c.moveTo(hx-5,hy-4);c.lineTo(hx-4,hy-15);c.lineTo(hx+1,hy-6);c.closePath();c.fill();
+    c.beginPath();c.moveTo(hx+2,hy-4);c.lineTo(hx+14,hy+1);c.lineTo(hx+12,hy+4);c.lineTo(hx+2,hy+4);c.closePath();c.fill();
+    c.fillStyle='#111';circ(c,hx+14,hy+1,1.4);c.fillStyle='#efe6c4';c.fillRect(hx+8,hy+3,1.5,2.5);c.fillRect(hx+11,hy+3,1.5,2.5);}
+  c.fillStyle=L.skin;circ(c,hx,hy,r);
+  switch(L.head){
+    case 'kalpak':c.fillStyle='#2a2018';c.fillRect(hx-6,hy-14,12,9);c.fillStyle='#a8322a';c.fillRect(hx-6,hy-15,12,3);break;
+    case 'bork':c.fillStyle='#e8e0c8';c.beginPath();c.moveTo(hx-7,hy-4);c.lineTo(hx+7,hy-4);c.lineTo(hx-5,hy-19);c.closePath();c.fill();break;
+    case 'migfer':c.fillStyle='#9a9ca0';c.beginPath();c.arc(hx,hy-1,7.6,Math.PI,0);c.fill();c.fillRect(hx-1,hy-14,2,6);c.fillRect(hx+2,hy-3,2,8);break;
+    case 'sarik':c.fillStyle='#f0ecdc';c.beginPath();c.ellipse(hx,hy-6,8.5,5,0,0,Math.PI*2);c.fill();c.strokeStyle='#a8322a';c.lineWidth=2;ln(c,hx-2,hy-10,hx-6,hy-20);break;
+    case 'bere':c.fillStyle='#a8322a';c.beginPath();c.arc(hx,hy-3,7,Math.PI,0);c.fill();break;
+    case 'deli':c.fillStyle='#6a4a2a';c.fillRect(hx-7,hy-13,14,8);c.fillStyle='#c8a23a';c.fillRect(hx-7,hy-6,14,2);
+      c.strokeStyle='#efe6c4';c.lineWidth=2.5;c.beginPath();c.moveTo(hx-5,hy-12);c.quadraticCurveTo(hx-16,hy-22,hx-20,hy-14);c.stroke();
+      c.beginPath();c.moveTo(hx-3,hy-13);c.quadraticCurveTo(hx-10,hy-28,hx-16,hy-26);c.stroke();break;
+    case 'tolga':c.fillStyle='#c8c8c8';c.beginPath();c.arc(hx,hy-1,7.8,Math.PI,0);c.lineTo(hx+2,hy-1);c.closePath();c.fill();
+      c.beginPath();c.moveTo(hx-3,hy-7);c.lineTo(hx,hy-17);c.lineTo(hx+3,hy-7);c.closePath();c.fill();
+      c.fillStyle='#c0302a';c.beginPath();c.ellipse(hx-5,hy-16,6,2.4,-0.5+Math.sin(T*6)*0.15,0,Math.PI*2);c.fill();c.fillStyle='#c8c8c8';c.fillRect(hx+2,hy-3,2,7);break;
+    case 'boynuz':c.strokeStyle='#d8c8a0';c.lineWidth=2.6;c.beginPath();c.moveTo(hx-3,hy-5);c.quadraticCurveTo(hx-9,hy-15,hx-3,hy-19);c.stroke();
+      c.beginPath();c.moveTo(hx+3,hy-5);c.quadraticCurveTo(hx+9,hy-14,hx+5,hy-19);c.stroke();
+      c.strokeStyle='#1a1410';c.lineWidth=1.5;for(let k=-2;k<3;k++)ln(c,hx+k*3,hy-6,hx+k*3-2,hy+7);break;
+    case 'cadi':c.fillStyle='#16101a';c.beginPath();c.ellipse(hx,hy-5,12,2.5,0,0,Math.PI*2);c.fill();
+      c.beginPath();c.moveTo(hx-6,hy-5);c.lineTo(hx+6,hy-5);c.lineTo(hx-8,hy-24);c.closePath();c.fill();
+      c.fillStyle='#ddd';c.beginPath();c.moveTo(hx-5,hy-4);c.lineTo(hx-11,hy+12);c.lineTo(hx-3,hy+2);c.closePath();c.fill();
+      c.fillStyle=L.skin;c.beginPath();c.moveTo(hx+5,hy-1);c.lineTo(hx+10,hy+3);c.lineTo(hx+5,hy+2);c.closePath();c.fill();break;
+    case 'demir':c.fillStyle='#4a4e56';c.beginPath();c.arc(hx,hy,8,0,Math.PI*2);c.fill();c.fillStyle='#2a2e36';c.fillRect(hx-1,hy-3,9,3);
+      c.strokeStyle='#8a8e96';c.lineWidth=1.5;ln(c,hx-6,hy+4,hx+7,hy+4);c.fillStyle=L.eye;c.shadowColor=L.eye;c.shadowBlur=6;c.fillRect(hx+2,hy-2.5,5,1.6);c.shadowBlur=0;return;
+    case 'muhafiz':c.fillStyle='#2a1a2a';c.beginPath();c.arc(hx,hy-1,8,Math.PI,0);c.fill();c.fillRect(hx+2,hy-2,5,8);
+      c.strokeStyle='#d8c8a0';c.lineWidth=2.2;c.beginPath();c.moveTo(hx-5,hy-6);c.quadraticCurveTo(hx-14,hy-10,hx-12,hy-20);c.stroke();
+      c.beginPath();c.moveTo(hx+4,hy-7);c.quadraticCurveTo(hx+8,hy-16,hx+3,hy-21);c.stroke();break;
+    case 'erlik':c.fillStyle='#120810';c.beginPath();c.arc(hx,hy-2,7.5,Math.PI,0);c.fill();
+      c.fillStyle='#c8a23a';for(let k=-2;k<=2;k++){c.beginPath();c.moveTo(hx+k*3-1.5,hy-7);c.lineTo(hx+k*3,hy-15-(2-Math.abs(k))*3);c.lineTo(hx+k*3+1.5,hy-7);c.closePath();c.fill();}
+      c.strokeStyle='#d8c8a0';c.lineWidth=2.4;c.beginPath();c.moveTo(hx-6,hy-4);c.quadraticCurveTo(hx-16,hy-6,hx-14,hy-18);c.stroke();
+      c.fillStyle='#2a1a1a';c.fillRect(hx-3,hy+3,9,6);break;
+    case 'tek':c.fillStyle='#f4ecd0';circ(c,hx+3,hy-1,4);c.fillStyle=L.eye;circ(c,hx+4.2,hy-1,2);c.fillStyle='#000';circ(c,hx+4.6,hy-1,0.9);
+      c.strokeStyle='#3a2a1a';c.lineWidth=1.2;ln(c,hx-1,hy-6,hx+7,hy-5);return;
+  }
+  if(L.eye)eyeDot(c,L,hx+3.6,hy-1);
+  else{c.fillStyle='#1a1a1a';c.fillRect(hx+3,hy-2,1.8,1.8);}
+}
+function drawArm(c,L,atk){
+  let a=0;
+  switch(L.wpn){case 'kilic':case 'kizil':a=-1.0+atk*1.5;break;case 'yay':a=-0.15;break;case 'kalkan':a=-0.8+atk*1.2;break;case 'mizrak':a=0.05;break;
+    case 'humbara':a=-2.2+atk*2.4;break;case 'pence':a=-0.4+atk*1.1;break;case 'asa':a=-0.3-atk*0.6;break;case 'sopa':case 'cekic':case 'balta':a=-1.3+atk*1.9;break;
+    case 'yok':a=-0.2-atk*0.5;break;case 'mesale':a=-1.1;break;case 'gurz':a=-1.3+atk*1.9;break;case 'kopuz':a=0.5+Math.sin(T*8)*0.15;break;case 'ejder':a=-1.0+atk*1.5;break;}
+  c.save();c.translate(1+(L.wpn==='mizrak'?atk*8:0),-19);c.rotate(a);
+  c.strokeStyle=L.cloth;c.lineWidth=4;ln(c,0,0,10,0);
+  c.fillStyle=L.skin;circ(c,11,0,2.3);
+  switch(L.wpn){
+    case 'kilic':c.strokeStyle='#e4e8ee';c.lineWidth=2.6;c.beginPath();c.moveTo(12,0);c.quadraticCurveTo(22,-1,31,-6);c.stroke();c.strokeStyle='#c8a23a';c.lineWidth=2;ln(c,11,-3.5,11,3.5);break;
+    case 'kizil':c.strokeStyle='#ff4a3a';c.shadowColor='#ff2a2a';c.shadowBlur=12;c.lineWidth=3;c.beginPath();c.moveTo(12,0);c.quadraticCurveTo(24,-2,36,-9);c.stroke();c.shadowBlur=0;c.strokeStyle='#c8a23a';c.lineWidth=2.2;ln(c,11,-4,11,4);break;
+    case 'kalkan':c.strokeStyle='#e4e8ee';c.lineWidth=2.4;ln(c,12,0,24,-1);break;
+    case 'yay':{c.strokeStyle='#6b4a2e';c.lineWidth=2.2;c.beginPath();c.arc(6,0,13,-1.2,1.2);c.stroke();
+      const ex=6+13*Math.cos(1.2),ey=13*Math.sin(1.2),pull=atk>0.5?0:4;c.strokeStyle='#e8e0c8';c.lineWidth=0.8;
+      c.beginPath();c.moveTo(ex,-ey);c.lineTo(ex-pull,0);c.lineTo(ex,ey);c.stroke();
+      if(atk<0.5){c.strokeStyle='#5a3a1a';c.lineWidth=1.3;ln(c,ex-pull,0,21,0);}break;}
+    case 'mizrak':c.strokeStyle='#6b4a2e';c.lineWidth=2.5;ln(c,-14,0,36,0);c.fillStyle='#e4e8ee';c.beginPath();c.moveTo(36,-3);c.lineTo(45,0);c.lineTo(36,3);c.closePath();c.fill();
+      c.fillStyle=L.cloth2==='#8a2a2a'?'#3a0a0a':'#a8322a';c.beginPath();c.moveTo(29,0);c.lineTo(22,-6+Math.sin(T*9)*1.5);c.lineTo(22,0);c.closePath();c.fill();break;
+    case 'humbara':c.fillStyle='#1a1a1a';circ(c,13,0,5.5);c.fillStyle=(T%0.2<0.1)?'#ffcc33':'#ff6a2a';circ(c,15,-7,1.8);break;
+    case 'pence':c.strokeStyle=L.glow?'#c8a0ff':'#efe6c4';c.lineWidth=1.4;for(let k=-1;k<2;k++)ln(c,12,k*2,18,k*3-1);break;
+    case 'asa':{const oc=L.orb||'#b48aff';c.strokeStyle='#4a3a2a';c.lineWidth=2.2;ln(c,11,13,11,-18);c.fillStyle=oc;c.shadowColor=oc;c.shadowBlur=10;circ(c,11,-20,3.6);c.shadowBlur=0;break;}
+    case 'sopa':c.strokeStyle='#5a3a1a';c.lineWidth=5;ln(c,10,0,28,-2);c.fillStyle='#5a3a1a';circ(c,29,-2,5.5);c.fillStyle='#8a8a8a';circ(c,31,-6,1.3);circ(c,33,0,1.3);break;
+    case 'cekic':c.strokeStyle='#3a2a1a';c.lineWidth=3.5;ln(c,10,0,28,-1);c.fillStyle='#6a6e76';c.fillRect(24,-9,9,16);c.fillStyle='#ff7a2a';c.fillRect(24,-9,9,2);break;
+    case 'balta':c.strokeStyle='#5a3a1a';c.lineWidth=3;ln(c,10,0,27,-1);c.fillStyle='#d8dce4';c.beginPath();c.moveTo(24,-2);c.quadraticCurveTo(32,-12,34,-1);c.quadraticCurveTo(32,8,24,3);c.closePath();c.fill();break;
+    case 'yok':c.fillStyle='#ffb347';c.shadowColor='#ff7a1f';c.shadowBlur=12;circ(c,13,0,4+Math.sin(T*12));c.shadowBlur=0;break;
+    case 'mesale':c.strokeStyle='#5a3a1a';c.lineWidth=3;ln(c,10,0,24,0);c.fillStyle='#ffb347';c.shadowColor='#ff7a1f';c.shadowBlur=14;c.beginPath();c.moveTo(23,-3);c.quadraticCurveTo(31+Math.sin(T*14)*2,-1,30,4);c.quadraticCurveTo(28,8,24,3);c.closePath();c.fill();c.fillStyle='#fff2a0';circ(c,26,1,1.8);c.shadowBlur=0;break;
+    case 'gurz':c.strokeStyle='#4a3020';c.lineWidth=3.2;ln(c,10,0,27,-1);c.fillStyle='#8a8f98';circ(c,30,-1,6);c.fillStyle='#d8dce4';for(let k=0;k<6;k++){const an=k*1.047;circ(c,30+Math.cos(an)*6.5,-1+Math.sin(an)*6.5,1.5);}break;
+    case 'ejder':c.strokeStyle='#ffd27a';c.shadowColor='#ffb347';c.shadowBlur=12;c.lineWidth=3.2;c.beginPath();c.moveTo(12,0);c.quadraticCurveTo(24,-2,37,-9);c.stroke();c.shadowBlur=0;c.strokeStyle='#c8a23a';c.lineWidth=2.4;ln(c,11,-4.5,11,4.5);break;
+    case 'kopuz':c.fillStyle='#8a5a2e';c.beginPath();c.ellipse(12,4,6,4.5,0.3,0,Math.PI*2);c.fill();c.strokeStyle='#6b4a2e';c.lineWidth=2;ln(c,15,2,30,-6);c.strokeStyle='#e8e0c8';c.lineWidth=0.6;ln(c,10,3,30,-7);break;
+  }
+  c.restore();
+  if(L.wpn==='kalkan'){c.fillStyle='#a8322a';c.strokeStyle='#c8a23a';c.lineWidth=2;c.beginPath();c.ellipse(9,-11,5.5,12,0,0,Math.PI*2);c.fill();c.stroke();c.fillStyle='#c8a23a';circ(c,10,-11,2);}
+}
+function drawWolf(c,L,walk,atk,moving){
+  const sw=moving?Math.sin(walk*1.6)*7:0;c.lineCap='round';
+  c.strokeStyle=L.cloth2;c.lineWidth=3.2;ln(c,-9,-9,-9-sw,0);ln(c,-5,-9,-5+sw,0);ln(c,7,-9,7+sw,0);ln(c,11,-9,11-sw,0);
+  c.fillStyle=L.cloth;c.beginPath();c.ellipse(1,-13,13,6.5,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.moveTo(-12,-15);c.quadraticCurveTo(-22,-20,-24,-12+Math.sin(T*10)*2);c.quadraticCurveTo(-18,-14,-12,-11);c.fill();
+  c.beginPath();c.ellipse(15,-19,6,5,-0.3,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(18,-21);c.lineTo(27,-17);c.lineTo(18,-15);c.closePath();c.fill();
+  c.beginPath();c.moveTo(11,-22);c.lineTo(12,-30);c.lineTo(16,-23);c.closePath();c.fill();
+  c.fillStyle=L.eye;c.shadowColor=L.eye;c.shadowBlur=6;circ(c,18,-20,1.4);c.shadowBlur=0;}
+function drawFig(c,L,walk,atk,moving){
+  if(L.dragon){drawDragon(c,L,walk,atk,moving);return;}
+  if(L.beast){drawWolf(c,L,walk,atk,moving);return;}
+  const sw=moving?Math.sin(walk)*6:0;
+  c.lineCap='round';c.lineJoin='round';
+  if(L.glow){c.shadowColor=L.glow;c.shadowBlur=10;}
+  if(L.cape){c.fillStyle=L.cape;c.beginPath();c.moveTo(-3,-37);c.quadraticCurveTo(-17-Math.abs(sw),-22,-13-Math.abs(sw)*0.5,-5);c.lineTo(-2,-18);c.closePath();c.fill();}
+  if(!L.float){c.strokeStyle=L.leg;c.lineWidth=4.5;ln(c,-1,-17,sw,0);ln(c,1,-17,-sw,0);}
+  c.save();c.translate(0,-17);c.rotate(L.hunch||0);
+  if(L.float){const wv=Math.sin(T*4)*2;c.fillStyle=L.cloth;c.beginPath();c.moveTo(-8,-23);c.lineTo(8,-23);c.lineTo(11,10+wv);c.lineTo(5,5);c.lineTo(0,11-wv);c.lineTo(-5,5);c.lineTo(-11,10+wv);c.closePath();c.fill();}
+  else{c.fillStyle=L.cloth;rr(c,-7,-23,14,24,3);c.fill();c.fillStyle=L.cloth2;c.fillRect(-7,-7,14,3);}
+  c.shadowBlur=0;
+  if(L.hairy){c.strokeStyle='#120e0b';c.lineWidth=1.5;for(let k=0;k<6;k++)ln(c,-8+k*3,-22,-10+k*3,-12);}
+  if(L.plate){c.strokeStyle='rgba(255,255,255,.22)';c.lineWidth=1.2;ln(c,-6,-18,6,-18);ln(c,-6,-13,6,-13);c.fillStyle='rgba(255,255,255,.18)';c.fillRect(-9,-23,5,6);c.fillRect(4,-23,5,6);}
+  if(L.spots){c.fillStyle='#4a2a10';[[-4,-19],[2,-15],[-2,-11],[4,-20]].forEach(p=>circ(c,p[0],p[1],1.3));}
+  drawHead(c,L);
+  drawArm(c,L,atk);
+  c.restore();
+}
+function drawDragon(c,L,walk,atk,moving){
+  const w=moving?walk:T*2;
+  c.lineCap='round';
+  // kanat
+  const fl=Math.sin(T*3)*10;
+  c.fillStyle=shade(L.cloth,-0.3);c.beginPath();c.moveTo(-6,-46);c.lineTo(-40,-92-fl);c.lineTo(-22,-70-fl*0.5);c.lineTo(-50,-64-fl*0.7);c.lineTo(-18,-52);c.closePath();c.fill();
+  // kuyruk ve gövde halkaları
+  for(let k=7;k>=0;k--){const x=-60+k*9,y=-14-Math.sin(w*0.8+k*0.7)*5-k*2.4,r=5+k*1.5;c.fillStyle=k%2?L.skin:shade(L.skin,-0.15);circ(c,x,y,r);}
+  // bacaklar
+  c.strokeStyle=shade(L.skin,-0.3);c.lineWidth=6;const s=moving?Math.sin(walk)*8:0;ln(c,-14,-20,-14+s,0);ln(c,10,-24,10-s,0);
+  c.fillStyle=L.skin;c.beginPath();c.ellipse(-2,-30,24,15,-0.15,0,Math.PI*2);c.fill();
+  c.fillStyle='#d8c890';c.beginPath();c.ellipse(2,-22,16,6,-0.1,0,Math.PI*2);c.fill();
+  // boyun ve kafa
+  c.strokeStyle=L.skin;c.lineWidth=11;c.beginPath();c.moveTo(14,-38);c.quadraticCurveTo(24,-58,30,-60);c.stroke();
+  const ja=atk*0.5;
+  c.save();c.translate(32,-60);
+  c.fillStyle=L.skin;c.beginPath();c.ellipse(6,0,13,8,0,0,Math.PI*2);c.fill();
+  c.save();c.rotate(ja);c.fillStyle=shade(L.skin,-0.2);c.beginPath();c.ellipse(9,6,11,3.5,0,0,Math.PI*2);c.fill();c.restore();
+  c.strokeStyle='#e8dcc0';c.lineWidth=2.5;c.beginPath();c.moveTo(0,-5);c.quadraticCurveTo(-8,-18,-14,-16);c.stroke();c.beginPath();c.moveTo(4,-6);c.quadraticCurveTo(0,-20,-6,-22);c.stroke();
+  eyeDot(c,L,9,-3,2.2);
+  if(atk>0.4){c.fillStyle='rgba(255,150,40,.85)';c.shadowColor='#ff7a1f';c.shadowBlur=16;c.beginPath();c.moveTo(18,2);c.lineTo(36,-6);c.lineTo(38,10);c.closePath();c.fill();c.shadowBlur=0;}
+  c.restore();
+  // sırt dikenleri
+  c.fillStyle='#c8a23a';for(let k=0;k<5;k++){const x=-18+k*8;c.beginPath();c.moveTo(x-3,-43+k*0.5);c.lineTo(x,-52+k*0.5);c.lineTo(x+3,-43+k*0.5);c.closePath();c.fill();}
+}
+function drawHorse(c,walk,col,moving){
+  const s=moving?Math.sin(walk)*8:0;
+  c.strokeStyle=col;c.lineWidth=3.6;c.lineCap='round';
+  ln(c,-13,-16,-13+s,0);ln(c,-8,-16,-8-s,0);ln(c,10,-16,10-s,0);ln(c,15,-16,15+s,0);
+  c.fillStyle=col;c.beginPath();c.ellipse(1,-21,17,8,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.moveTo(11,-25);c.lineTo(21,-38);c.lineTo(27,-36);c.lineTo(17,-19);c.closePath();c.fill();
+  c.beginPath();c.ellipse(26,-36,7.5,4,0.35,0,Math.PI*2);c.fill();
+  c.strokeStyle='#2a1a10';c.lineWidth=3;ln(c,-16,-24,-25,-11+Math.sin(T*7)*2);ln(c,13,-28,20,-39);
+  c.fillStyle='#a8322a';c.fillRect(-7,-30,13,5);
+}
+
+/* ================= ARKA PLAN ================= */
+function srand(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;};}
+const RPAL=[
+ [['#0b1a2a','#2b3c4a','#3c4a2c','#2c3a22'],['#14162a','#3a3a52','#3e4a2a','#2e3a20'],['#1a1424','#4a3442','#4a4430','#3a3622']],
+ [['#06120c','#1a2e22','#1e3a24','#16301c'],['#08140e','#1e3328','#25402a','#1a3020'],['#0a1010','#203430','#1c3626','#142a1a']],
+ [['#0e1420','#3a4656','#4a5462','#3a3e3a'],['#121a20','#4a5458','#3a4636','#2c382c'],['#1a1418','#4a3a3a','#4a3e36','#3a2e26']],
+ [['#0a0610','#3a1a3a','#2e2630','#221c24'],['#180808','#4a1e1a','#3e3022','#30241a'],['#0c0612','#2e1236','#2a1e2e','#1e1622']]];
+const bgCache={};
+function makeBg(i){
+  if(bgCache[i])return bgCache[i];
+  const RG=REGIONS[Math.min(REGIONS.length-1,Math.floor(i/RSZ))],reg=RG.st,P=RPAL[reg][i%3];
+  const b=document.createElement('canvas');b.width=960;b.height=430;const c=b.getContext('2d');const R=srand(77+i*13);
+  let g=c.createLinearGradient(0,0,0,GY);g.addColorStop(0,P[0]);g.addColorStop(1,P[1]);c.fillStyle=g;c.fillRect(0,0,960,430);
+  for(let k=0;k<90;k++){c.fillStyle='rgba(255,255,240,'+(0.3+R()*0.6)+')';c.fillRect(R()*960,R()*230,R()<0.15?2:1,R()<0.15?2:1);}
+  const mx=560+R()*240,my=60+R()*40;
+  if(reg===3){c.fillStyle='rgba(255,60,60,.12)';circ(c,mx,my,50);c.fillStyle='#c84a3a';circ(c,mx,my,26);}
+  else{c.fillStyle='rgba(255,240,200,.12)';circ(c,mx,my,44);c.fillStyle='#efe6c8';circ(c,mx,my,24);c.fillStyle=P[0];circ(c,mx+9,my-5,21);}
+  if(reg===2){ // sivri dağlar ve kar
+    for(let k=0;k<9;k++){const x=R()*1000-20,h=120+R()*120,w=90+R()*90;c.fillStyle=shade(P[2],-0.55);c.beginPath();c.moveTo(x-w,GY-40);c.lineTo(x,GY-40-h);c.lineTo(x+w,GY-40);c.closePath();c.fill();
+      c.fillStyle='rgba(230,236,245,.75)';c.beginPath();c.moveTo(x-w*0.22,GY-40-h*0.78);c.lineTo(x,GY-40-h);c.lineTo(x+w*0.22,GY-40-h*0.78);c.lineTo(x+w*0.08,GY-40-h*0.82);c.lineTo(x-w*0.06,GY-40-h*0.76);c.closePath();c.fill();}
+  }
+  const amp=reg===2?1.5:1,layers=[[GY-120,0.35,40*amp],[GY-70,0.55,26*amp],[GY-30,0.8,14]];
+  const trees=reg===1?70:reg===0?26:reg===2?10:0;
+  layers.forEach(([base,dark,a],li)=>{
+    c.fillStyle=shade(P[2],-(1-dark)*0.75);c.beginPath();c.moveTo(0,430);
+    const ph=R()*10,f=0.004+R()*0.006;
+    for(let x=0;x<=960;x+=8){c.lineTo(x,base-Math.sin(x*f+ph)*a-Math.sin(x*f*3.1+ph*2)*a*0.4);}
+    c.lineTo(960,430);c.closePath();c.fill();
+    if(li===1||(reg===1&&li===2)){const n=li===2?24:trees;for(let k=0;k<n;k++){const x=R()*960,y=base-Math.sin(x*f+ph)*a-4,h=(14+R()*22)*(reg===1?1.6:1);c.fillStyle=shade(P[3],li===2?-0.7:-0.55);c.beginPath();c.moveTo(x-6*(reg===1?1.4:1),y+4);c.lineTo(x,y-h);c.lineTo(x+6*(reg===1?1.4:1),y+4);c.closePath();c.fill();}}
+    if(reg===3&&li===1){for(let k=0;k<14;k++){const x=R()*960,y=base-Math.sin(x*f+ph)*a,h=20+R()*50;c.fillStyle='#120a14';c.beginPath();c.moveTo(x-4,y+4);c.lineTo(x-1,y-h);c.lineTo(x+4,y+4);c.closePath();c.fill();}}
+  });
+  g=c.createLinearGradient(0,GY-24,0,430);g.addColorStop(0,P[3]);g.addColorStop(1,shade(P[3],-0.5));c.fillStyle=g;c.fillRect(0,GY-22,960,430);
+  c.fillStyle=reg===2?'rgba(170,170,170,.25)':reg===3?'rgba(90,40,50,.35)':'rgba(120,100,70,.35)';c.fillRect(0,GY-12,960,26);
+  for(let k=0;k<160;k++){c.fillStyle='rgba(0,0,0,'+(0.08+R()*0.15)+')';c.fillRect(R()*960,GY-20+R()*70,2+R()*4,1+R()*2);}
+  for(let k=0;k<60;k++){c.strokeStyle=reg===3?'rgba(120,50,60,.4)':'rgba(90,120,60,.45)';c.lineWidth=1;const x=R()*960,y=GY+16+R()*40;ln(c,x,y,x+(R()-0.5)*4,y-4-R()*5);}
+  if(reg===3){for(let k=0;k<30;k++){c.fillStyle='rgba(255,120,60,'+(0.2+R()*0.4)+')';c.fillRect(R()*960,R()*GY,2,2);}}
+  if(RG.tint){c.globalCompositeOperation='overlay';c.fillStyle=RG.tint;c.globalAlpha=0.55;c.fillRect(0,0,960,430);c.globalAlpha=1;c.globalCompositeOperation='source-over';}
+  const ks=Object.keys(bgCache);if(ks.length>8)delete bgCache[ks[0]];
+  bgCache[i]=b;return b;
+}
+function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255,b=n&255;const f=amt<0?0:255,p=Math.abs(amt);
+  r=Math.round((f-r)*p+r);g=Math.round((f-g)*p+g);b=Math.round((f-b)*p+b);return 'rgb('+r+','+g+','+b+')';}
+
+function drawHisar(c,b){
+  const x0=14,x1=110,top=GY-150,pct=b.hp/b.max;
+  c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(62,GY+4,62,8,0,0,Math.PI*2);c.fill();
+  c.fillStyle='#7d786a';c.fillRect(x0,top,x1-x0,GY-top+6);
+  c.fillStyle='#6e6a5c';c.fillRect(x0,top,16,GY-top+6);
+  for(let k=0;k<5;k++)c.fillRect(x0+k*20,top-13,12,13);
+  c.fillStyle='#8c8778';for(let k=0;k<5;k++)c.fillRect(x0+k*20+2,top-13,8,3);
+  c.strokeStyle='rgba(0,0,0,.2)';c.lineWidth=1;
+  for(let y=top+12,r=0;y<GY;y+=13,r++){ln(c,x0,y,x1,y);for(let x=x0+(r%2?10:0);x<x1;x+=22)ln(c,x,y,x,y+13);}
+  c.fillStyle='#2a1c12';c.beginPath();c.moveTo(48,GY+6);c.lineTo(48,GY-30);c.arc(66,GY-30,18,Math.PI,0);c.lineTo(84,GY+6);c.closePath();c.fill();
+  c.strokeStyle='#4a3424';c.lineWidth=2;for(let x=52;x<84;x+=7)ln(c,x,GY-36,x,GY+6);
+  const fl=0.7+Math.sin(T*9)*0.15+Math.sin(T*23)*0.1;c.fillStyle='rgba(255,200,100,'+fl+')';c.shadowColor='#ffb04a';c.shadowBlur=12;
+  c.fillRect(38,top+30,8,14);c.fillRect(76,top+30,8,14);c.fillRect(57,top+70,8,14);c.shadowBlur=0;
+  c.strokeStyle='#3a2a1a';c.lineWidth=3;ln(c,64,top-13,64,top-62);
+  c.fillStyle='#b8282a';c.beginPath();c.moveTo(65,top-62);
+  for(let k=0;k<=10;k++){c.lineTo(65+k*4,top-62+Math.sin(T*5+k*0.7)*3);}
+  for(let k=10;k>=0;k--){c.lineTo(65+k*4,top-40+Math.sin(T*5+k*0.7)*3);}c.closePath();c.fill();
+  c.fillStyle='#f2ecd6';circ(c,79,top-51+Math.sin(T*5+2.5)*3,5.5);c.fillStyle='#b8282a';circ(c,81.5,top-51+Math.sin(T*5+2.8)*3,4.5);
+  if(pct<0.6){c.strokeStyle='rgba(20,15,10,.75)';c.lineWidth=2;c.beginPath();c.moveTo(30,top+10);c.lineTo(40,top+40);c.lineTo(34,top+62);c.lineTo(44,top+90);c.stroke();}
+  if(pct<0.3){c.beginPath();c.moveTo(96,top+20);c.lineTo(88,top+55);c.lineTo(98,top+80);c.stroke();
+    for(let k=0;k<3;k++){const fx=28+k*30,fh=10+Math.sin(T*12+k)*5;c.fillStyle='rgba(255,140,40,.85)';c.beginPath();c.moveTo(fx-6,top-13);c.lineTo(fx,top-13-fh-8);c.lineTo(fx+6,top-13);c.closePath();c.fill();}}
+  baseBar(c,62,top-80,b,'#5fae4f');
+}
+function drawKule(c,b){
+  const x0=852,x1=948,top=GY-190,pct=b.hp/b.max;
+  c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(900,GY+4,62,8,0,0,Math.PI*2);c.fill();
+  c.fillStyle='#2a2433';c.beginPath();c.moveTo(x0,GY+6);c.lineTo(x0+8,top+30);c.lineTo(x0+2,top+20);c.lineTo(x0+18,top);c.lineTo(x0+30,top+14);
+  c.lineTo(x0+48,top-26);c.lineTo(x0+64,top+12);c.lineTo(x0+80,top-4);c.lineTo(x1-4,top+26);c.lineTo(x1-10,top+34);c.lineTo(x1,GY+6);c.closePath();c.fill();
+  c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=1;for(let y=top+40,r=0;y<GY;y+=15,r++){ln(c,x0+6,y,x1-4,y);}
+  const pu=0.55+Math.sin(T*3)*0.3;c.fillStyle='rgba(190,90,255,'+pu+')';c.shadowColor='#c060ff';c.shadowBlur=16;
+  c.beginPath();c.ellipse(900,top+56,13,7,0,0,Math.PI*2);c.fill();c.fillStyle='#1a0820';circ(c,900,top+56,4);c.fillStyle='rgba(190,90,255,'+pu+')';
+  c.fillRect(870,top+100,7,14);c.fillRect(922,top+100,7,14);c.shadowBlur=0;
+  c.fillStyle='#0e0a12';c.beginPath();c.moveTo(880,GY+6);c.lineTo(880,GY-34);c.lineTo(900,GY-52);c.lineTo(920,GY-34);c.lineTo(920,GY+6);c.closePath();c.fill();
+  c.fillStyle='rgba(190,90,255,'+(pu*0.35)+')';c.fillRect(884,GY-30,32,36);
+  if(pct<0.6){c.strokeStyle='rgba(255,160,255,.35)';c.lineWidth=2;c.beginPath();c.moveTo(864,top+60);c.lineTo(876,top+92);c.lineTo(868,top+130);c.stroke();}
+  if(pct<0.3){c.beginPath();c.moveTo(936,top+50);c.lineTo(926,top+96);c.lineTo(938,top+140);c.stroke();}
+  baseBar(c,900,top-48,b,'#b04ad0');
+}
+function baseBar(c,cx,y,b,col){
+  const w=96,p=Math.max(0,b.hp/b.max);
+  c.fillStyle='rgba(0,0,0,.7)';c.fillRect(cx-w/2-2,y-2,w+4,12);c.fillStyle='#3a1a1a';c.fillRect(cx-w/2,y,w,8);
+  c.fillStyle=b.hitT>0?'#fff':col;c.fillRect(cx-w/2,y,w*p,8);
+  c.fillStyle='#f2ecd6';c.font='bold 11px Tahoma,Verdana,sans-serif';c.textAlign='center';c.fillText(Math.ceil(b.hp)+' / '+b.max,cx,y-5);
+}
+
+/* ================= SAVAŞ ================= */
+let B=null;
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+function mult(){const m=upEff('guc')*armyMul();return{hp:m,atk:m};}
+function unitUnlocked(u){return Math.max(S.unlocked,B?B.i+1:1)>=u.unlock;}
+function unitBanned(u){return !!(B&&B.M&&B.M.noUnit===u.id);}
+function pwCost(id){const P=PW(id);return Math.round(P.cost*(hasRank(401)?0.8:1));}
+function fireCost(){return pwCost('ates');}
+function unitById(id){return UNITS.find(u=>u.id===id);}
+function powerUnlocked(P){return Math.max(S.unlocked,B?B.i+1:1)>=P.unlock;}
+// savaşa götürülen 6 birlik ve 2 güç (orijinaldeki gibi her seferden önce seçilir)
+function loadoutFor(i){const top=Math.max(S.unlocked,i+1),ok=U=>top>=U.unlock;let ids=(S.loadout||[]).filter(id=>{const U=unitById(id);return U&&ok(U);});
+  for(const U of UNITS){if(ids.length>=6)break;if(ok(U)&&ids.indexOf(U.id)<0)ids.push(U.id);}
+  for(const U of UNITS){if(ids.length>=6)break;if(ids.indexOf(U.id)<0)ids.push(U.id);}return ids.slice(0,6);}
+function powersFor(i){const top=Math.max(S.unlocked,i+1);let ids=(S.powers||[]).filter(id=>PW(id)&&top>=PW(id).unlock);
+  for(const P of POWERS){if(ids.length>=2)break;if(top>=P.unlock&&ids.indexOf(P.id)<0)ids.push(P.id);}return ids.slice(0,2);}
+
+function mkUnit(side,def,look,m,x){
+  const sc=def.sc||1;
+  return{side,dir:side?-1:1,x:x!=null?x:(side?842:118),armor:def.armor||0,summon:!!def.summon,sumT:12,lane:Math.random()*20-10,hp:def.hp*m.hp,max:def.hp*m.hp,atk:def.atk*m.atk,rate:def.rate,range:def.range,
+    spd:def.spd*(0.92+Math.random()*0.16),ranged:!!def.ranged,splash:def.splash||0,cdT:Math.random()*0.3,walk:Math.random()*6,atkA:0,hitT:0,state:'walk',
+    look,sc,mounted:!!def.mounted,gold:def.gold||0,boss:!!def.boss,id:def.id,r:def.r||0};
+}
+function startLevel(i,opt){
+  opt=opt||{};const endless=!!opt.endless;
+  const L=endless?endlessLevel():LEVELS[i],sc=L.sc,M=MODS[L.mod]||{};if(endless)i=L.src;
+  const pMax=Math.round(700*upEff('sur')*(hasRank(1101)?1.3:1));
+  B={i,L,M,sc,gm:L.gm*(M.gold||1),t:0,food:40,foodRate:5*upEff('erzak')*(M.food||1),mana:20,manaRate:4*upEff('atesM'),
+    pBase:{isBase:true,side:0,x:112,hp:pMax,max:pMax,hitT:0},eBase:{isBase:true,side:1,x:848,hp:Math.round(L.base*1.25),max:Math.round(L.base*1.25),hitT:0},
+    units:[],proj:[],fires:[],parts:[],texts:[],coins:[],slots:loadoutFor(i).map(id=>UNITS.indexOf(unitById(id))),pw:powersFor(i),buffT:0,surT:1.5,manT:3,henT:2,healT2:4,endless,wave:0,
+    cds:[0,0,0,0,0,0],spawnT:2.5,waveT:endless?6:35,queue:[],bossT:L.boss?22:1e9,
+    speed:B?B.speed:1,paused:false,over:false,goldEarned:0,kills:0,shake:0,banner:null,heroIn:0,shown:false,modBan:!!L.mod,wx:[]};
+  B.ref=diffRaw(i); // güçler ve sur savunması bölümün temel zorluğuyla büyür (ince ayar düzeltmesinden bağımsız)
+  const R=REGIONS[L.region];
+  if(R.wx)for(let k=0;k<70;k++)B.wx.push({x:Math.random()*960,y:Math.random()*430,s:0.5+Math.random()});
+  const ha=upEff('alp'),SW=SILAH[Math.min(2,S.up.silah||0)];
+  const hero={side:0,dir:1,isHero:true,x:140,lane:5,hp:320*ha,max:320*ha,atk:24*ha*SW.m,rate:0.7,range:40,spd:115,cdT:0,shotT:1,walk:0,atkA:0,hitT:0,state:'idle',look:Object.assign({},LOOK.alp,{wpn:SW.wpn}),tier:S.up.silah||0,sc:1.25,dead:0,r:0};
+  B.hero=hero;B.units.push(hero);
+  if(endless){B.eBase.hp=B.eBase.max=1;B.eBase.inv=true;}
+  document.getElementById('lvChip').textContent=endless?'Sonsuz Dalga · en iyi: '+(S.best||0):'Bölüm '+(i+1)+' · '+L.ad+(L.mod?' · '+M.ic+' '+M.ad:'');
+  document.getElementById('bSpeed').textContent='×'+B.speed;
+  buildUnitButtons();
+  banner(endless?'Sonsuz Dalga: dayanabildiğin kadar dayan!':'Bölüm '+(i+1)+': '+L.ad,2.2);
+  document.getElementById('ovRes').classList.remove('on');document.getElementById('ovPause').classList.remove('on');
+  show('battle');ambience(true);rhTemizle();rhSavasBasi();
+}
+function banner(txt,life,col){B.banner={txt,life:life||2,max:life||2,col:col||'#f2ecd6'};}
+function pick(pool){let tot=0;for(const k in pool)tot+=pool[k];let r=Math.random()*tot;for(const k in pool){r-=pool[k];if(r<=0)return k;}return Object.keys(pool)[0];}
+function spawnFoe(id,x){
+  const d=FOES[id],M=B.M;const rage=1+Math.max(0,B.t-DIFF.rageT)/DIFF.rageS;
+  const u=mkUnit(1,d,LOOK[id],{hp:B.sc*(M.hp||1)*rage,atk:B.sc*(M.atk||1)*rage},x);
+  u.gold=Math.max(1,Math.round(d.gold*B.gm));if(M.spd)u.spd*=M.spd;if(M.armor)u.armor=Math.min(0.6,u.armor+M.armor);
+  B.units.push(u);
+  if(d.boss){banner(d.ad.toLocaleUpperCase('tr')+' GELİYOR!',2.5,'#ff8a6a');B.shake=8;SFX.bossRoar();}
+}
+function trySpawn(k){
+  if(!B||B.over||B.paused)return;
+  const U=UNITS[B.slots[k]];if(!U)return;
+  if(!unitUnlocked(U)||unitBanned(U)||B.cds[k]>0||B.food<U.cost){SFX.fail();return;}
+  if(U.unique&&B.units.some(e=>e.id===U.id&&e.side===0&&e.hp>0)){banner(U.ad+' zaten sahada',1.2);SFX.fail();return;}
+  B.food-=U.cost;B.cds[k]=U.cd;
+  const u=mkUnit(0,U,LOOK[U.id],mult());u.support=U.support||null;u.heal=!!U.heal;u.unique=!!U.unique;B.units.push(u);
+  if(U.escort){for(let n=0;n<2;n++){const e=mkUnit(0,unitById(U.escort),LOOK[U.escort],mult(),118-14-n*16);B.units.push(e);}}
+  if(U.unique)banner(U.ad+' sahada!',1.4,'#ffd27a');
+  SFX.spawn(U.mounted?'akinci':U.ranged?'okcu':'sekban');
+}
+function power(slot){
+  if(!B||B.over||B.paused)return;
+  const id=B.pw[slot];if(!id)return;const cost=pwCost(id);
+  if(B.mana<cost){SFX.fail();return;}
+  const foes=B.units.filter(e=>e.side===1&&e.hp>0&&!e.ghost);
+  let front=null;for(const e of foes)if(!front||e.x<front.x)front=e;
+  if(id!=='boru'&&id!=='kurt'&&!front){banner('Ortada düşman yok',1.2);return;}
+  if(id==='gurz'&&!(B.hero.hp>0)){banner('Alp Er sahada değil',1.2);SFX.fail();return;}
+  B.mana-=cost;const pm=upEff('atesD')*(0.6+0.5*B.ref);
+  if(id==='ates'){B.fires.push({cx:Math.min(800,front.x+50),t:0,done:false,balls:[]});SFX.fireRain();}
+  else if(id==='ok'){const tg=foes.filter(e=>e.x<front.x+260);for(let n=0;n<26;n++){const t=tg[n%tg.length];
+      B.proj.push({sx:100+Math.random()*30,sy:GY-120-Math.random()*20,tx:t.x+(Math.random()-0.5)*20,ty:tgtY(t),e:-n*0.035,dur:0.45+Math.abs(t.x-110)/900,kind:'arrow',dmg:13*pm,side:0,t,arc:60,col:'#fff'});}
+    banner('Ok yağmuru!',1,'#ffd27a');SFX.bow();}
+  else if(id==='mancinik'){const bs=foes.filter(e=>e.boss);const t0=bs.length?bs[0]:foes.reduce((a,b)=>b.max>a.max?b:a,front);
+    for(let n=0;n<3;n++)B.proj.push({sx:118,sy:GY-140,tx:t0.x+(n-1)*36,ty:GY+t0.lane-6,e:-n*0.25,dur:0.7+Math.abs(t0.x-118)/700,kind:'bomb',dmg:85*pm,splash:62,side:0,t:t0,arc:150,col:'#777'});
+    banner('Mancınıklar ateşte!',1,'#ffd27a');SFX.cannon();}
+  else if(id==='boru'){B.buffT=8;banner('Sur borusu öttü! Ordu coştu',1.6,'#ffd27a');SFX.wave();}
+  else if(id==='gurz'){const h=B.hero;h.atkA=1;let n=0;for(const e of foes){const dx=(e.x-h.x)*h.dir;if(dx>-20&&dx<230){hurt(e,(e.boss?0.6:1)*150*pm*upEff('alp'),true);if(!e.boss&&e.hp>0)e.x=Math.min(842,e.x+h.dir*46);n++;}}
+    B.shake=9;for(let k=0;k<18;k++)B.parts.push({x:h.x+h.dir*(20+Math.random()*200),y:GY-4,vx:(Math.random()-0.5)*80,vy:-Math.random()*220,life:0.6,col:k%2?'#ffe27a':'#8ac8ff',sz:3,g:420});
+    banner('Alp\'in Gürzü!',1,'#8ac8ff');SFX.bossDown();}
+  else if(id==='kurt'){for(let n=0;n<5;n++){const w=mkUnit(0,{id:'kurt',hp:1e6,atk:0,rate:9,range:0,spd:430},LOOK.bozkurt,{hp:1,atk:1},70-n*34);w.wolf=true;w.ghost=true;w.lane=-10+n*5;w.hit=new Set();w.dmg=60*pm;B.units.push(w);}
+    banner('Kurt akını!',1.2,'#d8dce4');SFX.summon();}
+}
+function fire(){power(0);}
+function findTarget(u){
+  let best=null,bd=1e9;
+  for(const e of B.units){if(e.side===u.side||e.hp<=0||e.ghost)continue;const d=(e.x-u.x)*u.dir;if(d<-12)continue;if(d<bd){bd=d;best=e;}}
+  const base=u.side?B.pBase:B.eBase;const db=(base.x-u.x)*u.dir;if(db<bd){best=base;}
+  return best;
+}
+function tgtY(t){return t.isBase?GY-80:GY+t.lane-26*(t.sc||1)-(t.mounted?22:0);}
+function hurt(t,a,pierce){
+  if(!(t.hp>0))return;
+  if(t.armor&&!pierce)a*=1-t.armor;
+  t.hp-=a;t.hitT=0.12;
+  if(t.isBase){if(t.inv){t.hp=t.max;return;}B.shake=Math.max(B.shake,2);SFX.baseHit();if(t.hp<=0){t.hp=0;endGame(t.side===1);}return;}
+  if(t.hp<=0)die(t);
+}
+function die(t){
+  const y=GY+t.lane-20*t.sc;
+  for(let k=0;k<10;k++)B.parts.push({x:t.x,y,vx:(Math.random()-0.5)*120,vy:-Math.random()*140,life:0.6+Math.random()*0.4,col:t.side?'#4a2a3a':'#7a1f1a',sz:2+Math.random()*2.5*t.sc,g:300});
+  if(t.isHero){t.dead=hasRank(701)?5:10;banner('Alp Er yaralandı! '+t.dead+' sn sonra döner',2,'#ffcc66');SFX.heroDown();return;}
+  if(t.side===1){
+    B.kills++;B.coins.push({x:Math.max(130,Math.min(830,t.x)),lane:t.lane,v:t.gold,t:0,big:t.boss});
+    if(t.boss){B.shake=10;banner(FOES[t.id].ad+' devrildi!',2,'#f5d36b');SFX.bossDown();}
+    else SFX.enemyDie(t.id);
+  }else SFX.allyDie();
+}
+function atkOf(u){let a=u.atk;if(u.side===0){if(B.buffT>0)a*=1.5;if(u.id==='okcu'&&B.torch)a*=1.6;if(u.id==='sekban'&&B.arms)a*=1.5;}return a;}
+function attack(u,t){
+  u.atkA=1;const A=atkOf(u);
+  const fb=u.side?B.pBase:B.eBase;
+  if(t!==fb&&Math.abs(fb.x-u.x)<=u.range+12)hurt(fb,A*0.4);
+  if(u.ranged){
+    const sx=u.x+u.dir*14*u.sc,sy=GY+u.lane-30*u.sc;
+    const tx=t.x+(t.isBase?u.dir*20:0),ty=tgtY(t);
+    const kind=u.id==='humbara'?'bomb':(u.id==='evren'||u.id==='atescini')?'fire':u.side?'orb':'arrow';const fa=kind==='arrow'&&u.id==='okcu'&&B.torch;
+    const dist=Math.abs(tx-sx);
+    const sy2=u.id==='evren'?GY+u.lane-96:sy;
+    B.proj.push({sx:u.id==='evren'?u.x+u.dir*72:sx,sy:sy2,tx,ty,e:0,dur:kind==='bomb'?0.5+dist/400:kind==='fire'?0.3+dist/500:0.15+dist/700,kind,col:fa?'#ffb347':(u.look&&u.look.orb)||'#b48aff',fa,dmg:A,splash:u.splash,side:u.side,t,arc:kind==='bomb'?90:kind==='fire'?30:kind==='arrow'?26:8});
+    if(kind==='bomb')SFX.cannon();else if(kind==='fire')SFX.fireball();else if(kind==='orb')SFX.magic(u.look&&u.look.orb);else SFX.bow();
+  }else{
+    hurt(t,A);
+    if(u.boss){for(const e of B.units)if(e!==t&&e.side!==u.side&&e.hp>0&&!e.ghost&&Math.abs(e.x-t.x)<34)hurt(e,A*0.5);B.shake=Math.max(B.shake,4);}
+    if(t.armor)SFX.armor();else{const w=u.look&&u.look.wpn;if(w==='sopa'||w==='cekic')SFX.club();else if(w==='pence')SFX.claw();else SFX.sword();}
+  }
+}
+function updUnit(u,dt){
+  if(u.hitT>0)u.hitT-=dt;if(u.atkA>0)u.atkA=Math.max(0,u.atkA-dt*3.5);
+  if(u.wolf){u.x+=u.spd*dt;u.walk+=dt*u.spd*0.05;u.state='walk';
+    for(const e of B.units)if(e.side===1&&e.hp>0&&!u.hit.has(e)&&Math.abs(e.x-u.x)<18){u.hit.add(e);hurt(e,e.boss?u.dmg*0.35:u.dmg,true);}
+    if(u.x>850)u.hp=0;return;}
+  if(u.support||u.heal){// savaşmazlar: ön safın biraz gerisinde dururlar
+    let fr=118;for(const e of B.units)if(e.side===0&&e.hp>0&&!e.isHero&&!e.support&&!e.heal&&!e.ghost)fr=Math.max(fr,e.x);
+    const want=Math.max(130,fr-70);if(u.x<want){u.state='walk';u.x+=u.spd*dt;u.walk+=dt*u.spd*0.16;}else u.state='idle';
+    if(u.heal){u.cdT-=dt;if(u.cdT<=0){u.cdT=4;u.atkA=1;let n=0;for(const e of B.units)if(e.side===0&&e.hp>0&&!e.ghost&&e!==u&&Math.abs(e.x-u.x)<150&&e.hp<e.max){e.hp=Math.min(e.max,e.hp+e.max*0.12);n++;}
+      if(n)B.texts.push({x:u.x,y:GY-60,txt:'Şifa +'+n,life:1.1,col:'#8aff8a'});}}
+    return;}
+  u.cdT-=dt;
+  const t=findTarget(u);
+  const d=t?Math.abs(t.x-u.x):1e9;
+  if(t&&d<=u.range+(t.r||0)+u.r){u.state='atk';if(u.cdT<=0){u.cdT=u.rate;attack(u,t);}}
+  else{u.state='walk';const sp=u.spd*(u.side===1&&B.buffT>0?0.5:1);u.x+=u.dir*sp*dt;u.walk+=dt*sp*0.16;}
+}
+function updHero(h,dt){
+  if(h.hitT>0)h.hitT-=dt;if(h.atkA>0)h.atkA=Math.max(0,h.atkA-dt*3.5);
+  if(h.hp<=0){h.dead-=dt;if(h.dead<=0){h.hp=h.max;h.x=130;banner('Alp Er sahada!',1.2,'#ffcc66');SFX.heroBack();}return;}
+  h.hp=Math.min(h.max,h.hp+dt*2);
+  const inp=B.heroIn;
+  if(inp){h.dir=inp;h.x=Math.max(118,Math.min(826,h.x+inp*h.spd*dt));h.walk+=dt*h.spd*0.16;h.state='walk';}else h.state='idle';
+  h.cdT-=dt;
+  const near=[];let anyFront=null;
+  for(const e of B.units){if(e.side!==1||e.hp<=0)continue;const dx=e.x-h.x;
+    if(Math.abs(dx)<=h.range+(e.r||0)){near.push(e);}}
+  B.coins=B.coins.filter(c=>!c.got);
+  if(!inp&&near.length){h.dir=Math.sign(near[0].x-h.x)||1;}
+  const front=near.filter(e=>(e.x-h.x)*h.dir>-10).sort((a,b)=>Math.abs(a.x-h.x)-Math.abs(b.x-h.x)).slice(0,hasRank(51)?5:3);
+  for(const cn of B.coins)if(!cn.got&&Math.abs(cn.x-h.x)<26){cn.got=true;B.goldEarned+=cn.v;B.texts.push({x:cn.x,y:GY-40,txt:'+'+cn.v,life:0.9,col:'#f5d36b'});SFX.coin();}
+  const baseIn=h.dir===1&&B.eBase.x-h.x<=h.range&&!B.eBase.inv;
+  h.shotT-=dt;
+  if(!front.length&&h.shotT<=0){let t=null,bd=230;for(const e of B.units){if(e.side!==1||e.hp<=0)continue;const d=(e.x-h.x)*h.dir;if(d>0&&d<bd){bd=d;t=e;}}
+    if(t){h.shotT=1.6;h.atkA=0.6;B.proj.push({sx:h.x+h.dir*14,sy:GY+h.lane-38,tx:t.x,ty:tgtY(t),e:0,dur:0.12+bd/800,kind:'arrow',dmg:h.atk*(B.buffT>0?1.5:1)*0.55,side:0,t,arc:10,col:'#fff'});SFX.bow();}}
+  if((front.length||baseIn)&&h.cdT<=0){
+    const HA=h.atk*(B.buffT>0?1.5:1);h.cdT=h.rate;h.atkA=1;for(const e of front)hurt(e,HA);if(baseIn&&!front.length)hurt(B.eBase,HA*0.6);
+    SFX.heroSwing();if(front.some(e=>e.armor))SFX.armor();else SFX.sword();
+  }
+}
+function step(dt){
+  if(!B)return;
+  B.t+=dt;
+  if(B.banner){B.banner.life-=dt;if(B.banner.life<=0)B.banner=null;}
+  if(B.pBase.hitT>0)B.pBase.hitT-=dt;if(B.eBase.hitT>0)B.eBase.hitT-=dt;
+  B.shake=Math.max(0,B.shake-dt*20);
+  for(const p of B.parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=(p.g||0)*dt;}
+  B.parts=B.parts.filter(p=>p.life>0);
+  for(const t of B.texts){t.life-=dt;t.y-=30*dt;}B.texts=B.texts.filter(t=>t.life>0);
+  if(B.over){B.endT-=dt;for(const u of B.units){if(u.atkA>0)u.atkA=Math.max(0,u.atkA-dt*3);u.state='idle';}
+    if(B.endT<=0&&!B.shown){B.shown=true;showResult();}return;}
+  if(!B.rageBan&&B.t>DIFF.rageT){B.rageBan=true;banner('Kara Kule azdı: düşman güçleniyor!',2.2,'#ff8a6a');}
+  if(B.modBan&&B.t>2.4){B.modBan=false;banner(B.M.ic+' '+B.M.ad,2.4,'#ffd27a');}
+  B.torch=B.arms=false;for(const u of B.units)if(u.side===0&&u.hp>0){if(u.support==='okcu')B.torch=true;else if(u.support==='sekban')B.arms=true;}
+  if(B.buffT>0)B.buffT-=dt;for(const cn of B.coins)cn.t+=dt;
+  surDefense(dt);
+  B.moral=Math.min(2.2,1+B.t/160);B.food=Math.min(999,B.food+B.foodRate*B.moral*dt);B.mana=Math.min(100,B.mana+B.manaRate*dt);
+  for(let k=0;k<B.cds.length;k++)if(B.cds[k]>0)B.cds[k]=Math.max(0,B.cds[k]-dt);
+  // düşman üretimi
+  B.spawnT-=dt;
+  if(B.spawnT<=0){spawnFoe(pick(B.L.pool));B.spawnT=B.L.iv*(B.M.iv||1)*0.85*(0.7+Math.random()*0.6)*Math.max(0.62,1-B.t/260);}
+  B.waveT-=dt;
+  if(B.waveT<=0){B.waveT=B.endless?26:35;let n=B.L.waves+(B.M.wave||0);
+    if(B.endless){B.wave++;B.sc=B.L.sc*(1+0.07*B.wave);n+=Math.floor(B.wave/2);banner('Dalga '+B.wave,1.6,'#ff8a6a');if(B.wave%5===0){B.queue2=B.t+3;B.endBoss=B.L.bossPool[(B.wave/5-1)%B.L.bossPool.length];}}
+    else banner('Düşman dalgası!',1.6,'#ff8a6a');SFX.wave();
+    for(let k=0;k<n;k++)B.queue.push(B.t+k*0.38);}
+  while(B.queue.length&&B.queue[0]<=B.t){B.queue.shift();spawnFoe(pick(B.L.pool));}
+  B.bossT-=dt;
+  if(B.bossT<=0&&B.L.boss){B.bossT=B.L.bossEvery||90;spawnFoe(B.L.boss);if(B.L.boss2)B.queue2=B.t+4;}
+  if(B.queue2&&B.t>=B.queue2){B.queue2=0;spawnFoe(B.endless?B.endBoss:B.L.boss2);}
+  if(B.endless&&B.t<8)B.spawnT=Math.max(B.spawnT,0.5);
+  if(hasRank(251)&&B.hero.hp>0){B.healT=(B.healT||8)-dt;if(B.healT<=0){B.healT=8;let n=0;for(const u of B.units)if(u.side===0&&!u.isHero&&u.hp>0&&Math.abs(u.x-B.hero.x)<150&&u.hp<u.max){u.hp=Math.min(u.max,u.hp+u.max*0.2);n++;}if(n)B.texts.push({x:B.hero.x,y:GY-70,txt:'Şifa +'+n,life:1.2,col:'#8aff8a'});}}
+  for(const u of B.units)if(u.summon&&u.hp>0){u.sumT-=dt;if(u.sumT<=0){u.sumT=14;spawnFoe('golge',u.x+10);spawnFoe('golge',u.x+30);banner('Erlik Gölge çağırdı!',1.4,'#d06aff');SFX.summon();}}
+  for(const u of B.units){if(u.isHero)updHero(u,dt);else if(u.hp>0)updUnit(u,dt);}
+  // mermiler
+  for(const p of B.proj){p.e+=dt;if(p.e>=p.dur){p.done=true;impact(p);}}
+  B.units=B.units.filter(u=>!u.wolf||u.hp>0);
+  B.proj=B.proj.filter(p=>!p.done);
+  // ateş yağmuru
+  const fdmg=65*upEff('atesD')*(0.6+0.5*B.ref);
+  for(const f of B.fires){f.t+=dt;
+    if(f.t<0.6&&Math.random()<0.7)f.balls.push({x:f.cx+(Math.random()-0.5)*260,y:-20,vy:700+Math.random()*200});
+    for(const b of f.balls){b.y+=b.vy*dt;if(!b.hit&&b.y>=GY){b.hit=true;for(let k=0;k<6;k++)B.parts.push({x:b.x,y:GY,vx:(Math.random()-0.5)*140,vy:-Math.random()*160,life:0.5,col:Math.random()<0.5?'#ffb347':'#ff5a1f',sz:3,g:300});}}
+    if(f.t>=0.55&&!f.done){f.done=true;B.shake=7;SFX.fireImpact();
+      for(const e of B.units)if(e.side===1&&e.hp>0&&Math.abs(e.x-f.cx)<140)hurt(e,e.boss?fdmg*1.5:fdmg,true);}
+  }
+  B.fires=B.fires.filter(f=>f.t<1.2);
+  B.units=B.units.filter(u=>u.isHero||u.hp>0);
+}
+function surDefense(dt){
+  const sk=B.ref*0.5+0.5;
+  const lo=upEff('surok');if(lo){B.surT-=dt;if(B.surT<=0){B.surT=Math.max(0.9,2.2-0.025*S.up.surok);
+    let t=null,bd=300;for(const e of B.units)if(e.side===1&&e.hp>0&&e.x-112<bd){bd=e.x-112;t=e;}
+    if(t){B.proj.push({sx:104+Math.random()*16,sy:GY-128,tx:t.x,ty:tgtY(t),e:0,dur:0.2+bd/700,kind:'arrow',dmg:6*lo*sk,side:0,t,arc:30,col:'#fff'});SFX.bow();}}}
+  const lm=upEff('mancinik');if(lm){B.manT-=dt;if(B.manT<=0){B.manT=Math.max(4,8-0.08*S.up.mancinik);
+    let t=null;for(const e of B.units)if(e.side===1&&e.hp>0&&e.x<640&&(!t||(e.boss&&!t.boss)||(e.boss===t.boss&&e.max>t.max)))t=e;
+    if(t){B.proj.push({sx:118,sy:GY-140,tx:t.x,ty:GY+t.lane-6,e:0,dur:0.7+Math.abs(t.x-118)/700,kind:'bomb',dmg:22*lm*sk,splash:55,side:0,t,arc:140,col:'#777'});SFX.cannon();}}}
+  const lh=upEff('hendek');if(lh){B.henT-=dt;if(B.henT<=0){B.henT=3;let n=0;
+    for(const e of B.units)if(e.side===1&&e.hp>0&&e.x<200){hurt(e,8*lh*sk,true);if(!e.boss&&e.hp>0)e.x=Math.min(842,e.x+50);n++;}
+    if(n){B.shake=Math.max(B.shake,3);for(let k=0;k<10;k++)B.parts.push({x:150+Math.random()*50,y:GY+4,vx:(Math.random()-0.5)*60,vy:-Math.random()*160,life:0.5,col:'#6a4a2a',sz:3,g:400});SFX.club();}}}
+}
+function impact(p){
+  const foeSide=p.side?0:1;
+  if(p.splash){
+    for(const e of B.units)if(e.side===foeSide&&e.hp>0&&Math.abs(e.x-p.tx)<p.splash)hurt(e,p.dmg,true);
+    const base=foeSide?B.eBase:B.pBase;if(Math.abs(base.x-p.tx)<p.splash+10)hurt(base,p.dmg);
+    for(let k=0;k<14;k++)B.parts.push({x:p.tx,y:p.ty+10,vx:(Math.random()-0.5)*200,vy:-Math.random()*200,life:0.5,col:k%2?'#ffb347':(p.kind==='fire'?'#ff5a1f':'#555'),sz:3+Math.random()*3,g:350});
+    B.shake=Math.max(B.shake,3);SFX.boom();return;
+  }
+  let t=p.t;
+  if(!(t.hp>0)||(!t.isBase&&Math.abs(t.x-p.tx)>40)){
+    t=null;let bd=28;for(const e of B.units)if(e.side===foeSide&&e.hp>0&&Math.abs(e.x-p.tx)<bd){bd=Math.abs(e.x-p.tx);t=e;}
+    const base=foeSide?B.eBase:B.pBase;if(!t&&Math.abs(base.x-p.tx)<30)t=base;
+  }
+  if(t){hurt(t,p.dmg);if(p.kind==='arrow')SFX.arrowHit();}
+}
+function endGame(win){
+  if(B.over)return;
+  B.over=true;B.win=win;B.endT=1.6;B.heroIn=0;
+  let bonus=0;B.stars=0;
+  B.left=0;for(const cn of B.coins)B.left+=cn.v;B.coins=[];
+  if(B.endless){B.left=0;const w=B.wave;bonus=Math.round(w*(20+DIFF.bonus*B.i*0.25));B.best=w>(S.best||0);S.best=Math.max(S.best||0,w);
+    banner('HİSAR DÜŞTÜ · '+w+' dalga',3,'#ff6a5a');SFX.towerFall();setTimeout(()=>SFX.defeat(),500);B.bonus=bonus;S.gold+=B.goldEarned+bonus;save();ambience(false);return;}
+  if(win){const lg=Math.round(B.left*0.5);B.goldEarned+=lg;B.leftGot=lg;}
+  if(win){const pct=B.pBase.hp/B.pBase.max;B.stars=pct>0.7?3:pct>0.35?2:1;
+    const first=!(S.stars[B.i]>0);B.ilk=first;bonus=Math.round((80+DIFF.bonus*B.i)*(first?1:0.35)*(B.M.gold||1));
+    S.stars[B.i]=Math.max(S.stars[B.i]||0,B.stars);if(S.unlocked<B.i+2)S.unlocked=Math.min(NLV,B.i+2);
+    if(B.i===NLV-1)S.finished=true;
+    banner('ZAFER!',3,'#f5d36b');B.shake=12;
+    for(let k=0;k<40;k++)B.parts.push({x:880+Math.random()*60,y:GY-100-Math.random()*90,vx:(Math.random()-0.5)*260,vy:-Math.random()*220,life:1+Math.random(),col:k%3?'#2a2433':'#c060ff',sz:3+Math.random()*5,g:400});
+    SFX.towerFall();setTimeout(()=>SFX.victory(),700);
+  }else{banner('HİSAR DÜŞTÜ',3,'#ff6a5a');SFX.towerFall();setTimeout(()=>SFX.defeat(),500);}
+  B.bonus=bonus;S.gold+=B.goldEarned+bonus;save();ambience(false);
+}
+
+/* ================= SAVAŞ ÇİZİMİ ================= */
+function drawUnit(c,u){
+  if(u.isHero&&u.hp<=0)return;
+  const y=GY+u.lane,jx=u.hitT>0?(Math.random()-0.5)*3:0;
+  c.fillStyle='rgba(0,0,0,.32)';c.beginPath();c.ellipse(u.x,y+1,u.look.dragon?50*u.sc:11*u.sc*(u.mounted?1.7:1),u.look.dragon?6:3*u.sc,0,0,Math.PI*2);c.fill();
+  c.save();c.translate(u.x+jx,y);c.scale(u.dir*u.sc,u.sc);
+  if(u.mounted){drawHorse(c,u.walk,u.look.horse,u.state==='walk');c.translate(-2,-23);}
+  if(u.look.float)c.translate(0,-7+Math.sin(T*3+u.lane)*2);
+  drawFig(c,u.look,u.walk,u.atkA,u.state==='walk'&&!u.mounted);
+  c.restore();
+  if(!u.ghost&&(u.hp<u.max||u.isHero)){
+    const w=(u.isHero?34:22)*Math.min(u.sc,1.6),top=u.look.dragon?y-104*u.sc:y-46*u.sc-(u.mounted?23:0)-(u.look.float?8:0),p=Math.max(0,u.hp/u.max);
+    c.fillStyle='rgba(0,0,0,.65)';c.fillRect(u.x-w/2-1,top-1,w+2,5);
+    c.fillStyle=u.isHero?'#f5d36b':u.side?'#d04a4a':'#6ac05a';c.fillRect(u.x-w/2,top,w*p,3);
+  }
+  if(u.isHero){c.fillStyle='#f5d36b';c.font='bold 10px Tahoma,Verdana,sans-serif';c.textAlign='center';c.fillText('ALP ER',u.x,y-46*u.sc-8);}
+  else if(u.unique&&u.side===0){c.fillStyle='#ffd27a';c.font='bold 9px Tahoma,Verdana,sans-serif';c.textAlign='center';c.fillText(UNITS.find(U=>U.id===u.id).ad.toLocaleUpperCase('tr'),u.x,y-46*u.sc-(u.mounted?31:8));}
+}
+function draw(){
+  const c=ctx;c.save();
+  if(B.shake>0)c.translate((Math.random()-0.5)*B.shake,(Math.random()-0.5)*B.shake);
+  c.drawImage(makeBg(B.i),0,0);
+  drawHisar(c,B.pBase);drawKule(c,B.eBase);
+  const list=B.units.slice().sort((a,b)=>a.lane-b.lane);
+  for(const cn of B.coins){const y=GY+cn.lane-3-Math.abs(Math.sin(cn.t*3+cn.x))*2,r=cn.big?6:4;c.fillStyle='#c8a23a';circ(c,cn.x,y,r+1);c.fillStyle='#f5d36b';circ(c,cn.x,y,r);c.fillStyle='#fff6c8';circ(c,cn.x-r*0.35,y-r*0.35,r*0.35);}
+  for(const u of list)drawUnit(c,u);
+  for(const p of B.proj){if(p.e<0)continue;const q=p.e/p.dur,x=p.sx+(p.tx-p.sx)*q,y=p.sy+(p.ty-p.sy)*q-p.arc*4*q*(1-q);
+    if(p.kind==='arrow'){const q2=Math.max(0,q-0.06),x2=p.sx+(p.tx-p.sx)*q2,y2=p.sy+(p.ty-p.sy)*q2-p.arc*4*q2*(1-q2);c.strokeStyle=p.fa?'#ffb347':'#e8dcc0';c.lineWidth=p.fa?2.2:1.6;ln(c,x2,y2,x,y);if(p.fa){c.fillStyle='#ff7a1f';circ(c,x,y,2);}}
+    else if(p.kind==='bomb'){c.fillStyle='#111';circ(c,x,y,5);c.fillStyle='#ffb347';circ(c,x-3,y-4,1.6);}
+    else if(p.kind==='fire'){c.fillStyle='#ffb347';c.shadowColor='#ff5a1f';c.shadowBlur=16;circ(c,x,y,p.splash>60?8:5);c.fillStyle='rgba(255,90,30,.5)';circ(c,x+(p.tx>p.sx?-7:7),y,4);c.shadowBlur=0;}
+    else{c.fillStyle=p.col;c.shadowColor=p.col;c.shadowBlur=10;circ(c,x,y,4);c.shadowBlur=0;}}
+  for(const f of B.fires){for(const b of f.balls){if(b.hit)continue;c.strokeStyle='rgba(255,160,60,.5)';c.lineWidth=4;ln(c,b.x,b.y-26,b.x,b.y);c.fillStyle='#ffcc55';c.shadowColor='#ff7a1f';c.shadowBlur=14;circ(c,b.x,b.y,5);c.shadowBlur=0;}
+    if(f.t>0.5&&f.t<0.9){c.fillStyle='rgba(255,140,40,'+(0.35*(1-(f.t-0.5)/0.4))+')';c.fillRect(f.cx-140,GY-90,280,110);}}
+  for(const p of B.parts){c.globalAlpha=Math.min(1,p.life*2);c.fillStyle=p.col;c.fillRect(p.x-p.sz/2,p.y-p.sz/2,p.sz,p.sz);}c.globalAlpha=1;
+  if(B.L.mod==='sis'){const g=c.createLinearGradient(430,0,820,0);g.addColorStop(0,'rgba(170,180,175,0)');g.addColorStop(1,'rgba(150,160,158,.88)');c.fillStyle=g;c.fillRect(430,0,530,GY+60);}
+  const wx=REGIONS[B.L.region].wx;
+  if(wx){const sp=wx==='snow'?40:wx==='ash'?28:wx==='rain'?520:wx==='sand'?60:-35;
+    c.fillStyle=wx==='snow'?'rgba(240,245,255,.8)':wx==='ash'?'rgba(150,150,150,.6)':wx==='rain'?'rgba(170,190,220,.45)':wx==='sand'?'rgba(220,180,120,.5)':'rgba(255,140,50,.85)';
+    c.strokeStyle=c.fillStyle;c.lineWidth=1;
+    for(const w of B.wx){if(!B.paused){w.y+=sp*w.s*(1/60);w.x+=(wx==='sand'?120:wx==='rain'?-60:10)*w.s*(1/60);}
+      if(w.y>430)w.y=-5;if(w.y<-6)w.y=430;if(w.x>965)w.x=-5;if(w.x<-6)w.x=960;
+      if(wx==='rain')ln(c,w.x,w.y,w.x-3,w.y+10);else c.fillRect(w.x,w.y,wx==='sand'?3:2*w.s,wx==='sand'?1:2*w.s);}}
+  c.textAlign='center';c.font='bold 13px Tahoma,Verdana,sans-serif';
+  for(const t of B.texts){c.globalAlpha=Math.min(1,t.life*2);c.fillStyle='#000';c.fillText(t.txt,t.x+1,t.y+1);c.fillStyle=t.col;c.fillText(t.txt,t.x,t.y);}c.globalAlpha=1;
+  if(B.hero.hp<=0&&!B.over){c.fillStyle='rgba(30,46,33,.85)';c.fillRect(120,GY+30,150,22);c.fillStyle='#ffcc66';c.font='bold 12px Tahoma,Verdana,sans-serif';c.fillText('Alp Er dönüyor: '+Math.ceil(B.hero.dead)+' sn',195,GY+45);}
+  if(B.banner){const b=B.banner,a=Math.min(1,b.life*2,(b.max-b.life)*4+0.2);c.globalAlpha=a;c.font='bold 30px Tahoma,Verdana,sans-serif';
+    c.lineWidth=5;c.strokeStyle='rgba(0,0,0,.8)';c.strokeText(b.txt,480,128);c.fillStyle=b.col;c.fillText(b.txt,480,128);c.globalAlpha=1;}
+  if(B.buffT>0){c.fillStyle='rgba(255,210,122,'+(0.08+0.04*Math.sin(T*8))+')';c.fillRect(0,0,960,430);}
+  if(B.endless){c.fillStyle='rgba(30,46,33,.85)';c.fillRect(770,GY-210,150,24);c.fillStyle='#ffd27a';c.font='bold 13px Tahoma,Verdana,sans-serif';c.textAlign='center';c.fillText('Dalga '+B.wave+' · en iyi '+(S.best||0),845,GY-193);}
+  if(B.paused&&!B.over){c.fillStyle='rgba(0,0,0,.25)';c.fillRect(0,0,960,430);}
+  c.restore();
+}
+
+/* ================= HUD ================= */
+const ubWrap=document.getElementById('ubtns');let ubEls=[];
+function unitIcon(U,w,h,s0){const ic=document.createElement('canvas');ic.width=w;ic.height=h;
+  const c=ic.getContext('2d');const sc=(U.sc&&U.sc<1?0.85:1)*s0;c.translate(U.mounted?w*0.44:w*0.49,h-3);c.scale(U.mounted?sc*0.9:sc,U.mounted?sc*0.9:sc);
+  if(U.mounted){drawHorse(c,0,LOOK[U.id].horse,false);c.translate(-2,-23);}drawFig(c,LOOK[U.id],0,0,false);return ic;}
+function buildUnitButtons(){
+  ubWrap.innerHTML='';ubEls=[];
+  B.pw.forEach((id,k)=>{const P=PW(id),el=document.getElementById('pw'+k);el.style.visibility='';el.querySelector('.t').textContent=P.ad;el.querySelector('.i').textContent=P.ic;});
+  for(let k=B.pw.length;k<2;k++)document.getElementById('pw'+k).style.visibility='hidden';
+  B.slots.forEach((ui,k)=>{const U=UNITS[ui];
+    const d=document.createElement('div');d.className='ubtn';
+    d.innerHTML='<span class="nm">'+U.ad+'</span><span class="key">'+(k+1)+'</span><span class="cost"></span><div class="cdv"></div>';
+    d.appendChild(unitIcon(U,82,66,1.05));if(U.unique)d.classList.add('uq');
+    d.addEventListener('pointerdown',e=>{e.preventDefault();trySpawn(k);});
+    ubWrap.appendChild(d);ubEls.push({d,cost:d.querySelector('.cost'),cdv:d.querySelector('.cdv')});
+  });
+}
+let hudT=0;
+function hud(){
+  if(!B)return;hudT-=1;if(hudT>0)return;hudT=3;
+  document.getElementById('foodV').textContent=Math.floor(B.food);
+  document.getElementById('foodR').textContent='+'+(B.foodRate*(B.moral||1)).toFixed(1)+'/sn';
+  document.getElementById('killChip').textContent='Leş '+B.kills+' · '+B.goldEarned+' akçe'+(B.coins.length?' · yerde '+B.coins.reduce((a,c)=>a+c.v,0):'');
+  B.slots.forEach((ui,k)=>{const U=UNITS[ui],e=ubEls[k];if(!e)return;const un=unitUnlocked(U),ban=unitBanned(U);
+    e.d.classList.toggle('locked',!un||ban);e.d.classList.toggle('poor',un&&!ban&&B.food<U.cost);
+    e.cost.textContent=ban?'Bu bölümde yok':un?U.cost+' erzak':'Bölüm '+U.unlock+"'te";
+    e.cdv.style.height=(B.cds[k]>0?B.cds[k]/U.cd*100:0)+'%';});
+  B.pw.forEach((id,k)=>{const el=document.getElementById('pw'+k),cost=pwCost(id);
+    el.querySelector('.fill').style.height=Math.min(100,B.mana/cost*100)+'%';el.classList.toggle('ready',B.mana>=cost);el.querySelector('.c').textContent=cost+' ocak';});
+}
+
+/* ================= SONUÇ ================= */
+function starHtml(n){let s='';for(let k=0;k<3;k++)s+=k<n?'★':'<span class="off">★</span>';return s;}
+function showResult(){
+  const rb=document.getElementById('resBody'),ra=document.getElementById('resActs');
+  if(B.endless){
+    rb.innerHTML='<div class="big">Sonsuz Dalga: '+B.wave+' dalga</div>'+(B.best?'<b>Yeni rekor!</b> ':'')+'En iyi: '+S.best+' dalga. Hisar düştü ama ganimet hazineye eklendi.'+
+      '<table><tr><td>Leş</td><td>'+B.kills+'</td></tr><tr><td>Ganimet</td><td>'+B.goldEarned+' akçe</td></tr><tr><td>Dalga ödülü</td><td>'+B.bonus+' akçe</td></tr><tr><td>Hazine</td><td>'+S.gold+' akçe</td></tr></table>';
+    ra.innerHTML='';addAct(ra,'Harita','gray',()=>show('levels'));addAct(ra,'Ordugâh','gray',()=>show('camp'));addAct(ra,'Tekrar ▸','',()=>openPrep(B.i,true));
+    document.getElementById('ovRes').classList.add('on');
+    if(window.HISAR&&window.HISAR.onResult)window.HISAR.onResult({win:false,endless:true,wave:B.wave,best:S.best,rec:B.best,stars:0,kills:B.kills,gold:B.goldEarned,bonus:B.bonus,hazine:S.gold,i:B.i,ad:'Sonsuz Dalga'});
+    return;}
+  const last=B.i===NLV-1,rk=RANKS.find(x=>x.at===B.i+2&&B.win);
+  if(B.win){
+    rb.innerHTML='<div class="big">'+(last?'Kara Kule yıkıldı!':'Zafer: '+B.L.ad)+'</div><div class="stars">'+starHtml(B.stars)+'</div>'+
+      (last?'Kara Gece sona erdi, Komutan. Anadolu sabaha uyanıyor.':(B.L.k===RSZ-1?REGIONS[B.L.region].ad+' temizlendi! Sırada '+REGIONS[B.L.region+1].ad+' var.':'Divan seni kutluyor, Komutan. Ordu bir sonraki sefere hazır.'))+(rk?'<br><b>Yeni rütbe: '+rk.ad+'</b> · '+rk.d:'')+
+      (B.leftGot?'<br><small>Yerde kalan ganimetin yarısını askerler topladı: +'+B.leftGot+' akçe.</small>':'')+
+      '<table><tr><td>Leş</td><td>'+B.kills+'</td></tr><tr><td>Ganimet</td><td>'+B.goldEarned+' akçe</td></tr><tr><td>Zafer ödülü</td><td>'+B.bonus+' akçe</td></tr><tr><td>Hazine</td><td>'+S.gold+' akçe</td></tr></table>';
+    ra.innerHTML='';
+    if(B.L.boss||last)addAct(ra,'Zaferi paylaş','gray',()=>paylas(last?'Hisar: Kara Gece\'de Kara Kule\'yi yıktım, Erlik Han devrildi! Sıra sende, Komutan.':'Hisar: Kara Gece\'de dev savaşını kazandım: '+FOES[B.L.boss].ad+' devrildi, '+B.L.ad+' alındı! '+B.stars+' yıldız. Sıra sende, Komutan.'));
+    addAct(ra,'Ordugâh','gray',()=>show('camp'));addAct(ra,'Tekrar','gray',()=>openPrep(B.i));
+    if(!last)addAct(ra,'Devam ▸','',()=>{curReg=Math.floor((B.i+1)/PG);openPrep(B.i+1);});else addAct(ra,'Ana Menü','',()=>show('menu'));
+  }else{
+    rb.innerHTML='<div class="big">Hisar düştü</div>Bu sefer olmadı, Komutan. Toplanan ganimet hazineye eklendi'+(B.left?', yerde kalan '+B.left+' akçe kayboldu':'')+'. Ordugâh\'ta ordunu güçlendir ve tekrar dene.'+
+      '<table><tr><td>Leş</td><td>'+B.kills+'</td></tr><tr><td>Ganimet</td><td>'+B.goldEarned+' akçe</td></tr><tr><td>Hazine</td><td>'+S.gold+' akçe</td></tr></table>';
+    ra.innerHTML='';addAct(ra,'Harita','gray',()=>show('levels'));addAct(ra,'Ordugâh','gray',()=>show('camp'));addAct(ra,'Tekrar ▸','',()=>openPrep(B.i));
+  }
+  if(puanSorulsunMu(B.win,B.ilk,B.i,B.stars)){rb.appendChild(puanKutusu());puanSoruldu();}
+  document.getElementById('ovRes').classList.add('on');
+  if(window.HISAR&&window.HISAR.onResult)window.HISAR.onResult({win:B.win,stars:B.stars,last,rk,kills:B.kills,gold:B.goldEarned,bonus:B.bonus,hazine:S.gold,i:B.i,ad:B.L.ad,left:B.left,leftGot:B.leftGot});
+  if(B.win){for(let k=0;k<B.stars;k++)setTimeout(()=>SFX.star(k),250+k*260);setTimeout(()=>SFX.coin(),300+B.stars*260);}
+}
+function addAct(p,txt,cls,fn){const b=document.createElement('div');b.className='btn '+cls;b.textContent=txt;b.onclick=()=>{SFX.click();fn();};p.appendChild(b);}
+
+/* ================= EKRANLAR ================= */
+let cur='menu';
+function show(n){
+  cur=n;const map={menu:'scrMenu',levels:'scrLevels',camp:'scrCamp',help:'scrHelp',battle:'scrBattle',settings:'scrSettings'};
+  for(const k in map)document.getElementById(map[k]).classList.toggle('on',k===n);
+  document.querySelectorAll('.lvGold').forEach(e=>e.textContent=S.gold+' akçe');
+  document.getElementById('ovLv').classList.remove('on');
+  if(n==='menu')renderMenu();if(n==='levels')renderLevels();if(n==='camp')renderCamp();if(n==='settings')renderSettings();if(n==='help')rhListe();
+  if(n!=='battle')rhTemizle();if(n==='menu'||n==='levels'||n==='camp')rhGoster(n);if(n==='camp')rhGoster('sur');
+  if(n!=='battle'){ambience(false);if(B)B.heroIn=0;}
+}
+function messages(){
+  const m=[];
+  m.push({id:'m0',from:'Hisar Divanı',subj:'Kara Gece çöktü',body:'Komutan,<br><br>Doğudaki Kara Kule\'den inen yaratıklar köylerimize saldırıyor: gulyabaniler, albastılar, hortlaklar... Hisar\'ın kapıları sana emanet.<br><br>Alp Er yanında. Erzağı iyi kullan, birliklerini sırayla çıkar ve Kule\'yi yık. Bu gece biterse sabah gelir.'});
+  for(let i=Math.max(0,Math.min(S.unlocked,NLV)-5);i<S.unlocked&&i<NLV;i++)m.push({id:'l'+i,from:'Keşif Kolu',subj:'Bölüm '+(i+1)+': '+LEVELS[i].ad,body:LEVELS[i].brief+(S.stars[i]?'<br><br><b>Durum:</b> Fethedildi '+'★'.repeat(S.stars[i]):'<br><br><b>Durum:</b> Seni bekliyor.')});
+  UNITS.forEach(U=>{if(U.unlock>1&&S.unlocked>=U.unlock)m.push({id:'u'+U.id,from:'Talim Meydanı',subj:'Yeni birlik: '+U.ad,body:U.ad+' ordumuza katıldı. '+UNIT_D[U.id]+' Bedeli '+U.cost+' erzak. Sefer hazırlığında ordusuna katabilirsin.'});});
+  POWERS.forEach(P=>{if(P.unlock>1&&S.unlocked>=P.unlock)m.push({id:'p'+P.id,from:'Cephanelik',subj:'Yeni güç: '+P.ad,body:P.d+' Sefer hazırlığında iki güç seçersin.'});});
+  if(S.unlocked>=ENDLESS_AT)m.push({id:'endless',from:'Hisar Divanı',subj:'Sonsuz Dalga açıldı',body:'Kara Kule ardı arkası kesilmeyen dalgalar gönderiyor. Sefer Haritası\'ndaki ♾ Sonsuz Dalga ile dayanabildiğin kadar dayan; her dalga hazineye akçe getirir.'+(S.best?' En iyi: '+S.best+' dalga.':'')});
+  const ur=Math.floor((Math.min(S.unlocked,NLV)-1)/RSZ);
+  REGIONS.forEach((R,r)=>{if(r>0&&r<=ur&&r>ur-3)m.push({id:'r'+r,from:'Hisar Divanı',subj:'Yeni bölge: '+R.ad,body:R.ad+' bölgesine ulaştık, Komutan. '+R.lines[0]});});
+  RANKS.forEach(x=>{if(hasRank(x.at))m.push({id:'k'+x.at,from:'Hisar Divanı',subj:'Rütbe: '+x.ad,body:'Bölüm '+(x.at-1)+' fethedildi. '+x.who+' yeni bir güç kazandı: '+x.d});});
+  if(S.gold>=150)m.push({id:'g',from:'Defterdar',subj:'Hazine dolu',body:'Hazinede '+S.gold+' akçe var. Ordugâh\'ta geliştirmelere harcamayı unutma.'});
+  if(S.finished)m.push({id:'fin',from:'Hisar Divanı',subj:'Sabah geldi',body:NLV+' bölümün hepsi fethedildi ve Kara Kule yıkıldı, Komutan. Bütün Anadolu adını anıyor. Yıldızları tamamlamak için seferlere dönebilirsin.'});
+  return m.reverse();
+}
+let selMsg=null;
+function renderMenu(){
+  document.getElementById('mGold').textContent=S.gold+' akçe';
+  document.getElementById('bSound').textContent='Ses: '+(S.sound?'Açık':'Kapalı');
+  const ms=messages();if(!selMsg||!ms.find(x=>x.id===selMsg))selMsg=ms[0].id;
+  const il=document.getElementById('ilist');il.innerHTML='';
+  ms.forEach(x=>{const d=document.createElement('div');d.className='iitem'+(x.id===selMsg?' sel':'')+(S.read.indexOf(x.id)<0?' new':'');
+    d.innerHTML='<b>'+x.subj+'</b>'+x.from;d.onclick=()=>{selMsg=x.id;renderMenu();};il.appendChild(d);});
+  const s=ms.find(x=>x.id===selMsg);if(S.read.indexOf(s.id)<0){S.read.push(s.id);save();}
+  document.getElementById('ibody').innerHTML='<div class="from">Kimden: '+s.from+'</div><div class="subj">'+s.subj+'</div>'+s.body;
+}
+let curReg=null,selLv=null;
+function renderLevels(){
+  const top=Math.min(S.unlocked,NLV),NPG=Math.ceil(NLV/PG);
+  if(curReg===null)curReg=Math.floor((top-1)/PG);
+  curReg=Math.max(0,Math.min(NPG-1,curReg));
+  const a=curReg*PG,b=Math.min(NLV,a+PG),rg=LEVELS[a].region,R=REGIONS[rg],rc=Math.min(RSZ,NLV-rg*RSZ),part=Math.floor((a-rg*RSZ)/PG)+1,np=Math.ceil(rc/PG);let st=0,won=0;
+  for(let i=a;i<b;i++){st+=S.stars[i]||0;if(S.stars[i])won++;}
+  const lockR=a+1>S.unlocked;
+  document.getElementById('lvSub').textContent='Fethedilen: '+(S.unlocked-1+(S.finished?1:0))+' / '+NLV;
+  document.getElementById('rHead').innerHTML=(lockR?'🔒 ':'')+'<span>'+(rg+1)+'. '+R.ad+(np>1?' · '+part+'/'+np:'')+'</span><small>Bölüm '+(a+1)+'–'+b+'</small><span class="rbar"><i style="width:'+Math.round(won/(b-a)*100)+'%"></i></span><small>★ '+st+' / '+(b-a)*3+'</small>';
+  document.getElementById('rPrev').classList.toggle('dis',curReg===0);
+  document.getElementById('rNext').classList.toggle('dis',curReg>=NPG-1);
+  document.getElementById('bEndless').style.display=S.unlocked>=ENDLESS_AT?'':'none';
+  const g=document.getElementById('lvgrid');g.innerHTML='';
+  for(let i=a;i<b;i++){const L=LEVELS[i],lock=i+1>S.unlocked,d=document.createElement('div');
+    d.className='panel lv'+(lock?' lock':'')+(L.boss?' boss':'')+(i===top-1&&!S.finished?' cur':'');
+    d.innerHTML=(L.mod&&!lock?'<span class="mi">'+MODS[L.mod].ic+'</span>':'')+(L.boss?'<span class="tg">☠</span>':'')+
+      '<div class="n">'+(lock?'🔒 '+(i+1):(i+1))+'</div><div class="s">'+(lock?'':starHtml(S.stars[i]||0))+'</div>';
+    if(!lock)d.onclick=()=>openLv(i);g.appendChild(d);}
+}
+function openLv(i){
+  selLv=i;const L=LEVELS[i],M=MODS[L.mod];
+  document.getElementById('lvT').textContent='Bölüm '+(i+1)+' · '+L.ad;
+  document.getElementById('lvB').innerHTML='<div class="from">'+(L.region+1)+'. bölge · '+REGIONS[L.region].ad+'</div><div class="lvst">'+starHtml(S.stars[i]||0)+'</div>'+L.brief+
+    (L.boss?'<div class="modl">☠ <b>Dev:</b> '+FOES[L.boss].ad+(L.boss2?' ve '+FOES[L.boss2].ad:'')+'</div>':'')+
+    (M?'<div class="modl">'+M.ic+' <b>'+M.ad+':</b> '+M.d+'</div>':'');
+  document.getElementById('ovLv').classList.add('on');
+}
+let prI=0,prEnd=false,prSel=[],prPw=[];
+function foeIcon(id,w,h){const ic=document.createElement('canvas');ic.width=w;ic.height=h;const c=ic.getContext('2d'),F=FOES[id],L=LOOK[id];
+  const s0=Math.min(1,(h-6)/(L.dragon?95:52)/Math.min(1.6,F.sc||1))*Math.min(1.6,F.sc||1)*0.8;c.translate(w/2+(L.dragon?14:0),h-3);c.scale(-s0,s0);drawFig(c,L,0,0,false);return ic;}
+function openPrep(i,endless){
+  prI=i;prEnd=!!endless;if(i>=0)selLv=i;const top=Math.max(S.unlocked,i+1);
+  prSel=loadoutFor(i).filter(id=>top>=unitById(id).unlock);prPw=powersFor(i);
+  const L=endless?endlessLevel():LEVELS[i];
+  document.getElementById('prT').textContent=endless?'Sefer Hazırlığı · ♾ Sonsuz Dalga':'Sefer Hazırlığı · Bölüm '+(i+1)+' · '+L.ad;
+  const fr=document.getElementById('prFoes');fr.innerHTML='';
+  const ids=Object.keys(L.pool).sort((a,b)=>L.pool[b]-L.pool[a]).slice(0,10);
+  ids.forEach(id=>{const d=document.createElement('div');d.className='pfoe';d.title=FOES[id].ad;d.appendChild(foeIcon(id,48,52));d.onclick=()=>{document.getElementById('prInfo').textContent=FOES[id].ad+(FOES[id].armor?' · zırhlı':'')+(FOES[id].ranged?' · uzaktan saldırır':'');};fr.appendChild(d);});
+  const bs=endless?L.bossPool:[L.boss,L.boss2].filter(Boolean);
+  bs.forEach(id=>{const d=document.createElement('div');d.className='pfoe boss';d.title=FOES[id].ad;d.appendChild(foeIcon(id,48,52));d.onclick=()=>{document.getElementById('prInfo').textContent='☠ Dev: '+FOES[id].ad;};fr.appendChild(d);});
+  const M=!endless&&MODS[L.mod];document.getElementById('prInfo').textContent=endless?'Kule yıkılmaz; dalgalar gittikçe güçlenir, her 5 dalgada bir dev gelir. Dayanabildiğin kadar dayan.':(M?M.ic+' '+M.ad+': '+M.d:'Bir birliğe ya da güce dokun, ne işe yaradığını gör.');
+  renderPrep();document.getElementById('ovLv').classList.remove('on');document.getElementById('ovPrep').classList.add('on');rhGoster('prep');
+}
+function renderPrep(){
+  const top=Math.max(S.unlocked,prI+1),L=prEnd?null:LEVELS[prI],ban=L&&MODS[L.mod]&&MODS[L.mod].noUnit,info=document.getElementById('prInfo');
+  const ur=document.getElementById('prUnits');ur.innerHTML='';
+  UNITS.forEach(U=>{const lock=top<U.unlock,d=document.createElement('div');d.className='pcard'+(prSel.indexOf(U.id)>=0?' on':'')+(lock?' lock':'')+(U.unique?' uq':'');
+    d.innerHTML='<span class="nm">'+U.ad+'</span><span class="cs">'+(lock?'Bölüm '+U.unlock:(ban===U.id?'bu bölümde yok':U.cost+' erzak'))+'</span>';d.appendChild(unitIcon(U,64,60,0.82));
+    if(!lock)d.onclick=()=>{const k=prSel.indexOf(U.id);info.textContent=U.ad+': '+UNIT_D[U.id];
+      if(k>=0)prSel.splice(k,1);else if(prSel.length<6)prSel.push(U.id);else{info.textContent='En fazla 6 birlik götürebilirsin. Önce birini çıkar.';return;}SFX.click();renderPrep();};
+    ur.appendChild(d);});
+  document.getElementById('prUc').textContent='(6 seç · '+prSel.length+'/6)';
+  const pr=document.getElementById('prPows');pr.innerHTML='';
+  POWERS.forEach(P=>{const lock=top<P.unlock,d=document.createElement('div');d.className='pchip'+(prPw.indexOf(P.id)>=0?' on':'')+(lock?' lock':'');
+    d.textContent=P.ic+' '+P.ad+(lock?' · '+P.unlock+'. bölüm':' · '+pwCost(P.id));
+    if(!lock)d.onclick=()=>{const k=prPw.indexOf(P.id);info.textContent=P.ad+': '+P.d;if(k>=0)prPw.splice(k,1);else{if(prPw.length>=2)prPw.shift();prPw.push(P.id);}SFX.click();renderPrep();};
+    pr.appendChild(d);});
+  document.getElementById('prPc').textContent='(2 seç · '+prPw.length+'/2)';
+  document.getElementById('prGo').classList.toggle('dis',!prSel.length);
+}
+function prepCommit(){if(!prSel.length)return false;S.loadout=UNITS.filter(U=>prSel.indexOf(U.id)>=0).map(U=>U.id);S.powers=prPw.slice();save();document.getElementById('ovPrep').classList.remove('on');return true;}
+function startEndless(){startLevel(0,{endless:true});}
+function renderCamp(){
+  const t=document.getElementById('ut');t.innerHTML='';
+  UPS.forEach(u=>{const l=S.up[u.id],mx=upMax(u),max=l>=mx,cost=upCost(u,l);const tr=document.createElement('tr');
+    const now=u.id==='silah'?' · <b>Şu an: '+SILAH[l].ad+'</b>':'';
+    tr.innerHTML='<td><div class="unm">'+u.ad+'</div><div class="ud">'+u.desc+now+'</div></td><td class="ulv"><b>'+l+'</b> / '+mx+'<div class="ubar"><i style="width:'+(l/mx*100)+'%"></i></div></td><td style="text-align:right"></td>';
+    const b=document.createElement('div');b.className='btn'+(max||S.gold<cost?' dis':'');b.textContent=max?'Tamam':'Geliştir · '+cost;
+    b.onclick=()=>{if(S.up[u.id]>=mx||S.gold<cost)return;S.gold-=cost;S.up[u.id]++;save();SFX.upgrade();show('camp');};
+    tr.lastChild.appendChild(b);t.appendChild(tr);});
+  document.getElementById('ranks').innerHTML=RANKS.map(x=>{const on=hasRank(x.at);
+    return '<div class="rki'+(on?' on':'')+'"><b>'+(on?'✓ ':'🔒 ')+x.ad+'</b>'+x.who+' · Bölüm '+(x.at-1)+' geçilince<br>'+x.d+'</div>';}).join('');
+}
+function paintBgs(){
+  const m=document.getElementById('menuBg').getContext('2d');m.drawImage(makeBg(4),0,0,960,540);m.fillStyle='rgba(5,10,6,.35)';m.fillRect(0,0,960,540);
+  document.querySelectorAll('canvas.bgc').forEach((cv2,k)=>{const c=cv2.getContext('2d');c.drawImage(makeBg([0,3,6][k%3]),0,0,960,540);c.fillStyle='rgba(5,10,6,.5)';c.fillRect(0,0,960,540);});
+}
+
+/* ================= GİRDİLER ================= */
+function on(id,fn){document.getElementById(id).addEventListener('click',fn);}
+on('bPlay',()=>show('levels'));on('rPrev',()=>{if(curReg>0){curReg--;renderLevels();}});on('rNext',()=>{if(curReg<Math.ceil(NLV/PG)-1){curReg++;renderLevels();}});
+on('bCur',()=>{curReg=null;renderLevels();openLv(Math.min(S.unlocked,NLV)-1);});on('lvBack',()=>document.getElementById('ovLv').classList.remove('on'));
+on('lvGo',()=>{if(selLv!=null)openPrep(selLv);});
+on('prBack',()=>document.getElementById('ovPrep').classList.remove('on'));
+on('prGo',()=>{if(!prepCommit())return;if(prEnd)startEndless();else startLevel(prI);});
+on('bEndless',()=>{if(S.unlocked>=ENDLESS_AT)openPrep(Math.min(S.unlocked,NLV)-1,true);});on('bPlay2',()=>show('levels'));on('bCamp',()=>show('camp'));on('bCamp2',()=>show('camp'));on('bHelp',()=>openHelp('menu'));
+on('bSound',()=>{S.sound=!S.sound;save();if(S.sound){unlockAudio();setTimeout(()=>SFX.click(),30);}else ambience(false);renderMenu();});
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.go)));
+function setPause(p){if(!B||B.over||rhAcik)return;B.paused=p;ambience(!p);B.heroIn=0;document.getElementById('ovPause').classList.toggle('on',p);}
+on('bPause',()=>setPause(true));on('bResume',()=>setPause(false));
+on('bQuit',()=>{setPause(false);B=null;show('levels');});
+on('bSpeed',()=>{if(!B)return;B.speed=B.speed>=3?1:B.speed+1;document.getElementById('bSpeed').textContent='×'+B.speed;});
+for(let k=0;k<2;k++){const el=document.getElementById('pw'+k);el.addEventListener('pointerdown',e=>{e.preventDefault();power(k);});}
+function holdBtn(id,dir){const el=document.getElementById(id);
+  const down=e=>{e.preventDefault();if(B&&!B.paused)B.heroIn=dir;el.classList.add('down');};
+  const up=()=>{if(B&&B.heroIn===dir)B.heroIn=0;el.classList.remove('down');};
+  el.addEventListener('pointerdown',down);el.addEventListener('pointerup',up);el.addEventListener('pointerleave',up);el.addEventListener('pointercancel',up);}
+holdBtn('hL',-1);holdBtn('hR',1);
+addEventListener('keydown',e=>{if(cur!=='battle'||!B)return;
+  if(rhAcik){if(e.key==='Enter'||e.key===' '){e.preventDefault();rhTamam();}return;}
+  if(e.key>='1'&&e.key<='6')trySpawn(+e.key-1);
+  else if(e.key==='ArrowLeft'){if(!B.paused)B.heroIn=-1;}else if(e.key==='ArrowRight'){if(!B.paused)B.heroIn=1;}
+  else if(e.key===' '){e.preventDefault();power(0);}else if(e.key==='q'||e.key==='Q'||e.key==='Enter'){e.preventDefault();power(1);}else if(e.key==='p'||e.key==='P'||e.key==='Escape')setPause(!B.paused);});
+addEventListener('keyup',e=>{if(!B)return;if((e.key==='ArrowLeft'&&B.heroIn===-1)||(e.key==='ArrowRight'&&B.heroIn===1))B.heroIn=0;});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&B&&cur==='battle'&&!B.over)setPause(true);});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('click',e=>{const el=e.target.closest('.btn,.rtab,.lv,.iitem,.sbtn,#bSound');if(el&&!el.closest('#resActs')&&el.id!=='bSound'&&!el.classList.contains('dis')&&!el.classList.contains('lock'))SFX.click();},true);
+
+/* ================= REHBER · AYARLAR · PUAN · PAYLAŞ =================
+   Test ekibinin önerileri (Malazgirt Akıncıları 1.6 / Champion Battle Manager 4.4 ile aynı paket):
+   ilk karşılaşmada kısa ipucu kartı, Nasıl Oynanır'da bütün ipuçları, uygulama içinden puan (mobil),
+   arkadaşına öner, "Bize yaz" hazır e-postası, Verilerimi sil. Hiçbir veri toplanmaz. */
+const SURUM='1.2.0';
+const RKEY='hisar_rehber_v1',PKEY='hisar_puan_v1';
+const IOS_ID='';// App Store kimliği belli olunca yaz (ör. '6750000000'); boşken iOS'ta mağaza bağlantısı yerine site kullanılır
+const jOku=(k,v)=>{try{const r=localStorage.getItem(k);return r?JSON.parse(r):v;}catch(e){return v;}};
+const jYaz=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+function platform(){try{const p=window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform();if(p&&p!=='web')return p;}catch(e){}return 'web';}
+const mobil=()=>platform()==='ios'||platform()==='android';
+const PLAY_URL='https://play.google.com/store/apps/details?id=com.anduv.hisar';
+function magazaUrl(){if(platform()==='ios')return IOS_ID?'https://apps.apple.com/app/id'+IOS_ID:'https://emreanduv.github.io/';return PLAY_URL;}
+/* ipuçları: [anahtar, başlık, metin] — Nasıl Oynanır'da bu sırayla görünür */
+const IPUCU=[
+ ['menu','Komuta Masası','Gelen Kutusu\'nda Divan\'ın ve Keşif Kolu\'nun mektupları var; her yeni bölümün ipucu oradadır. Devam ▸ ile Sefer Haritası\'na geç.'],
+ ['levels','Sefer Haritası','20 bölge, 1923 bölüm. Kazandıkça sıradaki bölüm açılır. Yıldızlar Hisar\'ın kalan canına göre verilir: canın %70\'ten fazlası kalırsa 3 yıldız.'],
+ ['prep','Sefer Hazırlığı','Savaştan önce gelecek düşmanları ve devleri gör. Ordundan 6 birlik, cephanelikten 2 güç seç; seçimin bir sonraki sefere de kalır.'],
+ ['ganimet','Ganimet yerde','Devrilen yaratık yere akçe bırakır. Alp Er\'i üstünden yürüt, toplasın. Zaferde yerde kalanın yarısını askerler toplar, yenilgide kaybolur.'],
+ ['sonsuz','Sonsuz Dalga','Kule yıkılmaz; dalgalar gittikçe güçlenir, her 5 dalgada bir dev gelir. Dayanabildiğin kadar dayan, her dalga hazineye akçe getirir.'],
+ ['sur','Sur savunması','Ordugâh\'tan Sur Okçuları, Sur Mancınığı ve Hendek kurabilirsin: Hisar kendini de savunur. Silahhane Alp Er\'in silahını güçlendirir.'],
+ ['battle','Erzak ve birlikler','Erzak zamanla dolar. Alttaki kartlara dokunarak birlik çıkar; her kartın bedeli ve bekleme süresi vardır. Önce ucuz Sekban ile safı tut, arkasına Okçu diz.'],
+ ['alp','Alp Er','◀ ▶ düğmelerini basılı tut, Alp Er yürür ve yanındaki düşmana kendiliğinden kılıç sallar. Sağ üstte ×2 savaşı hızlandırır, ❚❚ mola verir.'],
+ ['ates','Güç hazır','Ocak doldu. Sağ alttaki güç düğmelerinden birine dokun: Ateş Yağmuru kalabalığa ateş yağdırır, Ok Yağmuru öndekileri oklar. Devlere ve kalabalığa sakla.'],
+ ['alpDustu','Alp Er yaralandı','Alp Er düşünce 10 saniye sonra Hisar\'dan yeniden çıkar. O sırada birliklerinle cepheyi tut; Ordugâh\'taki Alp Er\'in Kılıcı onu güçlendirir.'],
+ ['camp','Ordugâh','Leşlerden ve zaferlerden gelen akçeyi burada harca. Geliştirmeler kalıcıdır; takıldığın bölümde önce Surlar ve Erzak Ambarı işe yarar.'],
+ ['u_kalkan','Yeni birlik: Kalkancı','Canı çok yüksek, yavaş ilerler. Öne kalkancı, arkaya okçu diz; okçular onun arkasından güvenle vurur.'],
+ ['dev','Dev geliyor','Bu bölümde bir dev çıkar. Vuruşu yanındaki herkese değer: safları sıklaştır, Alp Er\'i geri çek, Ateş Yağmuru\'nu ona sakla.'],
+ ['u_akinci','Yeni birlik: Akıncı','Atlı ve çok hızlı. Uzaktan vuran Hortlak ve Cadılara çabucak ulaşır.'],
+ ['u_humbara','Yeni birlik: Humbaracı','Uzaktan gülle atar, kalabalığa toplu hasar verir ve zırhı deler. Pahalıdır; önünü kalkancıyla koru.'],
+ ['u_deli','Yeni birlik: Deli','Zırhsız ama çok sert vurur ve hızlıdır. Kalkancıların arkasından saldırıya sür.'],
+ ['u_mizrak','Yeni birlik: Mızrakçı','Uzun mızrağıyla ön safın arkasından vurur. Kalkancının hemen arkasına koy.'],
+ ['u_mesaleci','Yeni birlik: Meşaleci','Savaşmaz. Sahadayken bütün okçular ateşli ok atar ve çok daha sert vurur. Çabuk düşer, önünü koru.'],
+ ['u_silahtar','Yeni birlik: Silahtar','Savaşmaz. Sahadayken bütün sekbanlar keskin kılıç kuşanır.'],
+ ['u_ozan','Tekil kahraman: Ozan','Sahada bir tane olur. Savaşmaz; kopuzuyla yakınındaki askerleri iyileştirir.'],
+ ['u_bey','Tekil kahraman: Hisar Beyi','Sahada bir tane olur. Çok güçlüdür ve yanında iki okçuyla gelir.'],
+ ['u_bahadir','Tekil kahraman: Kızıl Bahadır','Sahada bir tane olur. Atlıdır, gürzüyle düşman saflarına dalar.'],
+ ['zirh','Zırhlı düşman','Demir Cin ve Erlik Muhafızı zırhlıdır: kılıç ve okun bir kısmını yutar. Humbaracı güllesi ve Ateş Yağmuru zırhı tam deler.'],
+];
+const IPM={};IPUCU.forEach(x=>IPM[x[0]]=x);
+function rhDurum(){const d=jOku(RKEY,null);return d&&d.gor?d:{gor:{},kapali:false};}
+function rhKaydet(d){jYaz(RKEY,d);}
+/* eski oyuncu: rehber kaydı yok ama ilerlemesi var → zaten karşılaştığı ipuçlarını görülmüş say */
+(function(){try{if(localStorage.getItem(RKEY))return;}catch(e){return;}
+  if(!(S.unlocked>1||S.gold>0||(S.stars&&S.stars.length)))return;
+  const g={};['menu','levels','battle','alp','ates','alpDustu','camp'].forEach(k=>g[k]=1);
+  UNITS.forEach(U=>{if(U.unlock>1&&S.unlocked>U.unlock)g['u_'+U.id]=1;});
+  if(S.unlocked>5)g.dev=1;if(S.unlocked>21)g.zirh=1;
+  rhKaydet({gor:g,kapali:false});})();
+let rhSira=[],rhAcik=null;
+function rhGoster(k){if(window.__XR_ON)return;const d=rhDurum();if(d.kapali||d.gor[k]||!IPM[k])return;if(rhAcik===k||rhSira.indexOf(k)>=0)return;rhSira.push(k);if(!rhAcik)rhSonraki();}
+function rhSonraki(){
+  const el=document.getElementById('rhKart');
+  rhAcik=rhSira.shift()||null;
+  if(!rhAcik){el.classList.remove('on');if(B&&B.rhDur){B.rhDur=false;if(!document.getElementById('ovPause').classList.contains('on'))B.paused=false;}return;}
+  const x=IPM[rhAcik];document.getElementById('rhB').textContent=x[1];document.getElementById('rhM').textContent=x[2];
+  el.style.top=cur==='battle'?'52px':'54px';el.classList.add('on');
+  if(cur==='battle'&&B&&!B.over&&!B.paused){B.paused=true;B.rhDur=true;B.heroIn=0;}
+}
+function rhTamam(){if(rhAcik){const d=rhDurum();d.gor[rhAcik]=1;rhKaydet(d);}rhSonraki();}
+function rhKapat(){const d=rhDurum();d.kapali=true;if(rhAcik)d.gor[rhAcik]=1;rhKaydet(d);rhSira=[];rhSonraki();}
+function rhTemizle(){rhSira=[];rhSonraki();}
+function rhListe(){const d=rhDurum();const el=document.getElementById('rhListe');el.innerHTML='';
+  IPUCU.forEach(x=>{const r=document.createElement('div');r.className='rhSat'+(d.gor[x[0]]?'':' yeni');const b=document.createElement('b');b.textContent=x[1];r.appendChild(b);r.appendChild(document.createTextNode(x[2]));el.appendChild(r);});}
+/* savaş sırasında ilk karşılaşmalar (her karede ucuz kontrol) */
+function rhSavas(){
+  if(!B||B.over||rhAcik)return;
+  if(B.mana>=Math.min(...B.pw.map(pwCost)))rhGoster('ates');if(B.coins.length)rhGoster('ganimet');
+  if(B.hero&&B.hero.hp<=0)rhGoster('alpDustu');
+  for(const u of B.units)if(u.side===1&&u.hp>0){if(u.armor)rhGoster('zirh');if(u.boss)rhGoster('dev');}
+}
+function rhSavasBasi(){
+  rhGoster('battle');rhGoster('alp');
+  UNITS.forEach(U=>{if(U.unlock>1&&unitUnlocked(U))rhGoster('u_'+U.id);});
+  if(B&&B.L.boss)rhGoster('dev');if(B&&B.endless)rhGoster('sonsuz');
+}
+let helpFrom='menu';
+function openHelp(from){helpFrom=from;rhTemizle();show('help');}
+/* bildirim ve soru pencereleri */
+let tostT=0;
+function tost(m){const t=document.getElementById('tost');t.textContent=m;t.classList.add('on');clearTimeout(tostT);tostT=setTimeout(()=>t.classList.remove('on'),2600);}
+function sor(baslik,metin,dugmeler){
+  document.getElementById('askB').textContent=baslik;document.getElementById('askM').innerHTML=metin;
+  const a=document.getElementById('askActs');a.innerHTML='';
+  dugmeler.forEach(([t,c,f])=>addAct(a,t,c,()=>{document.getElementById('ovAsk').classList.remove('on');if(f)f();}));
+  document.getElementById('ovAsk').classList.add('on');
+}
+/* ilerleme özeti (e-posta gövdesi için; yalnız kullanıcı kendisi gönderirse gider) */
+function ilerleme(){let st=0;(S.stars||[]).forEach(x=>st+=x||0);return 'Bölüm '+Math.min(S.unlocked,LEVELS.length)+'/'+LEVELS.length+' · ★ '+st+'/'+(LEVELS.length*3)+' · '+S.gold+' akçe';}
+/* paylaş: telefonun paylaşım menüsü, yoksa tarayıcınınki, yoksa panoya kopyala */
+async function paylas(metin){
+  metin=metin||'Hisar: Kara Gece — Hisar\'ı savun, Kara Kule\'yi yık! Anadolu efsanelerinden yaratıklara karşı 1923 bölümlük kale savunması. Reklamsız, internetsiz.';
+  const url=magazaUrl(),P=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Share;
+  try{
+    if(P&&P.share){await P.share({title:'Hisar: Kara Gece',text:metin,url,dialogTitle:'Arkadaşına öner'});return;}
+    if(navigator.share){await navigator.share({title:'Hisar: Kara Gece',text:metin,url});return;}
+  }catch(e){if(/cancel|abort/i.test((e&&(e.message||e.name))||''))return;}
+  try{await navigator.clipboard.writeText(metin+' '+url);tost('Bağlantı kopyalandı, istediğin yere yapıştır.');}catch(e){tost(url);}
+}
+function bizeYaz(){
+  const konu='Hisar: Kara Gece – Görüş ve öneri ('+SURUM+', '+platform()+')';
+  const govde='Merhaba, oyunla ilgili görüşüm ve önerim:\n\n\n— Sürüm '+SURUM+' · '+platform()+' · '+ilerleme();
+  location.href='mailto:emreanduvart@gmail.com?subject='+encodeURIComponent(konu)+'&body='+encodeURIComponent(govde);
+}
+/* puan: yalnız iOS/Android; ilk kez kazanılan 5., 10. ve 20. bölümde (2+ yıldız) ya da sefer sonunda; en çok 2 kez, yenilgide asla */
+function puanSorulsunMu(win,ilk,i,yildiz){
+  if(!mobil()||!win||!ilk)return false;
+  const p=jOku(PKEY,{n:0,tamam:false});if(p.tamam||p.n>=2)return false;
+  return i===LEVELS.length-1||([4,9,19].indexOf(i)>=0&&yildiz>=2);
+}
+function puanSoruldu(){const p=jOku(PKEY,{n:0,tamam:false});p.n++;jYaz(PKEY,p);}
+async function puanVer(){
+  const p=jOku(PKEY,{n:0,tamam:false});p.tamam=true;jYaz(PKEY,p);
+  const R=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.InAppReview;
+  try{if(R&&R.requestReview){await R.requestReview();return;}}catch(e){}
+  try{window.open(magazaUrl(),'_blank');}catch(e){location.href=magazaUrl();}
+}
+function puanKutusu(){
+  const k=document.createElement('div');k.className='puanK';
+  k.innerHTML='<b>Hisar hoşuna gitti mi, Komutan?</b><br>Birkaç saniyeni ayırıp puan verirsen oyun daha çok kişiye ulaşır.';
+  const r=document.createElement('div');r.className='row';k.appendChild(r);
+  const kapat=()=>k.remove();
+  addAct(r,'Sonra','gray',kapat);addAct(r,'Önerim var','gray',()=>{kapat();bizeYaz();});addAct(r,'★ Puan ver','',()=>{kapat();puanVer();});
+  return k;
+}
+/* verilerimi sil: ilerleme, akçe, geliştirmeler, ayarlar, rehber ve puan kaydı. Oyunda satın alma yoktur. */
+function verileriSil(){
+  sor('Verilerimi sil','Bu cihazdaki bütün oyun verilerin silinecek: açılan bölümler, yıldızlar, akçe, Ordugâh geliştirmeleri, ses ayarı ve rehber. <b>Geri alınamaz.</b><br><br>Oyun hiçbir veriyi bize göndermez; silinecek veriler yalnız bu cihazdadır.',[
+    ['Vazgeç','gray',null],
+    ['Evet, sil','red',()=>{try{Object.keys(localStorage).forEach(k=>{if(/^hisar/i.test(k))localStorage.removeItem(k);});}catch(e){}
+      try{sessionStorage.clear();}catch(e){}
+      S.__silindi=true;tost('Verilerin silindi. Oyun baştan açılıyor…');setTimeout(()=>location.reload(),900);}]]);
+}
+function renderSettings(){
+  const d=rhDurum(),t=document.getElementById('ayarT');t.innerHTML='';
+  const satir=(ad,acik,dug,cls,fn)=>{const tr=document.createElement('tr');tr.innerHTML='<td><div class="unm"></div><div class="ud"></div></td><td></td>';
+    tr.querySelector('.unm').textContent=ad;tr.querySelector('.ud').textContent=acik;const b=document.createElement('div');b.className='btn '+(cls||'');b.textContent=dug;b.onclick=fn;tr.lastChild.appendChild(b);t.appendChild(tr);};
+  satir('Ses','Savaş sesleri ve gece ambiyansı',S.sound?'Açık':'Kapalı',S.sound?'':'gray',()=>{S.sound=!S.sound;save();if(S.sound){unlockAudio();setTimeout(()=>SFX.click(),30);}else ambience(false);renderSettings();});
+  satir('Rehber ipuçları','Yeni bir şeyle ilk karşılaştığında kısa ipucu',d.kapali?'Kapalı':'Açık',d.kapali?'gray':'',()=>{const x=rhDurum();x.kapali=!x.kapali;rhKaydet(x);renderSettings();});
+  satir('Nasıl Oynanır','Bütün ipuçları ve Divan\'ın talimatı','Aç','gray',()=>openHelp('settings'));
+  if(mobil())satir('Oyunu puanla','Mağazanın kendi puan ekranı açılır','★ Puan ver','',puanVer);
+  satir('Arkadaşına öner','Oyunu paylaş','Paylaş','gray',()=>paylas());
+  satir('Görüş ve öneri','Hazır bir e-posta açılır; sürüm ve ilerlemen eklenir','Bize yaz','gray',bizeYaz);
+  satir('Gizlilik politikası','Oyun hiçbir kişisel veri toplamaz','Oku','gray',()=>{try{window.open('https://emreanduv.github.io/hisar/','_blank');}catch(e){}});
+  satir('Verilerimi sil','Bu cihazdaki ilerleme, akçe, geliştirmeler ve ayarlar','Verilerimi sil','red',verileriSil);
+  document.getElementById('ayarSurum').innerHTML='Hisar: Kara Gece '+SURUM+' · <b>Bir Mr. Anduv! yapımıdır.</b>';
+}
+on('bRhTamam',rhTamam);on('bRhKapat',rhKapat);
+on('bRhBastan',()=>{rhKaydet({gor:{},kapali:false});rhListe();tost('Rehber baştan gösterilecek.');});
+on('bHelpBack',()=>show(helpFrom==='battle'&&!B?'levels':helpFrom));
+on('bShare',()=>paylas());on('bSettings',()=>show('settings'));
+on('bPauseHelp',()=>openHelp('battle'));
+
+/* ================= DÖNGÜ ================= */
+let last=performance.now();
+function loop(now){
+  requestAnimationFrame(loop);
+  const dt=Math.min(0.05,(now-last)/1000);last=now;T+=dt;
+  if(window.__XR_ON)return; // VR (Masadaki Savaş) kendi döngüsünü çalıştırır
+  if(cur==='battle'&&B){if(!B.paused){for(let k=0;k<B.speed;k++)step(dt);ambienceTick(dt);rhSavas();}draw();hud();}
+}
+paintBgs();show('menu');requestAnimationFrame(loop);
+window.HISAR={startLevel,step,trySpawn,fire,endGame,power,POWERS,PW,pwCost,UNIT_D,PG,ENDLESS_AT,upMax,SILAH,loadoutFor,powersFor,unitById,startEndless,openPrep,prepCommit,get prI(){return prI;},get prEnd(){return prEnd;},get B(){return B;},S,show,UNITS,LEVELS,REGIONS,MODS,UPS,upCost,UPMAX,NLV,RSZ,DIFF,buildLevels,fireCost,openLv,save,
+  LOOK,FOES,RANKS,RPAL,GY,drawFig,drawHorse,makeBg,shade,srand,SFX,ambience,ambienceTick,setPause,unitUnlocked,unitBanned,hasRank,
+  tick(dt){T+=dt;},get T(){return T;},onResult:null,get selLv(){return selLv;},setCurReg(r){curReg=r;}};
+// Masadaki Savaş (VR/MR): yalnızca WebXR destekleyen cihazlarda yüklenir
+(function(){const m=/[?&]masa=([a-z]+)/.exec(location.search);if(m){import('./vr.js').then(()=>{const q=/[?&]b=(\d+)/.exec(location.search);window.HISAR_VR.startPreview(q?+q[1]-1:0,{ar:m[1]==='mr'});});return;}
+  const x=navigator.xr;if(!x||!x.isSessionSupported)return;
+  Promise.all([x.isSessionSupported('immersive-ar').catch(()=>false),x.isSessionSupported('immersive-vr').catch(()=>false)]).then(([ar,vr])=>{
+    if(!ar&&!vr)return;window.HISAR.xrModes={ar,vr};document.body.classList.add('xr-ok');import('./vr.js').catch(e=>console.warn('VR yüklenemedi',e));});})();
+</script>
+</body>
+</html>
