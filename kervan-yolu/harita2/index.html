@@ -1214,6 +1214,8 @@ function vehStep(v,dt,inp,load){const p=v.p;let acc=0;const af=load||1;
  if(v===truck.v&&G&&RG().snow){const ice=getH(v.x,v.z)>RG().snowLine-2&&!(CZ&&CZ.x!==undefined&&Math.hypot(v.x-CZ.x,v.z-CZ.z)<30);v.ice=ice&&!G.chain;
   if(v.ice){if(inp.gas&&v.slope>.02){acc*=.15;acc-=9.8*v.slope*.25;G.spin=(G.spin||0)+1}if(inp.brake&&v.speed>.3)acc*=.45;if(!inp.gas&&!inp.brake&&Math.abs(v.speed)<1.2){acc=-v.speed*4}}
   if(G.chain&&v.speed>11&&!inp.brake)acc=Math.min(acc,-.8)}
+ /* TAKILMA YOK kuralı: ağır nakliye çekicisi en ağır yükle de yokuşu sürünme vitesinde çıkar. Gaza basılıyken (buz ve çamur kendi kurallarıyla) tır hiçbir eğimde geri kaymaz, en az ≈5 km/sa ilerler. Denetim: araclar/testler/rampa-denetimi.py */
+ if(v===truck.v&&inp.gas&&!inp.brake&&!v.ice&&!(window.EXT&&EXT.inMud(v))&&v.speed<1.6&&v.speed>-.6)acc=Math.max(acc,.4*(1-Math.max(0,v.speed)/1.6)+.06);
  const rd=getRD(v.x,v.z);v.off=rd>6.2&&yardMask(v.x,v.z)<.5&&siteMask(v.x,v.z)<.5&&!onPad(v.x,v.z);if(v.off)acc-=v.speed*.35;
  v.speed+=acc*dt;if(v.speed<-p.vrev)v.speed=-p.vrev;
  const tgt=(inp.left?1:0)-(inp.right?1:0);const ms=p.steer/(1+Math.abs(v.speed)*p.steerFall)*(v.ice?.72:1);v.steer+=(tgt*ms-v.steer)*Math.min(1,dt*(tgt?3.2:4.5)*(v.ice?.6:1));
@@ -1432,7 +1434,7 @@ function bladeLogic(dt){chainLogic(dt);if(aktarmaLogic(dt))return;if(!bladeOn())
   if(G.blT>.5&&i>VZ.v1&&i<VZ.wi-2&&G.warnT<=0){toast(T('t_wire'),'#ffe08a',2.4);G.warnT=3}}}
 function driveLogic(dt){const v=truck.v;const sp=Math.abs(v.speed);G.dist+=sp*dt;bladeLogic(dt);trafficRules(dt);
  if(G.bhitT>0||(v.ice&&!G.chain)||G.chT>0){if(G.bhitT>0)G.bhitT-=dt;G.stuckT=0;if(actFn===rescue&&v.ice)setAct(null)}else if((mode==='free'||G.strapped)&&(input.gas||input.brake)&&sp<.3)G.stuckT=(G.stuckT||0)+dt;else if(sp>1)G.stuckT=0;if(G.stuckT===0&&actFn===rescue)setAct(null);
- if(G.stuckT>2.5&&(!actFn||actFn.blade)){setAct(T('rescue'),rescue);return}
+ if(G.stuckT>2.5&&(!actFn||actFn.blade&&!actFn.dozer&&!actFn.chain&&!actFn.man)){setAct(T('rescue'),rescue);return}/* dozer, zincir ve manevra düğmesinin üstüne kurtarma yazılmaz: o yerin kendi çözümü öndedir */
  if(mode==='free'){portLogic(dt);if(yakitLogic(dt))return;G.score=Math.floor(G.dist/100)+(G.bonus||0);freeLogic();return}
  if(!G.strapped){if(sp<.5&&G.job.type!=='kasa'){setAct(T('strap'),doStrap);coach('strap')}if(input.gas&&G.warnT<=0){toast(T('t_strapFirst'),'#ffe08a');G.warnT=2}return}
  if(portLogic(dt))return;if(yakitLogic(dt))return;if(takoLogic(dt))return;

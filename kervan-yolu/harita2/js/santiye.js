@@ -150,7 +150,7 @@ function manKur(root){MR=null;if(!MAN.includes(REG))return;const i=NS-1-64-6;con
 function manAdim(dt){if(!MR||!G||mode!=='career'||!HEAVY.includes(G.job.type)||G.job.dummy){if(MR)MR.ring.visible=false;return}const v=truck.v,ti=roadIdx(v),sp=Math.abs(v.speed);MR.ring.visible=!G.manOk;
  if(G.manOk||G.manT!==undefined&&G.manT>=0)return;
  if(ti>MR.i+2&&v.speed>0){v.speed=0;if(G.warnT<=0){toast(T('t_manDur'),'#ffb36b',3);G.warnT=3}}
- if(Math.abs(ti-MR.i)<=3&&sp<.6){if(!(actFn&&actFn.man)){const fn=()=>{setAct(null);manBasla()};fn.man=1;fn.blade=1;setAct(T('a_man'),fn)}}
+ /* TAKILMA YOK: halkayı geçip duran tır kilitlenmez; halkadan sonra durduğu her yerde manevra düğmesi çıkar (eskiden yalnız halkanın ±3 örneğinde çıkıyordu, Karadeniz'de tır halkanın ötesinde kalıyordu) */if(ti>=MR.i-3&&sp<.6){if(!(actFn&&actFn.man)){const fn=()=>{setAct(null);manBasla()};fn.man=1;fn.blade=1;setAct(T('a_man'),fn)}}
  else if(actFn&&actFn.man)setAct(null)}
 function manBasla(){const v=truck.v;G.manT=0;if(G.deadline)G.deadline+=10;G.manX={i0:roadIdx(v)};showCtl&&showCtl(false);telsiz(T('manTz1'));const ds=ROADLEN/(NS-1);
  const bip=setInterval(()=>{if(G.manT<0||G.manT>9)return clearInterval(bip);blip(1250,1250,.08)},700);

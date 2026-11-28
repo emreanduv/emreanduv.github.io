@@ -3,10 +3,10 @@
 (function(){
 'use strict';
 const TRx={rain:'Yağmurlu',clear:'Açık',hava:'Hava',t_yagmur:'Yağmur başladı: fren mesafesi uzar, silecekler çalışıyor.',lYagmur:'Hava',
- t_camurHint:'Saha yolu stabilize ve yağmurdan çamur olmuş: yavaş gir, durma.',t_saplandi:'Çamura saplandın! Dozer çağır.',a_dozer:'DOZER ÇAĞIR',t_dozerGel:'Dozer geliyor, halat bağlanıyor…',t_dozerOk:'Dozer seni çamurdan çıkardı.',k_dozer:'Dozer çekme (saha yolu)',
+ t_camurHint:'Saha yolu stabilize ve yağmurdan çamur olmuş: yavaş gir, durma.',t_saplandi:'Çamura saplandın! Dozer çağır.',a_dozer:'DOZER ÇAĞIR',t_dozerGel:'Dozer geliyor, halat bağlanıyor…',t_dozerOk:'Dozer seni çamurdan çıkardı.',k_dozer:'Dozer çekme (saha yolu)',k_cekici:'Çekici (yolun zor kısmı)',t_cekici:'Çekici geldi, tırı zor kısımdan çekip ileride yola bıraktı.',
  lSaha:'Saha yolu',sahaKuru:'stabilize, kuru',sahaCamur:'stabilize, çamurlu'};
 const ENx={rain:'Rainy',clear:'Clear',hava:'Weather',t_yagmur:'Rain started: longer braking, wipers on.',lYagmur:'Weather',
- t_camurHint:'The site road is gravel and the rain turned it to mud: go in slow, keep moving.',t_saplandi:'Stuck in the mud! Call the dozer.',a_dozer:'CALL DOZER',t_dozerGel:'Dozer on its way, hooking up the cable…',t_dozerOk:'The dozer pulled you out of the mud.',k_dozer:'Dozer tow (site road)',
+ t_camurHint:'The site road is gravel and the rain turned it to mud: go in slow, keep moving.',t_saplandi:'Stuck in the mud! Call the dozer.',a_dozer:'CALL DOZER',t_dozerGel:'Dozer on its way, hooking up the cable…',t_dozerOk:'The dozer pulled you out of the mud.',k_dozer:'Dozer tow (site road)',k_cekici:'Tow truck (hard section)',t_cekici:'A tow truck pulled you past the hard section and left you on the road ahead.',
  lSaha:'Site road',sahaKuru:'gravel, dry',sahaCamur:'gravel, muddy'};
 Object.assign(STR.tr,TRx);Object.assign(STR.en,ENx);
 
@@ -53,6 +53,11 @@ function cable(){if(!SAHA)return null;if(SAHA.cab)return SAHA.cab;const m=new TH
 const _reset=resetGame;
 resetGame=function(m,n){_reset(m,n);if(!G)return;const j=G.job||{};G.rain=m==='career'?!!j.rain:(SAVE.wx==='rain'&&!RG().snow);G.mud=m==='career'?!!j.mud:G.rain;G.mudS=0;G.dozT=null;G.camurH=0;G.yagH=0;G.ext=[];
  sahaBuild();SAHA.m.map=G.mud?SAHA.t1:SAHA.t0;SAHA.m.needsUpdate=true;if(SAHA.dozer)SAHA.dozer.visible=false;if(SAHA.cab)SAHA.cab.visible=false;wipersBuild();setRain(G.rain);setTOD(CUR_TOD)};
+/* TAKILMA YOK: aynı yerde ikinci kez 'Aracı yola çıkar' gerekirse çekici gelir, tırı 100 m ileri, yolun zor kısmının ötesine çeker (kariyerde bedeli var) */
+const _resc=rescue;rescue=function(){const v=truck.v;const i=roadIdx(v);const now=G?G.t:0;const R=G&&G.rsc;
+ if(G&&R&&Math.abs(R.i-i)<30&&now-R.t<150){const back=mode==='career'&&G.job.type==='donus';const j=clamp(i+(back?-45:45),3,NS-4);const p=sideAt(j,(back?-1:1)*LANE);v.x=p.x;v.z=p.z;
+  const k=clamp(j+(back?-1:1),0,NS-1);v.h=Math.atan2(-(RS[k].x-RS[j].x),-(RS[k].z-RS[j].z));v.speed=0;v.steer=0;trailer.th=v.h;G.stuckT=0;G.mudS=0;setAct(null);snapCam();if(mode==='career')G.ext.push(['k_cekici',-2500]);toast(T('t_cekici'),'#8ff0a4',3.2);G.rsc=null;return}
+ _resc();if(G)G.rsc={i,t:now}};
 window.EXT={
  wet(){return rainOn?.7:1},
  inMud(v){return G&&G.mud&&SAHA&&roadIdx(v)>=SAHA.a-2},
@@ -71,7 +76,8 @@ window.EXT={
    const C=cable();const A=new THREE.Vector3(v.x-Math.sin(v.h)*5.4,getH(v.x,v.z)+1.1,v.z-Math.cos(v.h)*5.4),B=D.position.clone().add(new THREE.Vector3(0,1.1,0));const L2=A.distanceTo(B);C.visible=true;C.scale.set(1,L2,1);C.position.copy(A).add(B).multiplyScalar(.5);C.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());
    const end=Math.min(NS-6,SAHA.b-6);if(roadIdx(v)>=end||k>40){G.dozT=null;C.visible=false;D.visible=false;G.mud=false;SAHA.m.map=SAHA.t0;SAHA.m.needsUpdate=true;v.speed=0;toast(T('t_dozerOk'),'#8ff0a4',3);blip(523,784,.3)}
    return true}
-  if(G.mud&&i>=SAHA.a+6&&i<SAHA.b-10&&HEAVY.includes(G.job.type)){const lim=8/3.6*1.6;if(sp>lim)v.speed*=.985;
+  /* çamur: yavaşlatma çamurun başladığı yerden (inMud ile aynı: SAHA.a-2), saplanınca dozer her yükte; eskiden dozer 8 örnek sonra başlıyordu, arada tır kalıyordu */
+  if(G.mud&&i>=SAHA.a-2&&i<SAHA.b-10){const lim=8/3.6*1.6;if(HEAVY.includes(G.job.type)&&sp>lim)v.speed*=.985;
    if(sp<.9&&input.gas){G.mudS+=dt}else if(sp>1.5)G.mudS=Math.max(0,G.mudS-dt);
    if(G.mudS>1.6&&!(actFn&&actFn.dozer)){toast(T('t_saplandi'),'#ff8a5c',3);const fn=()=>{setAct(null);G.dozT=0;G.dozI=roadIdx(v);if(!SAHA.dozer)SAHA.dozer=dozerBuild();if(mode==='career')G.ext.push(['k_dozer',-3500]);toast(T('t_dozerGel'),'#bfe4ff',3);blip(200,160,.4)};fn.dozer=1;fn.blade=1;setAct(T('a_dozer'),fn)}
    if(G.mudS>1.6)v.speed=Math.min(v.speed,.15)}
