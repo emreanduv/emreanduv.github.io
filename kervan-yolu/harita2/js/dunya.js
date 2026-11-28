@@ -19,7 +19,7 @@ window.gercekH=function(x,z,o){const R=RG();const f=window.ROTA&&ROTA.dem(R.rota
  const dl=Math.hypot(x,z-20);const w=sstep(380,760,dl);if(d!==d)return o;
  const det=fbm(x*.011+3,z*.011-7,3)*4.5*sstep(4,40,d);let h=d>2.5?d+det:lerp(-16,2.5,sstep(0,2.5,d));
  return lerp(o,h,w)};
-function hesapla(x,z){const n=yakin(x,z),rd=n.rd;let h=natural(x,z);h=lerp(h,YARD_Y,yardMask(x,z));h=lerp(h,SITE_Y,siteMask(x,z));h=lerp(h,RY[n.k],1-sstep(17,44,rd));
+function hesapla(x,z){const n=yakin(x,z),rd=n.rd;const CF=RG().cift;let h=natural(x,z);h=lerp(h,YARD_Y,yardMask(x,z));h=lerp(h,SITE_Y,siteMask(x,z));h=lerp(h,RY[n.k],1-(CF?sstep(22,50,rd):sstep(17,44,rd)));
  for(const pd of PADS){const dd=Math.hypot(x-pd.x,z-pd.z);if(dd<pd.r1)h=lerp(h,pd.y,(1-sstep(pd.r0,pd.r1,dd))*sstep(5.5,12,rd))}return[h,rd]}
 function veri(ti,tj){const k=ti+','+tj;let t=DATA.get(k);if(t)return t;const H=new Float32Array(NQ*NQ),D=new Float32Array(NQ*NQ);
  for(let j=0;j<NQ;j++)for(let i=0;i<NQ;i++){const r=hesapla(ti*TS+i*SG,tj*TS+j*SG);H[j*NQ+i]=r[0];D[j*NQ+i]=r[1]}t={H,D};DATA.set(k,t);return t}
@@ -48,12 +48,16 @@ window.dunyaAdim=function(px,pz,butce,R){if(!grp)return;R=R||(MOBILE?1250:1500);
  if(DATA.size>2500){for(const k of DATA.keys()){if(DATA.size<=1800)break;if(!MESH.has(k))DATA.delete(k)}}};
 window.dunyaKaroSay=()=>({ag:MESH.size,veri:DATA.size});
 /* parçalı ağaçlar: ≈500 örnekte (≈1,1 km) bir parça, her parçanın kendi örnekli ağları */
-window.agacParca=function(){const N0=MOBILE?320:520,AD=500;const d=new THREE.Object3D(),col=new THREE.Color();const pg=pineGeo(),lg=leafGeo(),tg=new THREE.CylinderGeometry(.22,.32,2.4,5);
+/* gerçek rüzgâr santralleri: OSM'deki türbinler gerçek yerinde (rotadan 2,5 km'ye kadar) */
+function resKur(){const GR=ROTA.yol(RG().rota);if(!GR||!GR.res)return;let n=0;for(const s of GR.res.split(';')){const [e,nn]=s.split(',').map(Number);const p=GR.ileri(e,nn);const x=p[0],z=p[1];
+ const r=yakin(x,z);let d=r.rd;if(d>=999){let bd=1e18;for(let i=0;i<NS;i+=20)bd=Math.min(bd,(RS[i].x-x)**2+(RS[i].z-z)**2);d=Math.sqrt(bd)}if(d>2500||d<35)continue;if(world.turbines.some(q=>Math.hypot(q.x-x,q.z-z)<90))continue;
+ const t=makeTurbine();t.g.position.set(x,getH(x,z)-.5,z);obsC(x,z,3);t.g.rotation.y=Math.PI/2+.25;t.rot.rotation.z=rnd()*6;scene.add(t.g);world.rotors.push({r:t.rot,s:.7+rnd()*.35});world.turbines.push({x,z});n++}console.log('gerçek türbin',n)}
+window.agacParca=function(){try{resKur()}catch(e){console.log('res',e)}const N0=MOBILE?320:520,AD=500;const d=new THREE.Object3D(),col=new THREE.Color();const pg=pineGeo(),lg=leafGeo(),tg=new THREE.CylinderGeometry(.22,.32,2.4,5);
  const m1=P('#2f5a2c',{shininess:8}),m2=P('#3f6b30',{shininess:8}),m3=P('#5a4128');
  for(let i0=0;i0<NS;i0+=AD){const i1=Math.min(NS,i0+AD);const N=Math.max(60,Math.round(N0*(i1-i0)/AD));
   const crown=new THREE.InstancedMesh(pg,m1,N),crown2=new THREE.InstancedMesh(lg,m2,N),trunk=new THREE.InstancedMesh(tg,m3,N*2);let c1=0,c2=0,ct=0,tries=0;
   while(c1+c2<N&&tries<N*10){tries++;const i=i0+Math.floor(rnd()*(i1-i0));const off=(rnd()<.5?-1:1)*(12+Math.pow(rnd(),1.6)*380);const p=sideAt(i,off);const x=p.x+(rnd()-.5)*30,z=p.z+(rnd()-.5)*30;
-   const h=getH(x,z);if(h<3.5)continue;const rd=getRD(x,z);if(rd<12)continue;if(yardMask(x,z)>0.01||siteMask(x,z)>0.01||onPad(x,z))continue;if(world.turbines.some(q=>Math.hypot(q.x-x,q.z-z)<12))continue;if(DOLU.has(dk(x,z))||(window.KENT&&KENT[i]&&Math.abs(off)<120&&rnd()<.85))continue;
+   const h=getH(x,z);if(h<3.5)continue;const rd=getRD(x,z);if(rd<(RG().cift&&off<0?21:12))continue;if(yardMask(x,z)>0.01||siteMask(x,z)>0.01||onPad(x,z))continue;if(world.turbines.some(q=>Math.hypot(q.x-x,q.z-z)<12))continue;if(DOLU.has(dk(x,z))||(window.KENT&&KENT[i]&&Math.abs(off)<120&&rnd()<.85))continue;
    if(fbm(x*.01+9,z*.01,3)<-.05&&rnd()<.8)continue;const s=.7+rnd()*.7;const pine=h>320?rnd()<.8:rnd()<.35;
    if(pine&&c1<N){d.position.set(x,h+2.4*s+3.2*s,z);d.scale.set(s,s,s);d.rotation.set(0,rnd()*6,0);d.updateMatrix();crown.setMatrixAt(c1,d.matrix);col.setHSL(.27+rnd()*.06,.45,.22+rnd()*.08);crown.setColorAt(c1,col);c1++}
    else if(c2<N){d.position.set(x,h+2.4*s+1.8*s,z);d.scale.set(s*.95,s*.85,s*.95);d.rotation.set(0,rnd()*6,0);d.updateMatrix();crown2.setMatrixAt(c2,d.matrix);col.setHSL(.2+rnd()*.08,.5,.24+rnd()*.1);crown2.setColorAt(c2,col);c2++}else continue;
@@ -80,7 +84,7 @@ window.yapiKur=function(){DOLU.clear();window.KENT=new Uint8Array(NS);const GR=R
  for(const s of Bv.H.split(';')){const [i,j,n,a10,ad]=s.split(',').map(Number);const A=a10*10;const kat0=n>=10?4:n>=4?2:1,kat1=n>=10?7:n>=4?4:2;
   for(let q=0;q<n;q++){const e=(i+rh(i,j))*80,nn=(j+rh(j,i))*80;const p=GR.ileri(e,nn);const x=p[0],z=p[1];
    const big=A>800;const asp=1+rh(i+q,j)*.8;const w=Math.min(60,Math.sqrt(A*asp)),d=Math.min(60,A/w);
-   const rd=getRD(x,z);if(rd<12+Math.hypot(w,d)/2)continue;if(yardMask(x,z)>.01||siteMask(x,z)>.01||onPad(x,z))continue;if(getH(x,z)<1)continue;if(DOLU.has(dk(x,z)))continue;
+   const rd=getRD(x,z);if(rd<(RG().cift&&yanOf(x,z)<0?20:12)+Math.hypot(w,d)/2)continue;if(yardMask(x,z)>.01||siteMask(x,z)>.01||onPad(x,z))continue;if(getH(x,z)<1)continue;if(DOLU.has(dk(x,z)))continue;
    const ang=-(ad*Math.PI/180+rot)+(rh(q,i)<.5?0:Math.PI/2);const kat=big?0:Math.round(kat0+rh(q,j)*(kat1-kat0));const h=big?8+rh(i,q)*2:kat*3+.6;
    DOLU.add(dk(x,z));ekle(big?'s':'k'+kat,x,z,w,d,h,ang,big?'#c9ccc8':RENK[Math.floor(rh(i*3,q)*RENK.length)])}}
  /* parça: yol örneğine göre 500'lük gruplar */const mat={};const dm=new THREE.Object3D(),col=new THREE.Color();const parc={};
@@ -88,7 +92,11 @@ window.yapiKur=function(){DOLU.clear();window.KENT=new Uint8Array(NS);const GR=R
  for(const k in parc){const g=new THREE.Group();for(const key in parc[k]){const L=parc[k][key];const kat=key==='s'?3:+key.slice(1);
    const m=mat[key]||(mat[key]=new THREE.MeshLambertMaterial({map:key==='s'?null:cephe()}));const im=new THREE.InstancedMesh(kutuGeo(Math.max(1,kat),key==='s'?1:3),m,L.length);
    L.forEach((b,ii)=>{const y=Math.min(getH(b[0]-b[2]/2,b[1]),getH(b[0]+b[2]/2,b[1]),getH(b[0],b[1]-b[3]/2),getH(b[0],b[1]+b[3]/2))-.6;dm.position.set(b[0],y,b[1]);dm.rotation.set(0,b[5],0);dm.scale.set(b[2],b[4]+.6,b[3]);dm.updateMatrix();im.setMatrixAt(ii,dm.matrix);col.set(b[6]);im.setColorAt(ii,col)});
-   im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;if(im.instanceColor)im.instanceColor.needsUpdate=true;g.add(im)}
+   im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;if(im.instanceColor)im.instanceColor.needsUpdate=true;g.add(im);
+   /* 1-2 katlı evlere kiremit kırma çatı (Hatay köy ve kasaba evleri gibi); apartman ve depo düz damlı */
+   if(key==='k1'||key==='k2'){const rg=new THREE.ConeGeometry(Math.SQRT1_2,1,4,1);rg.rotateY(Math.PI/4);rg.translate(0,.5,0);const rm=mat.cati||(mat.cati=P('#a4492f',{shininess:14}));const ri=new THREE.InstancedMesh(rg,rm,L.length);
+    L.forEach((b,ii)=>{const y=Math.min(getH(b[0]-b[2]/2,b[1]),getH(b[0]+b[2]/2,b[1]),getH(b[0],b[1]-b[3]/2),getH(b[0],b[1]+b[3]/2))-.6;dm.position.set(b[0],y+b[4]+.6,b[1]);dm.rotation.set(0,b[5],0);dm.scale.set(b[2]*1.08,1.6+Math.min(b[2],b[3])*.12,b[3]*1.08);dm.updateMatrix();ri.setMatrixAt(ii,dm.matrix);col.setHSL(.03+hash2(ii,7)*.03,.55,.36+hash2(ii,3)*.1);ri.setColorAt(ii,col)});
+    ri.castShadow=true;ri.frustumCulled=false;ri.instanceColor.needsUpdate=true;g.add(ri)}}
   scene.add(g);PARCA.push({i0:+k*500,i1:+k*500+500,g})}
  /* camiler: gerçek konum; ışıkla değil yapı olarak (saygı kuralı: yalnız durağan yapı, etkileşim yok) */
  const tas=P('#ebe6dc',{shininess:12}),kur=P('#8d969c',{shininess:40});
@@ -104,5 +112,21 @@ window.yapiKur=function(){DOLU.clear();window.KENT=new Uint8Array(NS);const GR=R
  /* 300 m'den kısa açıklıklar kapanır (tabela sık sık değişmesin) */let son=-1;for(let i=0;i<NS;i++)if(KENT[i]){if(son>=0&&i-son>1&&i-son<136)for(let q=son;q<i;q++)KENT[q]=1;son=i}};
 function yakinIdx(x,z){return yakin(x,z).rd<999?yakin(x,z).k:(()=>{let bi=0,bd=1e18;for(let i=0;i<NS;i+=8){const d=(RS[i].x-x)**2+(RS[i].z-z)**2;if(d<bd){bd=d;bi=i}}return bi})()}
 const _bl=baseLimit;baseLimit=function(i){const b=_bl(i);return TILED&&window.KENT&&KENT[i]&&b>50?50:b};
-window.yakinIdxG=(x,z)=>yakinIdx(x,z);window.parcaAdim=function(ti){for(const p of PARCA){const v=ti>p.i0-700&&ti<p.i1+700;if(p.g.visible!==v)p.g.visible=v}};
+window.yakinIdxG=(x,z)=>yakinIdx(x,z);
+/* ---------- Bölünmüş yol (D-817 gibi): sürülen yol gidiş yönü, karşı yön orta refüjün öbür yanında ----------
+   Gidiş yolu: yol ekseninden ±4,6 m (iki şerit). Refüj −4,6…−7,6 m, ortasında beton bariyer (−6,1 m). Karşı yol −7,6…−17,2 m.
+   Bariyer katıdır (collides → bariyerVar): tır refüje giremez. Karşı yöndeki trafik karşı yolda akar, tırla karşılaşmaz. */
+function yanOf(x,z){const n=yakin(x,z);if(n.rd>60)return 99;const i=n.k,a=RS[Math.max(0,i-1)],b=RS[Math.min(NS-1,i+1)];let tx=b.x-a.x,tz=b.z-a.z;const l=Math.hypot(tx,tz)||1;tx/=l;tz/=l;return (x-RS[i].x)*(-tz)+(z-RS[i].z)*tx}
+window.yanOf=yanOf;
+window.bariyerVar=function(v,nx,nz){if(!RG().cift)return false;const o=yanOf(nx,nz);if(!(o<-4.7&&o>-7.8))return false;return yanOf(v.x,v.z)>-4.7};
+function serit(o0,o1,y0,y1,mat,uvL){const p=[],u=[],ix=[];let acc=0;for(let i=0;i<NS;i++){const a=sideAt(i,o0),b=sideAt(i,o1);if(i)acc+=RS[i].distanceTo(RS[i-1]);p.push(a.x,RY[i]+y0,a.z,b.x,RY[i]+y1,b.z);u.push(0,acc/uvL,1,acc/uvL);if(i<NS-1){const k=i*2;ix.push(k,k+2,k+1,k+1,k+2,k+3)}}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(u,2));g.setIndex(ix);g.computeVertexNormals();const m=new THREE.Mesh(g,mat);m.receiveShadow=true;m.userData.cift=1;m.userData.gecirgen=1;scene.add(m);return m}
+window.ciftYolKur=function(roadMat){serit(-7.6,-17.2,.2,.2,roadMat,14);const med=P('#7d8a5a');serit(-4.6,-7.6,.12,.12,med,14);
+ const bet=P('#bdb9b0',{shininess:6});serit(-5.8,-6.0,.12,.95,bet,8);serit(-6.2,-6.4,.95,.12,bet,8);serit(-6.0,-6.2,.95,.95,bet,8)};
+/* karşı yolun ve refüjün üstüne düşen küçük yapılar (tabela, pano, direk) karşı yolun dışına taşınır */
+window.ciftTemizle=function(){const B=new THREE.Box3(),S=new THREE.Vector3(),C=new THREE.Vector3();let n=0;
+ for(const o of scene.children){if(o.userData.cift||o.userData.zemin||o.isInstancedMesh||o===world.roadMesh||o.isLight||o===world.sky||o===world.water)continue;B.setFromObject(o);if(B.isEmpty())continue;B.getSize(S);if(Math.max(S.x,S.z)>25)continue;B.getCenter(C);
+  if(yardMask(C.x,C.z)>.01||siteMask(C.x,C.z)>.01)continue;const off=yanOf(C.x,C.z);if(!(off<-4.4&&off>-18.5))continue;const k=yakin(C.x,C.z).k;const q=sideAt(k,-21-Math.max(S.x,S.z)/2),c0=sideAt(k,off);
+  o.position.x+=q.x-c0.x;o.position.z+=q.z-c0.z;o.position.y+=getH(q.x,q.z)-getH(c0.x,c0.z);n++}console.log('cift temizle',n)};
+window.parcaAdim=function(ti){for(const p of PARCA){const v=ti>p.i0-700&&ti<p.i1+700;if(p.g.visible!==v)p.g.visible=v}};
 })();

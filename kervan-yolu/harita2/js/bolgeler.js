@@ -8,7 +8,7 @@ Object.assign(REGIONS,{
   amp:70,rid:14,climb:.04,coastW:24,sea:0x1d6c8c,fee:1.08,olive:1,cols:{g1:'#8a9a4e',g2:'#5d7036',dry:'#b9a66a',rock:'#9a8f7c'}},
  hatay:{name:{tr:'Hatay',en:'Hatay'},from:{tr:'İskenderun Limanı',en:'İskenderun Port'},to:{tr:'Belen Geçidi',en:'Belen Pass'},
   rp:[[0,40],[0,-60],[40,-160],[120,-220],[190,-300],[180,-410],[110,-500],[150,-610],[250,-660],[330,-760],[300,-880],[360,-990],[470,-1040],[540,-1160],[560,-1300]],
-  rota:'hatay',kasaba:'Belen',amp:120,rid:24,climb:.075,coastW:26,sea:0x1b6f93,fee:1.16,citrus:1,cols:{g1:'#7f9448',g2:'#506a30',dry:'#b49c63',rock:'#8f8576'}},
+  rota:'hatay',kasaba:'Belen',cift:1,amp:120,rid:24,climb:.075,coastW:26,sea:0x1b6f93,fee:1.16,citrus:1,cols:{g1:'#7f9448',g2:'#506a30',dry:'#b49c63',rock:'#8f8576'}},
  karadeniz:{name:{tr:'Karadeniz',en:'Black Sea'},from:{tr:'Trabzon Limanı',en:'Trabzon Port'},to:{tr:'Çaykara Yaylası',en:'Çaykara Plateau'},
   rp:[[0,40],[0,-70],[30,-180],[-20,-300],[40,-410],[140,-460],[200,-560],[150,-680],[200,-800],[300,-860],[360,-980],[320,-1100],[400,-1200],[500,-1260],[540,-1400]],
   amp:130,rid:22,climb:.08,coastW:20,sea:0x1d4c66,fee:1.22,snow:1,snowLine:115,tea:1,fog:1,cols:{g1:'#4f7d3a',g2:'#2f5a26',dry:'#7d8a55',rock:'#6f6d68'}},
@@ -29,7 +29,7 @@ function peri(root){const tuff=P('#d8c19a',{shininess:6}),cap=P('#7a6a58',{shini
    const s=new THREE.Mesh(new THREE.ConeGeometry(r*.75,r*.9,9),cap);s.position.set(c.position.x,y+h-.2,c.position.z);root.add(s)}}
  const er=new THREE.Mesh(new THREE.ConeGeometry(520,420,24),P('#8c8a86',{shininess:2}));const sp=RS[NS-1];er.position.set(sp.x+900,-20,sp.z-1400);root.add(er);const kar=new THREE.Mesh(new THREE.ConeGeometry(190,155,24),P('#f4f6f8',{shininess:20}));kar.position.set(er.position.x,er.position.y+210-72,er.position.z);root.add(kar)}
 function cay(root){const bush=P('#2f6b2c',{shininess:8});const geo=new THREE.SphereGeometry(.9,8,6);const N=900;const im=new THREE.InstancedMesh(geo,bush,N);let c=0;const M=new THREE.Matrix4(),q=new THREE.Quaternion(),s=new THREE.Vector3(1.3,.7,1.3);
- for(let i=60;i<NS*.55&&c<N;i+=7){for(const side of[-1,1]){for(let row=0;row<6&&c<N;row++){const off=side*(16+row*3.2);const p=sideAt(i,off);const y=getH(p.x,p.z);if(onPad&&onPad(p.x,p.z))continue;M.compose(new THREE.Vector3(p.x,y+.45,p.z),q,s);im.setMatrixAt(c++,M)}}}im.count=c;im.receiveShadow=true;root.add(im);
+ for(let i=60;i<NS*.55&&c<N;i+=7){for(const side of[-1,1]){for(let row=0;row<6&&c<N;row++){const off=side*(16+row*3.2)+(side<0&&RG().cift?-8:0);const p=sideAt(i,off);const y=getH(p.x,p.z);if(onPad&&onPad(p.x,p.z))continue;M.compose(new THREE.Vector3(p.x,y+.45,p.z),q,s);im.setMatrixAt(c++,M)}}}im.count=c;im.receiveShadow=true;root.add(im);
  // yayla evleri (serender biçimli ahşap)
  const ah=P('#7a5232',{shininess:10}),cat=P('#4a4f55',{shininess:20});for(let k=0;k<7;k++){const i=Math.floor(NS*.62)+k*28;const p=sideAt(i,(k%2?1:-1)*(18+k%3*5));const y=getH(p.x,p.z);const g=new THREE.Group();g.position.set(p.x,y,p.z);g.rotation.y=p.ang+k;root.add(g);
   for(const x of[-1.6,1.6])for(const z of[-1.6,1.6])addBox(.3,1.4,.3,ah,x,.7,z,g);addBox(4,2.4,4,ah,0,2.6,0,g);const r=new THREE.Mesh(new THREE.ConeGeometry(3.4,1.8,4),cat);r.rotation.y=Math.PI/4;r.position.y=4.7;g.add(r)}}

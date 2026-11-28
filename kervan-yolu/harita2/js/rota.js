@@ -9,7 +9,7 @@
 /* yon: gerçek rotanın ilk yönü (oyunda atan2(x,z)); bas: gerçek rotanın oyundaki başlangıcı; bag: limandan gerçek yola bağlantı yolu.
    Hatay: gerçek deniz yolun sağında (batıda); oyundaki liman da denizi solunda bekler. Rota +z'ye döndürülür, liman yol ile deniz arasında kalır,
    limandan çıkan yol U dönüşüyle (liman bağlantı yolu) D-817'ye bağlanır. */
-const KAYNAK={hatay:()=>({yol:window.ROTA_HATAY,dem:window.DEM_HATAY,bina:window.BINA_HATAY,yon:0,bas:[180,150],bag:[[0,40],[0,-60],[0,-120],[25,-175],[80,-200],[140,-182],[172,-130],[180,-60],[180,20],[180,95]]})};
+const KAYNAK={hatay:()=>({yol:window.ROTA_HATAY,dem:window.DEM_HATAY,bina:window.BINA_HATAY,res:window.RES_HATAY,yon:0,bas:[180,150],bag:[[0,40],[0,-60],[0,-120],[25,-175],[80,-200],[140,-182],[172,-130],[180,-60],[180,20],[180,95]]})};
 const ON=400,EGIM=0.08;const onbellek={};
 function coz(ad){if(onbellek[ad])return onbellek[ad];const k=KAYNAK[ad]&&KAYNAK[ad]();if(!k||!k.yol)return null;
  const E=[],N=[],H=[];let e=0,n=0;for(const t of k.yol.split(';')){if(!t)continue;const a=t.split(',');e+=+a[0];n+=+a[1];E.push(e);N.push(n);H.push(+a[2])}
@@ -24,7 +24,7 @@ function coz(ad){if(onbellek[ad])return onbellek[ad];const k=KAYNAK[ad]&&KAYNAK[
   const rows=D.v.split('|');for(let r=0;r<rows.length&&r<nz;r++){const v=rows[r].split(',');for(let q=0;q<v.length&&q<nx;q++)if(v[q]!=='')g[r*nx+q]=+v[q]}
   demF=(x,z)=>{const p=geri(x,z);let fx=(p[0]-D.x0)/D.C,fz=(p[1]-D.z0)/D.C;if(fx<0||fz<0||fx>=nx-1||fz>=nz-1)return NaN;const i=fx|0,jj=fz|0;fx-=i;fz-=jj;
    const A=g[jj*nx+i],B=g[jj*nx+i+1],C=g[(jj+1)*nx+i],DD=g[(jj+1)*nx+i+1];const w=[(1-fx)*(1-fz),fx*(1-fz),(1-fx)*fz,fx*fz],v=[A,B,C,DD];let t=0,ws=0;for(let q=0;q<4;q++)if(v[q]===v[q]){t+=v[q]*w[q];ws+=w[q]}return ws>.2?t/ws:NaN}}
- return onbellek[ad]={x:X,z:Z,h:H,s:S,L,dem:demF,ileri,geri,bag:k.bag||null,bina:k.bina||null}}
+ return onbellek[ad]={x:X,z:Z,h:H,s:S,L,dem:demF,ileri,geri,bag:k.bag||null,bina:k.bina||null,res:k.res||null}}
 function profil(ad,ss){const r=coz(ad);const n=ss.length,out=new Float32Array(n);let k=0;
  for(let i=0;i<n;i++){const s=ss[i];while(k<r.s.length-2&&r.s[k+1]<s)k++;const t=Math.min(1,Math.max(0,(s-r.s[k])/((r.s[k+1]-r.s[k])||1)));out[i]=r.h[k]+(r.h[k+1]-r.h[k])*t}
  /* DEM yol yarmasını ve köprüyü bilmez: Gauss yumuşatma (σ≈60 m), sonra gerçek devlet yolu sınırına göre eğim en çok %8 */

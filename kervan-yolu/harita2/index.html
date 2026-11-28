@@ -206,7 +206,7 @@ body.fotom #speedo,body.fotom #cl,body.fotom #cr,body.fotom #bcam,body.fotom #hS
 <div id="hPause" class="tb">II</div>
 
 <script src="iletisim.js"></script>
-<script src="veri/rota-hatay.js"></script><script src="veri/dem-hatay.js"></script><script src="veri/bina-hatay.js"></script><script src="js/rota.js"></script>
+<script src="veri/rota-hatay.js"></script><script src="veri/dem-hatay.js"></script><script src="veri/bina-hatay.js"></script><script src="veri/res-hatay.js"></script><script src="js/rota.js"></script>
 <script src="lib/three.min.js"></script>
 <script>
 "use strict";
@@ -447,12 +447,12 @@ function buildWorld(){
   const lx=RS[i].x+nx*HW,lz=RS[i].z+nz*HW,rx=RS[i].x-nx*HW,rz=RS[i].z-nz*HW;rp.push(lx,RY[i]+.2,lz,rx,RY[i]+.2,rz);ru.push(0,acc/14,1,acc/14);
   if(i<NS-1){const k=i*2;ri.push(k,k+2,k+1,k+1,k+2,k+3)}}
  const rg=new THREE.BufferGeometry();rg.setAttribute('position',new THREE.Float32BufferAttribute(rp,3));rg.setAttribute('uv',new THREE.Float32BufferAttribute(ru,2));rg.setIndex(ri);rg.computeVertexNormals();
- const road=new THREE.Mesh(rg,new THREE.MeshLambertMaterial({map:TEX.road,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));road.receiveShadow=true;scene.add(road);world.roadMesh=road;
+ const road=new THREE.Mesh(rg,new THREE.MeshLambertMaterial({map:TEX.road,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));road.receiveShadow=true;scene.add(road);world.roadMesh=road;if(GR&&RG().cift)ciftYolKur(road.material);
  const posts=new THREE.InstancedMesh(new THREE.BoxGeometry(.18,1,.18),P('#f4f4f0'),NS);let pc=0;const dm=new THREE.Object3D();
  const reflM=new THREE.MeshBasicMaterial({color:0xff9a1a});const refl=new THREE.InstancedMesh(new THREE.BoxGeometry(.2,.14,.2),reflM,NS);
- for(let i=4;i<NS-4;i+=4){if(yardMask(RS[i].x,RS[i].z)>.1||siteMask(RS[i].x,RS[i].z)>.1)continue;const a=RS[i-1],b=RS[i+1];let tx=b.x-a.x,tz=b.z-a.z;const l=Math.hypot(tx,tz);const nx=-tz/l,nz=tx/l;for(const s of[1,-1]){if(pc>=NS)break;const x=RS[i].x+nx*s*6,z=RS[i].z+nz*s*6;const y=getH(x,z);dm.position.set(x,y+.5,z);dm.updateMatrix();posts.setMatrixAt(pc,dm.matrix);dm.position.y=y+.85;dm.updateMatrix();refl.setMatrixAt(pc,dm.matrix);pc++}}
+ for(let i=4;i<NS-4;i+=4){if(yardMask(RS[i].x,RS[i].z)>.1||siteMask(RS[i].x,RS[i].z)>.1)continue;const a=RS[i-1],b=RS[i+1];let tx=b.x-a.x,tz=b.z-a.z;const l=Math.hypot(tx,tz);const nx=-tz/l,nz=tx/l;for(const s of(RG().cift?[1]:[1,-1])){if(pc>=NS)break;const x=RS[i].x+nx*s*6,z=RS[i].z+nz*s*6;const y=getH(x,z);dm.position.set(x,y+.5,z);dm.updateMatrix();posts.setMatrixAt(pc,dm.matrix);dm.position.y=y+.85;dm.updateMatrix();refl.setMatrixAt(pc,dm.matrix);pc++}}
  posts.count=refl.count=pc;posts.castShadow=true;scene.add(posts);scene.add(refl);
- buildPort();buildSite();buildTurbines();if(RG().village)buildVillage();if(RG().snow)buildSnowStuff();buildTrafficSigns();buildPortOps();if(RG().village)buildAktarma();buildDuzenleme();buildMola();buildKantar();if(TILED)agacParca();else if(RG().olive)buildTreesEge();else if(RG().fields)buildFields();else buildTrees();buildRoadside();
+ buildPort();buildSite();buildTurbines();if(RG().village)buildVillage();if(RG().snow)buildSnowStuff();buildTrafficSigns();buildPortOps();if(RG().village)buildAktarma();buildDuzenleme();buildMola();buildKantar();if(TILED)agacParca();else if(RG().olive)buildTreesEge();else if(RG().fields)buildFields();else buildTrees();buildRoadside();if(GR&&RG().cift)ciftTemizle();
 }
 
 function drawSiteSign(inv,oem){const w=world.siteSign;if(!w)return;const g=w.c.getContext('2d');g.fillStyle='#f4f2ea';g.fillRect(0,0,1024,512);g.fillStyle='#14532d';g.fillRect(0,0,1024,150);g.fillStyle='#fff';g.textAlign='center';g.font='800 92px "Barlow Condensed",sans-serif';g.fillText(inv.toUpperCase(),512,112);
@@ -678,7 +678,7 @@ function telsizLogic(dt){if(!G||phase!=='drive'||!(ESC&&ESC.g.visible))return;if
  if(VZ&&VZ.v0&&!G.tlz.koy&&VZ.v0-i>6&&VZ.v0-i<30){G.tlz.koy=1;G.tlzT=9;telsiz(T(POL&&POL.g.visible?'tz_koyPol':'tz_koy'));return}
  if(ESC2&&ESC2.g.visible&&!G.tlz.arka&&i>NS*.35&&TRAF.filter(c=>c.on&&!(c.crashT>0)&&(c.i-i)*(G.trSgn||1)<-2&&(c.i-i)*(G.trSgn||1)>-60).length>=2){G.tlz.arka=1;G.tlzT=9;telsiz(T('tz_arka'));return}
  if(!G.tlz.son&&NS-1-i<40){G.tlz.son=1;G.tlzT=9;telsiz(T('tz_son'));return}
- const ds=ROADLEN/(NS-1),sg=G.trSgn||1;const onc=TRAF.filter(c=>c.on&&!(c.crashT>0)).map(c=>({c,a:(c.i-i)*sg*ds})).filter(o=>o.a>25&&o.a<230).sort((x,y)=>x.a-y.a)[0];
+ const ds=ROADLEN/(NS-1),sg=G.trSgn||1;const onc=TRAF.filter(c=>c.on&&!c.cift&&!(c.crashT>0)).map(c=>({c,a:(c.i-i)*sg*ds})).filter(o=>o.a>25&&o.a<230).sort((x,y)=>x.a-y.a)[0];
  if(onc&&!onc.c.tlz){onc.c.tlz=1;G.tlzT=7;G.tlzG=0;telsiz(T(HEAVY.includes(G.job.type)?(onc.c.vir===1&&G.job.type==='kanat'?'tz_karsiV':'tz_karsi'):'tz_karsi2'));return}
  G.tlzG=(G.tlzG||0)+dt+9.5;if(G.tlzG>75&&Math.abs(truck.v.speed)>4){G.tlzG=0;G.tlzT=9;const busy=TRAF.some(c=>c.on&&Math.abs((c.i-i)*ds)<320);telsiz(T(busy?'tz_kopru':['tz_acik','tz_kopru'][Math.floor(Math.random()*2)]))}}
 // Mr. Anduv! FM yol ve hava bülteni: radyo açıkken sürüşte ~3,5 dakikada bir, bölgeye ve havaya göre
@@ -755,14 +755,14 @@ function trafficStep(dt){if(!G||!TRAF.length)return;const v=truck.v;const ti=roa
  const a=RS[Math.max(0,ti-2)],b=RS[Math.min(NS-1,ti+2)];const fwdx=-Math.sin(v.h),fwdz=-Math.cos(v.h);const sgn=((b.x-a.x)*fwdx+(b.z-a.z)*fwdz)>=0?1:-1;G.trSgn=sgn;
  const tOff=laneOf(ti,v.x,v.z);const max=MOBILE?4:5;G.trT=(G.trT||0)-dt;
  if(G.trT<=0&&Math.abs(v.speed)>2){G.trT=4+Math.random()*7;const act=TRAF.filter(c=>c.on).length;if(act<max){const free=TRAF.filter(c=>!c.on);const c=free[Math.floor(Math.random()*free.length)];
-   const i0=ti+sgn*(130+Math.floor(Math.random()*90));const vil=VZ&&i0>VZ.v0-15&&i0<VZ.v1+15;if(c&&i0>50&&i0<NS-50&&!vil&&!TRAF.some(o=>o.on&&Math.abs(o.i-i0)<35)){c.on=true;c.i=i0;c.dir=-sgn;c.off=-LANE*sgn;c.spd=c.spd0*(RG().snow?.7:1)*(.9+Math.random()*.2);c.brake=false;c.honk=0;c.crashT=0;c.hit=0;c.tlz=0;c.g.visible=true}}}
+   const i0=ti+sgn*(130+Math.floor(Math.random()*90));const cf=TILED&&RG().cift&&sgn>0;const vil=VZ&&i0>VZ.v0-15&&i0<VZ.v1+15;if(c&&i0>50&&i0<NS-50&&!vil&&!TRAF.some(o=>o.on&&Math.abs(o.i-i0)<35)){c.on=true;c.i=i0;c.dir=-sgn;/* bölünmüş yol: karşı yön refüjün öbür yanındaki yolda akar */c.cift=cf?1:0;c.off=cf?-(9.9+(Math.random()<.5?0:4.6)):-LANE*sgn;c.spd=c.spd0*(RG().snow?.7:1)*(.9+Math.random()*.2);c.brake=false;c.honk=0;c.crashT=0;c.hit=0;c.tlz=0;c.g.visible=true}}}
  for(const c of TRAF){if(!c.on)continue;
   const ahead=(c.i-ti)*sgn*ds;// tıra olan uzaklık (önde +)
-  const heavy=HEAVY.includes(G.job.type)&&G.job.type!=='free';if(heavy&&ahead>0&&ahead<170){c.yield=true}else if(ahead<-25)c.yield=false;
+  const heavy=HEAVY.includes(G.job.type)&&G.job.type!=='free';if(heavy&&ahead>0&&ahead<170&&!c.cift){c.yield=true}else if(ahead<-25)c.yield=false;
   if(c.yield&&c.vir===undefined){c.vir=0;const st=c.dir;for(let k=0;k<=24;k+=2){const j=clamp(Math.round(c.i)+st*k,6,NS-7);const a=RS[j-6],b=RS[j],d=RS[j+6];const an=Math.abs(Math.atan2((b.x-a.x)*(d.z-b.z)-(b.z-a.z)*(d.x-b.x),(b.x-a.x)*(d.x-b.x)+(b.z-a.z)*(d.z-b.z)));if(an>.16){c.vir=k<=4?2:1;break}}}
   if(!c.yield)c.vir=undefined;
-  const offT=c.yield?-(c.vir===2&&G.job.type==='kanat'?6.6:LANE+1.9)*sgn:-LANE*sgn;c.off+=clamp(offT-c.off,-2.5*dt,2.5*dt);
-  const inLane=Math.abs(tOff-c.off)<(c.wid/2+1.45);
+  const offT=c.cift?c.off:c.yield?-(c.vir===2&&G.job.type==='kanat'?6.6:LANE+1.9)*sgn:-LANE*sgn;c.off+=clamp(offT-c.off,-2.5*dt,2.5*dt);
+  const inLane=!c.cift&&Math.abs(tOff-c.off)<(c.wid/2+1.45);
   if(c.crashT>0){c.crashT-=dt;if(window.vehAnim)vehAnim(c,dt,c.g.rotation.y);if(c.crashT<=0){hitMark(null)}continue}
   if(inLane&&ahead>0&&ahead<90&&!c.yield){c.brake=true;if(!c.honk){c.honk=1;blip(420,420,.25);setTimeout(()=>blip(330,330,.3),280);if(G.warnT<=0){toast(T('t_oncoming'),'#ffb36b',2.2);G.warnT=2.5}G.laneV=(G.laneV||0)+1}}
   else if(!inLane&&c.brake&&ahead>10)c.brake=false;
@@ -1240,7 +1240,7 @@ function katiSifirla2(){_cevC=new WeakMap()}
 function cevreNoktalari(b,adim){const P=[];if(b.isEmpty())return P;const ys=[b.min.y+Math.min(.9,(b.max.y-b.min.y)*.3),Math.min(b.max.y-.2,b.min.y+2.6)];
  for(const y of ys){for(let z=b.min.z;z<=b.max.z+1e-3;z+=Math.max(.5,Math.min(adim,(b.max.z-b.min.z)/2))){P.push([b.min.x,y,z],[b.max.x,y,z])}for(let x=b.min.x;x<=b.max.x+1e-3;x+=Math.max(.5,(b.max.x-b.min.x)/2)){P.push([x,y,b.min.z],[x,y,b.max.z])}}return P}
 const _cvM=new THREE.Matrix4(),_cvV=new THREE.Vector3();
-function collides(v,nx,nz,hepsi){const fx=-Math.sin(v.h),fz=-Math.cos(v.h),rx=-fz,rz=fx;const S=hepsi?new Set():null;const vur=k=>{if(!k)return false;if(S){S.add(k);return false}return true};
+function collides(v,nx,nz,hepsi){if(!hepsi&&TILED&&window.bariyerVar&&bariyerVar(v,nx,nz))return true;/* bölünmüş yolda orta refüj bariyeri */const fx=-Math.sin(v.h),fz=-Math.cos(v.h),rx=-fz,rz=fx;const S=hepsi?new Set():null;const vur=k=>{if(!k)return false;if(S){S.add(k);return false}return true};
  if(v===truck.v){// tır + dorse + yük: tam dış çizgi
   const dx=nx-v.x,dz=nz-v.z,ign=[truck.g,trailer.g];
   for(const[g,yuk]of[[truck.g,false],[trailer.g,false],[trailer.g,true]]){if(!g||!g.visible)continue;const b=cevreKutu(g,yuk);if(b.isEmpty())continue;g.updateMatrixWorld();
